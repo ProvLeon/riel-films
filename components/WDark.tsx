@@ -601,46 +601,7 @@ function WDark() {
           </div>
         </div>
       </div>
-      <div className="flex absolute top-0 right-12 z-0 items-center w-3.5 py-[467px] max-md:hidden max-md:py-24">
-        <div className="flex flex-col flex-1 shrink items-center self-stretch my-auto w-full basis-0 max-md:hidden">
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] min-h-[9px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] min-h-[9px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] min-h-[9px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] min-h-[9px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] min-h-[9px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[rgba(255,255,255,0.50)] h-[10px] min-h-[10px] rounded-[300px] w-[100%]" />
-          </div>
-          <div className="flex flex-col justify-center self-stretch py-1.5 w-full">
-            <div className="border-solid border-[1px] border-[#FFF] h-[14px] min-h-[14px] rounded-[300px] w-[100%]" />
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }
