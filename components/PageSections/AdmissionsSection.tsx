@@ -28,7 +28,7 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
   return (
     <section
       id={id}
-      className={`relative py-24 md:py-32 bg-gradient-to-b from-film-red-400/20 to-film-black-400/20 dark:from-film-black-950 dark:to-film-black-900 text-white ${className}`}
+      className={`relative py-24 md:py-32 bg-gradient-to-b from-white to-white dark:from-film-black-950 dark:to-film-black-900 text-white ${className}`}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
         <motion.div
@@ -38,7 +38,7 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-8 md:mb-0 leading-tight text-white">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold mb-8 md:mb-0 leading-tight text-film-black-900 dark:text-white">
             {title}
           </h2>
           <Button variant="primary" asChild>
@@ -68,7 +68,7 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto text-center mb-12">
+          <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto text-center mb-12">
             Our application process is designed to identify motivated and
             creative individuals who will thrive in our collaborative learning
             environment. Follow these steps to begin your journey with us.

@@ -20,29 +20,29 @@ import { PageData } from "../types";
 import TableOfContents from "./PageSections/TableOfContents";
 import BackToTop from "./UI/BackToTop";
 import WDark from "./WDark";
+import { getRevealClass } from "../lib/utils.ts";
 
 interface WLightProps {
   data?: PageData;
   className?: string;
 }
 
+// Revised table of contents with logical flow
 const tocItems = [
   { id: "overview", label: "Overview" },
   { id: "video-showcase", label: "Program Video" },
   { id: "creative-production", label: "Creative Production" },
   { id: "course-structure", label: "Course Structure" },
+  { id: "tutors", label: "Our Faculty" },
   { id: "facilities", label: "Facilities" },
   { id: "community", label: "Community" },
-  { id: "tutors", label: "Tutors" },
-  { id: "progression", label: "Progression" },
-  { id: "admissions", label: "Admissions" },
-  { id: "more-courses", label: "More Courses" },
+  { id: "progression", label: "Career Pathways" },
+  { id: "student-showcase", label: "Student Showcase" },
+  { id: "admissions", label: "How to Apply" },
+  { id: "more-courses", label: "Related Programs" },
 ];
 
 function WLight({ data = coursePageData, className = "" }: WLightProps) {
-  // State for sticky announcement bar
-  const [showAnnouncement, setShowAnnouncement] = useState(true);
-
   // State for intersection observer animations
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -107,15 +107,6 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
     return () => clearTimeout(timer);
   }, [isVisible]);
 
-  const getRevealClass = (id: string) => {
-    if (!id) return "";
-
-    // Default to showing content if not tracked by intersection observer
-    return isVisible[id] !== false
-      ? "opacity-100 translate-y-0 transition-all duration-700 ease-out"
-      : "opacity-0 translate-y-5 transition-all duration-700 ease-out";
-  };
-
   // Verify that data exists and has required properties
   if (!data || !data.overview || !data.creativeProduction) {
     console.error("Missing required data for WLight component:", data);
@@ -124,7 +115,7 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
 
   return (
     <div
-      className={`relative bg-film-warmWhite-300 dark:bg-film-black-950 ${className}`}
+      className={`relative bg-white dark:bg-film-black-950 ${className}`}
     >
       {/* Background pattern with more refined styling */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -142,37 +133,20 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
       </div>
 
       {/* Main content container with refined gradient */}
-      <div className="relative z-10 min-h-screen bg-gradient-to-b from-film-warmWhite-200 via-film-red-900/30 to-film-warmWhite-100 dark:from-film-black-950 dark:via-film-red-900/30 dark:to-film-black-900 text-white ">
-        {/* Header component */}
-        {
-          /* <div
-          className={`sticky top-0 z-40 transition-shadow duration-300 ${
-            hasScrolled ? "shadow-md" : ""
-          }`}
-        > */
-        }
+      <div className="relative z-10 min-h-screen bg-gradient-to-b from-film-warmWhite-200 via-film-red-900/30 to-film-warmWhite-100 dark:from-film-black-950 dark:via-film-red-900/30 dark:to-film-black-900 text-white">
         <Header />
-        {/* </div> */}
 
-        {/* Banner component */}
+        {/* Hero Banner component */}
         <Banner />
 
-        {/* Announcement Bar - if needed */}
-        {showAnnouncement && (
-          <AnnouncementBar
-            announcement={data.announcement}
-            onDismiss={() => setShowAnnouncement(false)}
-          />
-        )}
-
-        {/* Main content sections with consistent container structure */}
+        {/* Main content sections with improved narrative flow */}
         <main>
           <div className="mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
-            {/* Overview Section */}
+            {/* 1. OVERVIEW - Start with a compelling introduction */}
             <section
               id="overview"
               className={`scroll-reveal pt-16 md:pt-28 ${
-                getRevealClass("overview")
+                getRevealClass({ id: "overview", isVisible })
               }`}
             >
               <ContentSection
@@ -182,21 +156,21 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Video Showcase Section with increased spacing */}
+            {/* 2. VIDEO SHOWCASE - Visual introduction to the program */}
             <section
               id="video-showcase"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("video-showcase")
+                getRevealClass({ id: "video-showcase", isVisible })
               }`}
             >
               <VideoSection />
             </section>
 
-            {/* Creative Production Section with consistent spacing */}
+            {/* 3. CREATIVE PRODUCTION - Core program philosophy */}
             <section
               id="creative-production"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("creative-production")
+                getRevealClass({ id: "creative-production", isVisible })
               }`}
             >
               <ContentSection
@@ -206,11 +180,11 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Course Structure Section */}
+            {/* 4. COURSE STRUCTURE - Program details */}
             <section
               id="course-structure"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("course-structure")
+                getRevealClass({ id: "course-structure", isVisible })
               }`}
             >
               <AccordionSection
@@ -220,11 +194,21 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* First Student Quote Section with refined spacing */}
+            {/* 5. TUTORS - Who will teach you */}
+            <section
+              id="tutors"
+              className={`scroll-reveal pt-20 md:pt-32 ${
+                getRevealClass({ id: "tutors", isVisible })
+              }`}
+            >
+              <TutorGrid />
+            </section>
+
+            {/* Student Quote to transition to learning environment */}
             <section
               id="student-quote"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("student-quote")
+                getRevealClass({ id: "student-quote", isVisible })
               }`}
             >
               <QuoteSection
@@ -234,11 +218,11 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
             </section>
           </div>
 
-          {/* Facilities Section - Full width with improved spacing */}
+          {/* 6. FACILITIES - Where you'll learn */}
           <section
             id="facilities"
             className={`scroll-reveal mt-24 md:mt-36 ${
-              getRevealClass("facilities")
+              getRevealClass({ id: "facilities", isVisible })
             }`}
           >
             <FacilitiesSection
@@ -251,12 +235,12 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
             />
           </section>
 
-          {/* Community and additional sections */}
+          {/* 7. COMMUNITY - Who you'll learn with */}
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
               id="community"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("community")
+                getRevealClass({ id: "community", isVisible })
               }`}
             >
               <ContentSection
@@ -266,11 +250,11 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Second Student Quote Section */}
+            {/* Student Quote to transition to career outcomes */}
             <section
               id="student-quote-2"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("student-quote-2")
+                getRevealClass({ id: "student-quote-2", isVisible })
               }`}
             >
               <QuoteSection
@@ -279,21 +263,11 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Tutor Grid Section with improved spacing */}
-            <section
-              id="tutors"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("tutors")
-              }`}
-            >
-              <TutorGrid />
-            </section>
-
-            {/* Progression Section with improved spacing */}
+            {/* 8. PROGRESSION - Career outcomes */}
             <section
               id="progression"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("progression")
+                getRevealClass({ id: "progression", isVisible })
               }`}
             >
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-14 text-white">
@@ -306,13 +280,16 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Third Student Quote Section */}
+            {/* 9. STUDENT SHOWCASE - Evidence of success */}
             <section
-              id="student-quote-3"
+              id="student-showcase"
               className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass("student-quote-3")
+                getRevealClass({ id: "student-showcase", isVisible })
               }`}
             >
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-14 text-white">
+                Student Success Stories
+              </h2>
               <QuoteSection
                 quote={data.quotes[2].quote}
                 author={data.quotes[2].author}
@@ -320,11 +297,11 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
             </section>
           </div>
 
-          {/* Admissions Section - Full width with improved design */}
+          {/* 10. ADMISSIONS - How to apply */}
           <section
             id="admissions"
             className={`scroll-reveal mt-24 md:mt-36 ${
-              getRevealClass("admissions")
+              getRevealClass({ id: "admissions", isVisible })
             }`}
           >
             <AdmissionsSection
@@ -336,12 +313,12 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
             />
           </section>
 
-          {/* Related Courses Section - Container width */}
+          {/* 11. RELATED COURSES - Other options */}
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
               id="more-courses"
               className={`scroll-reveal pt-24 ${
-                getRevealClass("more-courses")
+                getRevealClass({ id: "more-courses", isVisible })
               }`}
             >
               <CoursesGrid
@@ -352,10 +329,48 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
             </section>
           </div>
 
-          {/* Call to Action Section - Full width */}
+          {/* Transition to Screenology section */}
+          <section className="py-24 bg-gradient-to-b dark:from-film-black-900 dark:to-black text-center from-white via-white to-black/50">
+            <div className="container mx-auto px-4">
+              <h2 className="text-4xl md:text-5xl dark:font-medium mb-8 dark:text-white text-gray-900 font-bold">
+                Discover Screenology
+              </h2>
+              <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-12">
+                Screenology offers a unique approach to film education that
+                emphasizes hands-on learning, creative exploration, and personal
+                growth. Learn how we're transforming film education.
+              </p>
+              <div className="h-16 flex items-center justify-center">
+                <div className="animate-bounce">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-10 w-10 text-film-red-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Screenology Content */}
+          <div id="screenology" className="scroll-reveal">
+            <WDark />
+          </div>
+          {/* 12. CALL TO ACTION - Final push to apply */}
           <section
             id="cta"
-            className={`scroll-reveal mt-24 ${getRevealClass("cta")}`}
+            className={`scroll-reveal mt-0 ${
+              getRevealClass({ id: "cta", isVisible })
+            }`}
           >
             <CTASection
               title={data.cta.title}
@@ -364,9 +379,10 @@ function WLight({ data = coursePageData, className = "" }: WLightProps) {
               secondaryCta={data.cta.secondaryCta}
             />
           </section>
-          <WDark />
         </main>
-        <TableOfContents items={tocItems} />
+        <TableOfContents
+          items={[...tocItems, { id: "screenology", label: "Screenology" }]}
+        />
         <BackToTop />
       </div>
     </div>

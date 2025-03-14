@@ -26,7 +26,7 @@ const CTASection: React.FC<CTASectionProps> = ({
 }) => {
   return (
     <section
-      className={`relative overflow-hidden bg-gradient-to-r from-film-red-600 via-film-red-500 to-film-red-600 dark:from-film-red-800 dark:via-film-red-700 dark:to-film-red-800 py-20 md:py-24 ${className}`}
+      className={`relative overflow-hidden bg-gradient-to-b from-film-red-600 via-film-red-500 to-film-black-900 dark:from-film-red-700 dark:via-film-red-800 dark:to-film-black-900/20 py-20 md:py-24 ${className}`}
     >
       {/* Decorative elements */}
       <div className="absolute -left-24 top-1/2 transform -translate-y-1/2 w-64 h-64 rounded-full bg-film-red-400 dark:bg-film-red-900 opacity-20 blur-3xl">

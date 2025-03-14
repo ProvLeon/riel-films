@@ -28,9 +28,8 @@ const Header = () => {
 
   return (
     <header
-      className={`w-full transition-all light-mode-bg sticky top-0 z-40 transition-shadow duration-300 ${
-        isScrolled ? "shadow-md py-4 sticky top-0" : "py-3"
-      }`}
+      className={`w-full transition-all light-mode-bg sticky top-0 z-40 transition-shadow duration-300 ${isScrolled ? "shadow-md py-4 sticky top-0" : "py-3"
+        }`}
     >
       <div className="container-custom">
         <div className="flex items-center justify-between">
@@ -70,7 +69,7 @@ const Header = () => {
                 href="/study"
                 className="hover:text-film-red-500 focus:text-film-red-500 focus:outline-none transition-colors"
               >
-                Study at Catalyst
+                Study at Real Films
               </Link>
               <Link
                 href="/student-life"

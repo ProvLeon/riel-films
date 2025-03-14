@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { Link as ScrollLink } from "react-scroll";
 
@@ -57,26 +58,59 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           On this page
         </h3>
-        <ul className="space-y-2">
-          {items.map((item) => (
-            <li key={item.id}>
-              <ScrollLink
-                to={item.id}
-                spy={true}
-                smooth={true}
-                offset={-100}
-                duration={500}
-                className={`text-sm cursor-pointer block py-1 px-2 rounded transition-colors ${
-                  activeSection === item.id
-                    ? "bg-yellow-100 dark:bg-film-red-900/30 text-yellow-800 dark:text-film-red-200 font-medium"
-                    : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                {item.label}
-              </ScrollLink>
-            </li>
-          ))}
-        </ul>
+
+        {/* Main course sections */}
+        <div className="mb-3">
+          <ul className="space-y-2">
+            {items.filter((item) => item.id !== "screenology").map((item) => (
+              <li key={item.id}>
+                <ScrollLink
+                  to={item.id}
+                  spy={true}
+                  smooth={true}
+                  offset={-100}
+                  duration={500}
+                  className={`text-sm cursor-pointer block py-1 px-2 rounded transition-colors ${
+                    activeSection === item.id
+                      ? "bg-yellow-100 dark:bg-film-red-900/30 text-yellow-800 dark:text-film-red-200 font-medium"
+                      : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </ScrollLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Screenology section - only show if there's a screenology item */}
+        {items.some((item) => item.id === "screenology") && (
+          <>
+            <div className="border-t border-gray-200 dark:border-gray-700 my-2 pt-2">
+              <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                Screenology
+              </h4>
+              <ul>
+                <li>
+                  <ScrollLink
+                    to="screenology"
+                    spy={true}
+                    smooth={true}
+                    offset={-100}
+                    duration={500}
+                    className={`text-sm cursor-pointer block py-1 px-2 rounded transition-colors ${
+                      activeSection === "screenology"
+                        ? "bg-yellow-100 dark:bg-film-red-900/30 text-yellow-800 dark:text-film-red-200 font-medium"
+                        : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    Screenology
+                  </ScrollLink>
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
