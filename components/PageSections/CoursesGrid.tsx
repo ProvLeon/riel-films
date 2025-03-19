@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CourseCard, ShortCourse } from "../../types";
@@ -7,7 +6,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardImage,
   CardTitle,
 } from "@/components/UI/Card";
@@ -27,7 +25,6 @@ const CoursesGrid: React.FC<CoursesGridProps> = ({
   title,
   courses,
   shortCourses,
-  id,
   className = "",
 }) => {
   return (

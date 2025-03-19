@@ -63,12 +63,13 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
   useEffect(() => {
     if (typeof window !== "undefined" && "IntersectionObserver" in window) {
       const observer = new IntersectionObserver(
-        (entries: any) => {
-          entries.forEach((entry: any) => {
-            if (entry.target.id) {
+        (entries: IntersectionObserverEntry[]) => {
+          entries.forEach((entry: IntersectionObserverEntry) => {
+            const targetElement = entry.target as HTMLElement;
+            if (targetElement.id) {
               setIsVisible((prev) => ({
                 ...prev,
-                [entry.target.id]: entry.isIntersecting,
+                [targetElement.id]: entry.isIntersecting,
               }));
             }
           });

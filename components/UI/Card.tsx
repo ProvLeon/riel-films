@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion, MotionProps } from "framer-motion";
+import Image from "next/image";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "outline" | "ghost";
@@ -154,7 +155,7 @@ const CardImage = React.forwardRef<
       className={cn("relative w-full overflow-hidden", aspectRatio, className)}
       {...props}
     >
-      <img
+      <Image
         src={src}
         alt={alt}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
