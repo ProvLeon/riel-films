@@ -9,7 +9,7 @@ import FeatureCard from "./WDarkSections/FeatureCard";
 import GraduateCard from "./WDarkSections/GraduateCard";
 import ProgramCard from "./WDarkSections/ProgramCard";
 import SectionHeader from "./WDarkSections/SectionHeader";
-import { getRevealClass } from "../lib/utils.ts";
+import { getRevealClass } from "../lib/utils";
 
 const tocItems = [
   { id: "film-degree", title: "Film Degree" },
@@ -48,7 +48,7 @@ function WDark() {
               <div className="px-4 max-w-full w-full">
                 <SectionHeader>WE MAKE FILMMAKERS</SectionHeader>
                 <h3 className="mt-11 w-full text-2xl tracking-wider leading-9 uppercase">
-                  IF YOU'RE CREATIVE CONSIDER CREATIVE FILMMAKING AS FUTURE.
+                  IF YOU&apos;RE CREATIVE CONSIDER CREATIVE FILMMAKING AS FUTURE.
                 </h3>
               </div>
             </div>
@@ -273,9 +273,8 @@ function WDark() {
         {/* WE MAKE GOOD SECTION */}
         <DarkSection
           id="net"
-          className={`bg-gradient-to-b from-film-red-600 via-film-red-500/100 to-film-red-600 dark:to-film-red-700 scroll-reveal ${
-            getRevealClass({ id: "cta", isVisible })
-          }`}
+          className={`bg-gradient-to-b from-film-red-600 via-film-red-500/100 to-film-red-600 dark:to-film-red-700 scroll-reveal ${getRevealClass({ id: "cta", isVisible })
+            }`}
         >
           <div className="w-full">
             <div className="flex flex-wrap items-start w-full gap-8">

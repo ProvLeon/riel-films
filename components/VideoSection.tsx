@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/UI/Card";
 
 interface VideoSectionProps {
   videoThumbnail?: string;

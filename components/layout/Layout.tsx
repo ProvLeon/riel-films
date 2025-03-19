@@ -136,9 +136,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* Section components with consistent spacing */}
             <section
               id="overview"
-              className={`scroll-reveal mb-24 ${
-                getRevealClass({ id: "overview", isVisible })
-              }`}
+              className={`scroll-reveal mb-24 ${getRevealClass({ id: "overview", isVisible })
+                }`}
             >
               <ContentSection
                 title={data.overview.title}
@@ -149,9 +148,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* 2. VIDEO SHOWCASE - Visual introduction to the program */}
             <section
               id="video-showcase"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "video-showcase", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "video-showcase", isVisible })
+                }`}
             >
               <VideoSection
                 videoTitle="Shaping the Future of African Storytelling"
@@ -162,9 +160,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* 3. OUR STORYTELLING - Core philosophy */}
             <section
               id="our-storytelling"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "our-storytelling", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-storytelling", isVisible })
+                }`}
             >
               <ContentSection
                 title="Our Authentic Storytelling"
@@ -178,9 +175,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* 4. PRODUCTION VALUES - Company values */}
             <section
               id="production-values"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "production-values", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "production-values", isVisible })
+                }`}
             >
               <AccordionSection
                 title="Our Production Values"
@@ -218,9 +214,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* 5. OUR TEAM - Production team */}
             <section
               id="our-team"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "our-team", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-team", isVisible })
+                }`}
             >
               <TutorGrid
                 title="Our Creative Team"
@@ -231,9 +226,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* Student Quote to transition to learning environment */}
             <section
               id="student-quote"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "student-quote", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-quote", isVisible })
+                }`}
             >
               <QuoteSection
                 quote={data.quotes[0].quote}
@@ -246,9 +240,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
           {/* Full-width sections can go outside container */}
           <section
             id="facilities"
-            className={`scroll-reveal mb-24 ${
-              getRevealClass({ id: "facilities", isVisible })
-            }`}
+            className={`scroll-reveal mb-24 ${getRevealClass({ id: "facilities", isVisible })
+              }`}
           >
             <FacilitiesSection {...data.facilities} />
           </section>
@@ -257,9 +250,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
               id="community"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "community", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "community", isVisible })
+                }`}
             >
               <ContentSection
                 title="Our African Storytelling Community"
@@ -273,9 +265,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* Student Quote to transition to career outcomes */}
             <section
               id="student-quote-2"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "student-quote-2", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-quote-2", isVisible })
+                }`}
             >
               <QuoteSection
                 quote={data.quotes[1].quote}
@@ -305,9 +296,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             {/* 9. STUDENT SHOWCASE - Evidence of success */}
             <section
               id="student-showcase"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "student-showcase", isVisible })
-              }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-showcase", isVisible })
+                }`}
             >
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-14 text-white">
                 Student Success Stories
@@ -341,9 +331,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
               id="more-courses"
-              className={`scroll-reveal pt-24 ${
-                getRevealClass({ id: "more-courses", isVisible })
-              }`}
+              className={`scroll-reveal pt-24 ${getRevealClass({ id: "more-courses", isVisible })
+                }`}
             >
               <CoursesGrid
                 title={data.relatedCourses.title}
@@ -362,7 +351,7 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
               <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-12">
                 Screenology offers a unique approach to film education that
                 emphasizes hands-on learning, creative exploration, and personal
-                growth. Learn how we're transforming film education.
+                growth. Learn how we&apos;re transforming film education.
               </p>
               <div className="h-16 flex items-center justify-center">
                 <div className="animate-bounce">
@@ -392,9 +381,8 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
           {/* 12. CALL TO ACTION - Final push to apply */}
           <section
             id="cta"
-            className={`scroll-reveal mt-0 ${
-              getRevealClass({ id: "cta", isVisible })
-            }`}
+            className={`scroll-reveal mt-0 ${getRevealClass({ id: "cta", isVisible })
+              }`}
           >
             <CTASection
               title={data.cta.title}
