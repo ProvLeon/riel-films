@@ -1,7 +1,14 @@
 import Image from "next/image";
 import React from "react";
 
-const GradCard = ({ grad }: any) => {
+interface GradProps {
+  name?: string;
+  image?: string;
+  description: string;
+  role?: string;
+}
+
+const GradCard = ({ grad }: { grad: GradProps }) => {
   return (
     <div className="flex flex-wrap items-start w-full text-lg font-light leading-8 text-neutral-600">
       <div className="flex flex-col flex-1 shrink justify-center p-4 basis-0 min-w-60">

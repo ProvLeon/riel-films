@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface VideoSectionProps {
   videoThumbnail?: string;
@@ -37,7 +38,7 @@ const VideoSection: React.FC<VideoSectionProps> = ({
           {!isPlaying
             ? (
               <>
-                <img
+                <Image
                   src={videoThumbnail}
                   className="object-cover absolute inset-0 w-full h-full"
                   alt={videoTitle}
