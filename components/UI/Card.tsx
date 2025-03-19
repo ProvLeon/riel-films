@@ -1,9 +1,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, MotionProps } from "framer-motion";
+import { motion, MotionProps, HTMLMotionProps } from "framer-motion";
 import Image from "next/image";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, keyof MotionProps> {
   variant?: "default" | "outline" | "ghost";
   isHoverable?: boolean;
   isInteractive?: boolean;
@@ -19,16 +19,19 @@ const cardVariants = {
 };
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({
-    className,
-    variant = "default",
-    isHoverable = false,
-    isInteractive = false,
-    isAnimated = false,
-    motionProps,
-    children,
-    ...props
-  }, ref) => {
+  (
+    {
+      className,
+      variant = "default",
+      isHoverable = false,
+      isInteractive = false,
+      isAnimated = false,
+      motionProps,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     const baseStyles = cn(
       "rounded-xl overflow-hidden transition-all duration-300",
       cardVariants[variant],
@@ -36,20 +39,21 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         "transform hover:-translate-y-1 hover:shadow-xl": isHoverable,
         "cursor-pointer active:scale-[0.98]": isInteractive,
       },
-      className,
+      className
     );
 
     if (isAnimated) {
+      // Separate DOM props from motion props to avoid conflicts
       return (
         <motion.div
-          ref={ref as React.RefObject<HTMLDivElement>}
+          ref={ref as React.Ref<HTMLDivElement>}
           className={baseStyles}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
           {...motionProps}
-          {...props}
+          {...props as {}}
         >
           {children}
         </motion.div>
@@ -61,7 +65,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {children}
       </div>
     );
-  },
+  }
 );
 
 Card.displayName = "Card";
@@ -87,7 +91,7 @@ const CardTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-xl font-bold text-film-black-900 dark:text-white",
-      className,
+      className
     )}
     {...props}
   />
@@ -148,7 +152,7 @@ const CardImage = React.forwardRef<
       overlay = false,
       ...props
     },
-    ref,
+    ref
   ) => (
     <div
       ref={ref}
@@ -158,14 +162,14 @@ const CardImage = React.forwardRef<
       <Image
         src={src}
         alt={alt}
+        fill
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
       {overlay && (
-        <div className="absolute inset-0 bg-gradient-to-t from-film-black-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-film-black-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       )}
     </div>
-  ),
+  )
 );
 
 CardImage.displayName = "CardImage";
