@@ -272,7 +272,7 @@ function WDark() {
         </section>
         {/* WE MAKE GOOD SECTION */}
         <DarkSection
-          id="net"
+          data-id="net"
           className={`bg-gradient-to-b from-film-red-600 via-film-red-500/100 to-film-red-600 dark:to-film-red-700 scroll-reveal ${getRevealClass({ id: "cta", isVisible })
             }`}
         >
