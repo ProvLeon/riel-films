@@ -20,7 +20,7 @@ interface CTASectionProps {
 const CTASection: React.FC<CTASectionProps> = ({
   title = "Ready to Experience Authentic African Cinema?",
   subtitle =
-    "Join our community of film enthusiasts celebrating the rich tapestry of African storytelling.",
+  "Join our community of film enthusiasts celebrating the rich tapestry of African storytelling.",
   primaryCta = {
     text: "Explore Our Films",
     link: "/films",
@@ -55,7 +55,7 @@ const CTASection: React.FC<CTASectionProps> = ({
             {subtitle}
           </p>
           <div className="flex flex-wrap justify-center gap-6">
-            <Button variant="primary" asChild>
+            <Button variant="primary">
               <Link href={primaryCta.link} className="flex items-center">
                 {primaryCta.text}
                 <svg
@@ -72,7 +72,7 @@ const CTASection: React.FC<CTASectionProps> = ({
                 </svg>
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline">
               <Link href={secondaryCta.link}>
                 {secondaryCta.text}
               </Link>
