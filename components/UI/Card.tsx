@@ -44,10 +44,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     );
 
     if (isAnimated) {
-      // Separate DOM props from motion props to avoid conflicts
-      // Use a type assertion to avoid the empty object type error
-      const domProps = props as React.HTMLAttributes<HTMLDivElement>;
-
+      // Instead of trying to filter properties that don't exist,
+      // pass the props directly and let motion.div handle them
       return (
         <motion.div
           ref={ref as React.Ref<HTMLDivElement>}
@@ -57,7 +55,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
           {...motionProps}
-          {...domProps}
+          // We're using type assertion here to avoid TypeScript errors
+          // This is relatively safe as React will filter out invalid props anyway
+          {...(props as any)}
         >
           {children}
         </motion.div>
