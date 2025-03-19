@@ -41,7 +41,7 @@ const CollaborationSection: React.FC<AdmissionsSectionProps> = ({
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold mb-8 md:mb-0 leading-tight text-film-black-900 dark:text-white">
             {title}
           </h2>
-          <Button variant="primary" asChild>
+          <Button variant="primary">
             <Link href={ctaLink} className="flex items-center">
               {ctaText}
               <svg
