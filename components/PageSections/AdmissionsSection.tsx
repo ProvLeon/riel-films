@@ -16,7 +16,7 @@ interface AdmissionsSectionProps {
   className?: string;
 }
 
-const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
+const CollaborationSection: React.FC<AdmissionsSectionProps> = ({
   title,
   ctaText,
   ctaLink,
@@ -60,7 +60,7 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
           </Button>
         </motion.div>
 
-        {/* Application process description */}
+        {/* Collaboration process description */}
         <motion.div
           className="mb-16"
           initial={{ opacity: 0, y: 20 }}
@@ -69,13 +69,13 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto text-center mb-12">
-            Our application process is designed to identify motivated and
-            creative individuals who will thrive in our collaborative learning
-            environment. Follow these steps to begin your journey with us.
+            Riel Films is always open to collaborations with filmmakers,
+            investors, distributors, and creative professionals who share our
+            vision for authentic African storytelling.
           </p>
         </motion.div>
 
-        {/* Application Timeline - properly integrated */}
+        {/* Collaboration Timeline */}
         <ApplicationTimeline steps={timelineSteps} />
 
         {/* Enhanced accordion section */}
@@ -87,4 +87,4 @@ const AdmissionsSection: React.FC<AdmissionsSectionProps> = ({
   );
 };
 
-export default AdmissionsSection;
+export default CollaborationSection;

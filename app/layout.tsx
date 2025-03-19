@@ -2,6 +2,8 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 // Define fonts
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -52,7 +54,9 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
+          <Header />
           {children}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

@@ -46,7 +46,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, isLoading, icon, children, ...props }, ref) => {
     return (
       <button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          "focus:ring-2 focus:ring-offset-2",
+          buttonVariants({ variant, size, className }),
+        )}
         ref={ref}
         disabled={isLoading || props.disabled}
         {...props}

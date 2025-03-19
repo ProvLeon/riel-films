@@ -25,54 +25,50 @@ interface TutorGridProps {
   className?: string;
 }
 
-const TutorGrid: React.FC<TutorGridProps> = ({
+const TeamGrid: React.FC<TutorGridProps> = ({
   tutors,
-  title = "Our Expert Tutors",
+  title = "Our Creative Team",
   description =
-    "Our tutors are industry-acclaimed experts in their field, with a passion for passing on their knowledge to others.",
+    "Our team consists of passionate filmmakers dedicated to authentic African storytelling with a deep appreciation for the continent's rich cultural heritage.",
   className = "",
 }) => {
   // Use the provided tutors or default to a predefined list
-  const tutorsList: Tutor[] = tutors || [
+  const teamMembers: Tutor[] = tutors || [
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/0a3a3c0bd3f40d759f038ee11e1353f5ab27ef524a2121c1f833d00eaf9b3280?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "Jon-Carlos Evans",
-      title:
-        "Programme Lead, Creative Production (Film); Tutor, Film Production",
+      name: "Emmanuel Koffi",
+      title: "Founder & Creative Director",
     },
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/fc9bf457f49ca08a8b034cf20e434887ae5aa1645bf36df24dee983494c122d3?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "Leandro Goddinho",
-      title:
-        "Programme Lead, Film Production; Tutor, Creative Production (Film)",
+      name: "Nana Adwoa",
+      title: "Lead Producer & Talent Manager",
     },
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/0508bf54dd69d7acb4b0fcfb090de6088e7f0c0feb26465e2b9ba5fa664d414d?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "Juli Saragosa",
-      title:
-        "Certificate Lead, Film Production; tutor, Creative Production (Film) MA",
+      name: "Kofi Mensah",
+      title: "Director of Photography",
     },
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/9593ca3cced2d583c6c286801e6468f61d1c8db7f24c597917016d02b6da6e34?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "Shivani H",
-      title:
-        "Tutor, Creative Production (Film), Film Production & Visual Effects, Digital Arts & Animation",
+      name: "Ama Boateng",
+      title: "Screenwriter & Story Developer",
     },
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/cbf0ba5eab78f9adcea6232f45ac7b1f76c69a2168ef83dd4395c6700e86e38a?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "María Gisèle Royo",
-      title: "Tutor, Creative Production (Film) and Film Production",
+      name: "Joseph Quarcoo",
+      title: "Production Manager & Cultural Consultant",
     },
     {
       image:
         "https://cdn.builder.io/api/v1/image/assets/TEMP/34a4c35bd30032a799694627a0b7d996678f8f26f67454a80b3034fbef54eb60?placeholderIfAbsent=true&apiKey=931f40127e7944988057f598479fa95c",
-      name: "Marwa Zein",
-      title: "Tutor, Creative Production (Film)",
+      name: "Efua Owusu",
+      title: "Editor & Post-Production Supervisor",
     },
   ];
 
@@ -102,7 +98,7 @@ const TutorGrid: React.FC<TutorGridProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tutorsList.map((tutor, index) => (
+        {teamMembers.map((tutor, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
@@ -154,4 +150,4 @@ const TutorGrid: React.FC<TutorGridProps> = ({
   );
 };
 
-export default TutorGrid;
+export default TeamGrid;

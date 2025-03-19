@@ -17,12 +17,29 @@ interface FacilitiesSectionProps {
 }
 
 const FacilitiesSection: React.FC<FacilitiesSectionProps> = ({
-  title,
-  subtitle,
-  ctaText,
-  ctaLink,
-  backgroundImage,
-  features,
+  title = "Our Production Capabilities",
+  subtitle =
+    "Access to state-of-the-art filmmaking technology and local production expertise",
+  ctaText = "Our Facilities",
+  ctaLink = "/facilities",
+  backgroundImage = "/images/studio-facilities.jpg",
+  features = [
+    {
+      title: "Local Production Expertise",
+      description:
+        "Deep connections with local talent, locations, and production resources across Africa.",
+    },
+    {
+      title: "Professional Equipment",
+      description:
+        "Access to industry-standard cameras, lenses, lighting, and audio equipment for authentic cinematic storytelling.",
+    },
+    {
+      title: "Post-Production Excellence",
+      description:
+        "Dedicated editing suites and post-production facilities to ensure the highest quality final product.",
+    },
+  ],
   id,
   className = "",
 }) => {

@@ -18,10 +18,17 @@ interface CTASectionProps {
 }
 
 const CTASection: React.FC<CTASectionProps> = ({
-  title,
-  subtitle,
-  primaryCta,
-  secondaryCta,
+  title = "Ready to Experience Authentic African Cinema?",
+  subtitle =
+    "Join our community of film enthusiasts celebrating the rich tapestry of African storytelling.",
+  primaryCta = {
+    text: "Explore Our Films",
+    link: "/films",
+  },
+  secondaryCta = {
+    text: "Contact Us",
+    link: "/contact",
+  },
   className = "",
 }) => {
   return (
