@@ -1,12 +1,10 @@
 import React from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardImage,
   CardTitle,
 } from "@/components/UI/Card";
@@ -29,7 +27,7 @@ const TeamGrid: React.FC<TutorGridProps> = ({
   tutors,
   title = "Our Creative Team",
   description =
-    "Our team consists of passionate filmmakers dedicated to authentic African storytelling with a deep appreciation for the continent's rich cultural heritage.",
+  "Our team consists of passionate filmmakers dedicated to authentic African storytelling with a deep appreciation for the continent's rich cultural heritage.",
   className = "",
 }) => {
   // Use the provided tutors or default to a predefined list

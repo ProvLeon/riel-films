@@ -26,14 +26,14 @@ const QuoteSection: React.FC<QuoteSectionProps> = ({
         >
           {/* Decorative quote marks */}
           <div className="absolute -top-12 left-0 text-9xl opacity-10 text-film-red-500">
-            "
+            &dquo;
           </div>
           <div className="absolute -bottom-44 right-0 text-9xl opacity-10 text-film-red-500">
-            "
+            &dquo;
           </div>
 
           <p className="text-3xl md:text-4xl font-bold leading-tight text-film-black-900 dark:text-white mb-6 relative z-10">
-            "{quote}"
+            &dquo;{quote}&dquo;
           </p>
           <footer className="text-xl md:text-2xl font-medium text-film-red-600 dark:text-film-red-500">
             {author}
