@@ -13,7 +13,7 @@ import CTASection from "@/components/PageSections/CTASection";
 // Import data
 import { coursePageData } from "@/data/coursePageData";
 import { PageData } from "@/types";
-import TableOfContents from "@/components/PageSections/TableOfContents";
+// import TableOfContents from "@/components/PageSections/TableOfContents";
 import BackToTop from "@/components/UI/BackToTop";
 import WDark from "@/components/WDark";
 import { getRevealClass } from "@/lib/utils";
@@ -393,9 +393,9 @@ function Layout({ data = coursePageData, className = "" }: WLightProps) {
             />
           </section>
         </main>
-        <TableOfContents
+        {/* <TableOfContents
           items={[...tocItems, { id: "screenology", label: "Screenology" }]}
-        />
+        /> */}
         <BackToTop />
       </div>
     </div>
