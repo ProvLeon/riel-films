@@ -1,17 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Header from "@/components/layout/Header";
-import Banner from "@/components/Banner";
 import ContentSection from "@/components/ContentSection";
 import VideoSection from "@/components/VideoSection";
 import AccordionSection from "@/components/AccordionSection";
 import QuoteSection from "@/components/QuoteSection";
 import TutorGrid from "@/components/TutorGrid";
 // Import modular section components
-import AnnouncementBar from "@/components/PageSections/AnnouncementBar";
 import FacilitiesSection from "@/components/PageSections/FacilitiesSection";
-import AdmissionsSection from "@/components/PageSections/AdmissionsSection";
 import CoursesGrid from "@/components/PageSections/CoursesGrid";
 import CTASection from "@/components/PageSections/CTASection";
 // Import data
@@ -20,7 +16,7 @@ import { PageData } from "@/types";
 import TableOfContents from "@/components/PageSections/TableOfContents";
 import BackToTop from "@/components/UI/BackToTop";
 import WDark from "@/components/WDark";
-import { getRevealClass } from "@/lib/utils.ts";
+import { getRevealClass } from "@/lib/utils";
 import HeroSection from "@/components/sections/HeroSection";
 
 interface WLightProps {

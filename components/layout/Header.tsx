@@ -79,7 +79,7 @@ const Header = () => {
                 Stories
               </Link>
 
-              <Button variant="primary" asChild>
+              <Button variant="primary">
                 <Link href="/contact">Contact Us</Link>
               </Button>
             </nav>
@@ -152,7 +152,7 @@ const Header = () => {
               Stories
             </Link>
             <div className="flex items-center justify-between px-4 py-4 border-t border-film-black-700">
-              <Button variant="primary" asChild>
+              <Button variant="primary">
                 <Link href="/contact">Contact Us</Link>
               </Button>
               <ThemeSwitcher />
