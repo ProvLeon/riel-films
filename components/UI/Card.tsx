@@ -21,6 +21,7 @@ const cardVariants = {
 
 // Create a non-typed wrapper for motion.div to bypass TypeScript errors
 // This is an escape hatch for the type system
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MotionDiv = motion.div as React.FC<any>;
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
