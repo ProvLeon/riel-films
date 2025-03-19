@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, MotionProps } from "framer-motion";
+import { motion, MotionProps, AnimationProps } from "framer-motion";
 import Image from "next/image";
 
 interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, keyof MotionProps> {
@@ -44,8 +44,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     );
 
     if (isAnimated) {
-      // Instead of trying to filter properties that don't exist,
-      // pass the props directly and let motion.div handle them
+      // Create a typed version of props for motion.div
+      // We use a specific type union that represents HTML attributes for a div
+      type MotionDivProps = Omit<React.HTMLAttributes<HTMLDivElement>, keyof AnimationProps>;
+      const safeProps = props as unknown as MotionDivProps;
+
       return (
         <motion.div
           ref={ref as React.Ref<HTMLDivElement>}
@@ -55,9 +58,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
           {...motionProps}
-          // We're using type assertion here to avoid TypeScript errors
-          // This is relatively safe as React will filter out invalid props anyway
-          {...(props as any)}
+          {...safeProps}
         >
           {children}
         </motion.div>
