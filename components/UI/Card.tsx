@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, MotionProps, HTMLMotionProps } from "framer-motion";
+import { motion, MotionProps } from "framer-motion";
 import Image from "next/image";
 
 interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, keyof MotionProps> {
@@ -9,6 +9,7 @@ interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, keyof Mot
   isInteractive?: boolean;
   isAnimated?: boolean;
   motionProps?: MotionProps;
+  children?: React.ReactNode;
 }
 
 const cardVariants = {
@@ -44,6 +45,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
     if (isAnimated) {
       // Separate DOM props from motion props to avoid conflicts
+      // Use a type assertion to avoid the empty object type error
+      const domProps = props as React.HTMLAttributes<HTMLDivElement>;
+
       return (
         <motion.div
           ref={ref as React.Ref<HTMLDivElement>}
@@ -53,7 +57,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
           {...motionProps}
-          {...props as {}}
+          {...domProps}
         >
           {children}
         </motion.div>
