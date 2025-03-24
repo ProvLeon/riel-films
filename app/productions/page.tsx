@@ -663,7 +663,7 @@ const ProductionsPage = () => {
           <div className="absolute inset-0 -z-10">
             <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/90 to-film-black-900/70 z-10" />
             <Image
-              src="/images/productions/hero-bg.jpg"
+              src="/images/hero/hero9.jpg"
               alt="Production Background"
               fill
               className="object-cover object-center"
@@ -680,7 +680,7 @@ const ProductionsPage = () => {
               </SectionReveal>
 
               <SectionReveal delay={0.1}>
-                <p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">
+                <p className="text-lg md:text-xl dark:text-gray-200 text-gray-600 mb-8 leading-relaxed">
                   From concept to screen, we bring authentic African stories to life through
                   compelling narratives and visually stunning cinematography.
                 </p>
