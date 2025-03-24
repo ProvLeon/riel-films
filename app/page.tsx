@@ -3,7 +3,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Layout from "@/components/layout/Layout";
 import { coursePageData } from "@/data/coursePageData";
 import BackToTop from "@/components/UI/BackToTop";
-import Main from "@/components/layout/index";
+import Main from "@/components/layout/Main";
 
 export default function Home() {
   return (

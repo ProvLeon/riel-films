@@ -13,35 +13,28 @@ import CTASection from "@/components/PageSections/CTASection";
 // Import data
 import { coursePageData } from "@/data/coursePageData";
 import { PageData } from "@/types";
-// import TableOfContents from "@/components/PageSections/TableOfContents";
 import BackToTop from "@/components/UI/BackToTop";
-import WDark from "@/components/WDark";
 import { getRevealClass } from "@/lib/utils";
 import HeroSection from "@/components/sections/HeroSection";
-import { useScrollProgress } from "@/hooks/useScrollProgress";
-import { motion } from "framer-motion";
 
-interface WLightProps {
+interface MainProps {
   data?: PageData;
   className?: string;
 }
 
-// Revised table of contents with logical flow
-const tocItems = [
-  { id: "overview", label: "About Us" },
-  { id: "video-showcase", label: "Featured Film" },
-  { id: "our-storytelling", label: "Our Storytelling" },
-  { id: "production-values", label: "Production Values" },
-  { id: "our-team", label: "Our Team" },
-  { id: "facilities", label: "Production Facilities" },
-  { id: "community", label: "African Voices" },
-  { id: "impact", label: "Our Impact" },
-  { id: "collaborations", label: "Collaborations" },
-  { id: "contact", label: "Work With Us" },
-  { id: "productions", label: "Latest Productions" },
+// Key sections for our film company landing page
+const sectionIds = [
+  "overview",
+  "video-showcase",
+  "our-storytelling",
+  "production-values",
+  "our-team",
+  "facilities",
+  "community",
+  "productions"
 ];
 
-function Main({ data = coursePageData, className = "" }: WLightProps) {
+function Main({ data = coursePageData, className = "" }: MainProps) {
   // State for intersection observer animations
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -94,11 +87,11 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
   useEffect(() => {
     // Set all sections to visible after a delay if they're not already visible
     const timer = setTimeout(() => {
-      tocItems.forEach((item) => {
-        if (!isVisible[item.id]) {
+      sectionIds.forEach((id) => {
+        if (!isVisible[id]) {
           setIsVisible((prev) => ({
             ...prev,
-            [item.id]: true,
+            [id]: true,
           }));
         }
       });
@@ -109,8 +102,8 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
 
   // Verify that data exists and has required properties
   if (!data || !data.overview || !data.creativeProduction) {
-    console.error("Missing required data for WLight component:", data);
-    return <div className="p-8 text-center">Error loading course data</div>;
+    console.error("Missing required data for Main component:", data);
+    return <div className="p-8 text-center">Error loading page data</div>;
   }
 
   return (
@@ -136,11 +129,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
 
           {/* Wrap sections in consistent container */}
           <div className="container-custom py-16">
-            {/* Section components with consistent spacing */}
+            {/* About Riel Films */}
             <section
               id="overview"
-              className={`scroll-reveal mb-24 ${getRevealClass({ id: "overview", isVisible })
-                }`}
+              className={`scroll-reveal mb-24 ${getRevealClass({ id: "overview", isVisible })}`}
             >
               <ContentSection
                 title={data.overview.title}
@@ -148,11 +140,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* 2. VIDEO SHOWCASE - Visual introduction to the program */}
+            {/* Featured Film/Showreel */}
             <section
               id="video-showcase"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "video-showcase", isVisible })
-                }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "video-showcase", isVisible })}`}
             >
               <VideoSection
                 videoTitle="Shaping the Future of African Storytelling"
@@ -160,11 +151,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* 3. OUR STORYTELLING - Core philosophy */}
+            {/* Our Storytelling Philosophy */}
             <section
               id="our-storytelling"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-storytelling", isVisible })
-                }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-storytelling", isVisible })}`}
             >
               <ContentSection
                 title="Our Authentic Storytelling"
@@ -175,11 +165,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* 4. PRODUCTION VALUES - Company values */}
+            {/* Production Values */}
             <section
               id="production-values"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "production-values", isVisible })
-                }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "production-values", isVisible })}`}
             >
               <AccordionSection
                 title="Our Production Values"
@@ -214,11 +203,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* 5. OUR TEAM - Production team */}
+            {/* Our Creative Team */}
             <section
               id="our-team"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-team", isVisible })
-                }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-team", isVisible })}`}
             >
               <TutorGrid
                 title="Our Creative Team"
@@ -226,11 +214,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Student Quote to transition to learning environment */}
+            {/* Vision Statement */}
             <section
-              id="student-quote"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-quote", isVisible })
-                }`}
+              id="vision-quote"
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "vision-quote", isVisible })}`}
             >
               <QuoteSection
                 quote={data.quotes[0].quote}
@@ -239,22 +226,19 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
             </section>
           </div>
 
-          {/* 6. FACILITIES - Where you'll learn */}
-          {/* Full-width sections can go outside container */}
+          {/* Production Facilities - Full Width Section */}
           <section
             id="facilities"
-            className={`scroll-reveal mb-24 ${getRevealClass({ id: "facilities", isVisible })
-              }`}
+            className={`scroll-reveal mb-24 ${getRevealClass({ id: "facilities", isVisible })}`}
           >
             <FacilitiesSection {...data.facilities} />
           </section>
 
-          {/* 7. COMMUNITY - Who you'll learn with */}
+          {/* African Storytelling Community */}
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
               id="community"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "community", isVisible })
-                }`}
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "community", isVisible })}`}
             >
               <ContentSection
                 title="Our African Storytelling Community"
@@ -265,77 +249,23 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
               />
             </section>
 
-            {/* Student Quote to transition to career outcomes */}
+            {/* Value Proposition Quote */}
             <section
-              id="student-quote-2"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-quote-2", isVisible })
-                }`}
+              id="value-quote"
+              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "value-quote", isVisible })}`}
             >
-              <QuoteSection
-                quote={data.quotes[1].quote}
-                author={data.quotes[1].author}
-              />
-            </section>
-
-            {/* 8. PROGRESSION - Career outcomes */}
-            {
-              /* <section
-              id="progression"
-              className={`scroll-reveal pt-20 md:pt-32 ${
-                getRevealClass({ id: "progression", isVisible })
-              }`}
-            >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-14 text-white">
-                {data.progression.title}
-              </h2>
-              <AccordionSection
-                title=""
-                items={data.progression.items}
-                isDarkMode={true}
-              />
-            </section> */
-            }
-
-            {/* 9. STUDENT SHOWCASE - Evidence of success */}
-            <section
-              id="student-showcase"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "student-showcase", isVisible })
-                }`}
-            >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-14 text-white">
-                Student Success Stories
-              </h2>
               <QuoteSection
                 quote={data.quotes[2].quote}
-                author={data.quotes[2].author}
+                author="Riel Films Value Proposition"
               />
             </section>
           </div>
 
-          {/* 10. ADMISSIONS - How to apply */}
-          {
-            /* <section
-            id="admissions"
-            className={`scroll-reveal mt-24 md:mt-36 ${
-              getRevealClass({ id: "admissions", isVisible })
-            }`}
-          >
-            <AdmissionsSection
-              title={data.admissions.title}
-              ctaText={data.admissions.ctaText}
-              ctaLink={data.admissions.ctaLink}
-              timelineSteps={data.admissions.timelineSteps}
-              items={data.admissions.items}
-            />
-          </section> */
-          }
-
-          {/* 11. RELATED COURSES - Other options */}
+          {/* Our Productions */}
           <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
             <section
-              id="more-courses"
-              className={`scroll-reveal pt-24 ${getRevealClass({ id: "more-courses", isVisible })
-                }`}
+              id="productions"
+              className={`scroll-reveal pt-24 ${getRevealClass({ id: "productions", isVisible })}`}
             >
               <CoursesGrid
                 title={data.relatedCourses.title}
@@ -345,47 +275,10 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
             </section>
           </div>
 
-          {/* Transition to Screenology section */}
-          <section className="py-24 bg-gradient-to-b dark:from-film-black-900 dark:to-black text-center from-white via-white to-black/50">
-            <div className="container mx-auto px-4">
-              <h2 className="text-4xl md:text-5xl dark:font-medium mb-8 dark:text-white text-gray-900 font-bold">
-                Discover Screenology
-              </h2>
-              <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-12">
-                Screenology offers a unique approach to film education that
-                emphasizes hands-on learning, creative exploration, and personal
-                growth. Learn how we&apos;re transforming film education.
-              </p>
-              <div className="h-16 flex items-center justify-center">
-                <div className="animate-bounce">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-10 w-10 text-film-red-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Screenology Content */}
-          <div id="screenology" className="scroll-reveal">
-            <WDark />
-          </div>
-          {/* 12. CALL TO ACTION - Final push to apply */}
+          {/* CTA Section */}
           <section
             id="cta"
-            className={`scroll-reveal mt-0 ${getRevealClass({ id: "cta", isVisible })
-              }`}
+            className={`scroll-reveal mt-24 ${getRevealClass({ id: "cta", isVisible })}`}
           >
             <CTASection
               title={data.cta.title}
@@ -395,9 +288,6 @@ function Main({ data = coursePageData, className = "" }: WLightProps) {
             />
           </section>
         </main>
-        {/* <TableOfContents
-          items={[...tocItems, { id: "screenology", label: "Screenology" }]}
-        /> */}
         <BackToTop />
       </div>
     </div>
