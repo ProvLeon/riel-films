@@ -40,6 +40,7 @@ const VideoSection: React.FC<VideoSectionProps> = ({
               <>
                 <Image
                   src={videoThumbnail}
+                  layout="fill"
                   className="object-cover absolute inset-0 w-full h-full"
                   alt={videoTitle}
                 />
