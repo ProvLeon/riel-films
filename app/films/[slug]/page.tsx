@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, use } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -149,7 +149,7 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
   const [showShareOptions, setShowShareOptions] = useState(false);
 
   // Unwrap params using React.use
-  const slug = use(params).slug;
+  const { slug } = params;
 
   // Find the requested film from our data
   const film = films.find((film) => film.slug === slug);

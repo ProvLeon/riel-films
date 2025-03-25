@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -173,7 +173,7 @@ const ProductionDetailPage = ({ params }: { params: { slug: string } }) => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [expandedFaqItem, setExpandedFaqItem] = useState<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const slug = use(params).slug
+  const { slug } = params
 
   // Handle scroll tracking
   useEffect(() => {
