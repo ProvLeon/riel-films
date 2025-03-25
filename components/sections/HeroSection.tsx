@@ -82,7 +82,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      <div className="relative -top-[500px]  lg:-right-[100px] md:-right-[300px]">
+      <div className="relative top-4 md:-top-[500px]  lg:-right-[100px] md:-right-[300px]">
         <HeroRectangleCard />
       </div>
     </section>

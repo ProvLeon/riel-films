@@ -67,8 +67,8 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           disabled={currentPage === 1}
           onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${currentPage === 1
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
             }`}
           aria-label="Previous page"
         >
@@ -83,10 +83,10 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
               key={`page-${number}`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => typeof number === 'number' && onPageChange(number)}
+              onClick={() => typeof number === 'number' && onPageChange(number as number)}
               className={`w-10 h-10 rounded-full flex items-center justify-center ${currentPage === number
-                  ? 'bg-film-red-600 text-white'
-                  : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
+                ? 'bg-film-red-600 text-white'
+                : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
                 } transition-colors`}
             >
               {number}
@@ -100,8 +100,8 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           disabled={currentPage === totalPages}
           onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${currentPage === totalPages
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
+            ? 'text-gray-400 cursor-not-allowed'
+            : 'border border-gray-300 dark:border-film-black-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800'
             }`}
           aria-label="Next page"
         >
