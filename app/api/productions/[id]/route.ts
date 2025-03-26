@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prismaAccelerate as prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET a single production by slug

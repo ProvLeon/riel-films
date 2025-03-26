@@ -17,7 +17,7 @@ export function getRevealClass(
 }
 
 // Format date to a readable string
-export function formatDate(dateString: Date): string {
+export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
     day: 'numeric',

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, BookOpen, User } from 'lucide-react';
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
+import { Story } from '@/types/mongodbSchema';
 
 interface BlogPost {
   title: string;
@@ -15,7 +16,7 @@ interface BlogPost {
 }
 
 interface StoryCardProps {
-  post: BlogPost;
+  post: Story;
   index: number;
   onClick: () => void;
   isHovered: boolean;

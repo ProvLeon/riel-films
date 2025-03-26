@@ -95,7 +95,7 @@ export type Story = {
   excerpt: string;
   content: StoryContent[];
   author: string;
-  date: Date;
+  date: string;
   image: string;
   category: string;
   readTime: string;

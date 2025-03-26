@@ -23,12 +23,12 @@ interface ProductionDetailPageProps {
 
 
 const ProductionDetailPage = ({ params }: { params: { slug: string } }) => {
-  const { production, isLoading, error } = useProduction(params.slug);
+  const { slug } = params
+  const { production, isLoading, error } = useProduction(slug);
   const [activeTab, setActiveTab] = useState<'about' | 'updates' | 'team' | 'support'>('about');
   const [showTrailer, setShowTrailer] = useState(false);
   const [expandedFaqItem, setExpandedFaqItem] = useState<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const { slug } = params
 
   // Handle scroll tracking
   useEffect(() => {

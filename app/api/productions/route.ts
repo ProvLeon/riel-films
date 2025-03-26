@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { prismaAccelerate as prisma } from "@/lib/db";
 import { Production } from '@/types/mongodbSchema';
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";

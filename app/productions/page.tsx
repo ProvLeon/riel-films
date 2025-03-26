@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardImage, CardTitle, CardDescription } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
 import Image from "next/image";
@@ -11,26 +11,6 @@ import { Play, ArrowRight, ArrowUpRight, Clock, Calendar, AlertCircle, CheckCirc
 import { useProductionsList } from "@/hooks/useProductionsList";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Production } from "@/types/mongodbSchema";
-// Types for better modularity
-// interface Production {
-//   title: string;
-//   category: string;
-//   description: string;
-//   image: string;
-// }
-
-interface CurrentProduction extends Production {
-  status: string;
-  progress: number;
-  director: string;
-  timeline: string;
-  featured?: boolean;
-}
-
-interface CompletedProduction extends Production {
-  year: number;
-  awards: string;
-}
 
 interface CollaborationType {
   title: string;
@@ -58,20 +38,21 @@ interface Testimonial {
   image: string;
 }
 
+const statusColor = (status: string) => {
+  switch (status) {
+    case "In Production":
+      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+    case "Pre-Production":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+    case "Development":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+  }
+};
+
 // Component for featured production card
-const FeaturedProductionCard = ({ production }: { production: CurrentProduction }) => {
-  const statusColor = (status: string) => {
-    switch (status) {
-      case "In Production":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case "Pre-Production":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "Development":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
+const FeaturedProductionCard = ({ production }: { production: Production }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-gray-50 dark:bg-film-black-900 rounded-2xl overflow-hidden shadow-lg">
@@ -148,23 +129,12 @@ const FeaturedProductionCard = ({ production }: { production: CurrentProduction 
 
 // Component for current production card
 const CurrentProductionCard = ({ production, index, onHover }: {
-  production: CurrentProduction;
+  production: Production;
   index: number;
   onHover: (index: number | null) => void;
   isHovered?: boolean;
 }) => {
-  const statusColor = (status: string) => {
-    switch (status) {
-      case "In Production":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case "Pre-Production":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "Development":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
+
 
   return (
     <motion.div
@@ -229,7 +199,7 @@ const CurrentProductionCard = ({ production, index, onHover }: {
 };
 
 // Component for completed production card
-const CompletedProductionCard = ({ production }: { production: CompletedProduction }) => {
+const CompletedProductionCard = ({ production }: { production: Production }) => {
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -244,7 +214,7 @@ const CompletedProductionCard = ({ production }: { production: CompletedProducti
             aspectRatio="aspect-video"
           />
           <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/90 dark:bg-film-black-800/90 backdrop-blur-sm text-xs font-medium text-film-black-900 dark:text-white">
-            {production.year}
+            Completed
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="w-14 h-14 flex items-center justify-center rounded-full bg-film-red-600/80 hover:bg-film-red-600 cursor-pointer backdrop-blur-sm transform hover:scale-105 transition-transform">
@@ -262,14 +232,14 @@ const CompletedProductionCard = ({ production }: { production: CompletedProducti
           <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm line-clamp-3">{production.description}</p>
 
           <div className="mt-auto pt-4 border-t border-gray-100 dark:border-film-black-800">
-            <div className="flex items-center gap-2 text-sm text-film-red-600 dark:text-film-red-500">
-              <Award className="w-4 h-4" />
-              <span>{production.awards}</span>
-            </div>
+            <Link href={`/productions/${production.slug}`} className="flex items-center text-sm text-film-red-600 dark:text-film-red-500">
+              <Award className="w-4 h-4 mr-2" />
+              <span>View details</span>
+            </Link>
           </div>
         </CardContent>
-      </Card>
-    </motion.div>
+      </Card >
+    </motion.div >
   );
 };
 
@@ -463,68 +433,37 @@ const ProductionsPage = () => {
   const [activeTab, setActiveTab] = useState<'current' | 'completed'>('current');
   const [hoveredProject, setHoveredProject] = useState<number | null>(null);
 
-  // Data for current productions
-  const currentProductions: CurrentProduction[] = [
-    {
-      title: "Voices of the Delta",
-      category: "Documentary",
-      status: "In Production",
-      description: "A cinematic exploration of the vibrant communities along Ghana's Volta Delta and their resilience in the face of climate change.",
-      image: "/images/productions/voices-delta.jpg",
-      progress: 65,
-      director: "Emmanuel Koffi",
-      timeline: "Est. Completion: Q3 2023",
-      featured: true
-    },
-    {
-      title: "Market Queen",
-      category: "Feature Film",
-      status: "Pre-Production",
-      description: "A powerful drama about a determined market woman's rise to become an influential leader in Kumasi's vibrant market scene.",
-      image: "/images/productions/market-queen.jpg",
-      progress: 30,
-      director: "Ama Boateng",
-      timeline: "Est. Completion: Q1 2024"
-    },
-    {
-      title: "Diaspora Dreams",
-      category: "Documentary Series",
-      status: "Development",
-      description: "A four-part series following African diaspora members as they reconnect with their ancestral homelands.",
-      image: "/images/productions/diaspora-dreams.jpg",
-      progress: 15,
-      director: "Kofi Mensah",
-      timeline: "Est. Completion: Q2 2024"
-    }
-  ];
+  // Process the fetched productions
+  const {
+    currentProductions,
+    completedProductions,
+    featuredProduction
+  } = useMemo(() => {
+    const current = productions.filter(p =>
+      p.status === "In Production" ||
+      p.status === "Pre-Production" ||
+      p.status === "Development"
+    );
 
-  // Data for completed productions
-  const completedProductions: CompletedProduction[] = [
-    {
-      title: "The River's Song",
-      category: "Feature Film",
-      year: 2022,
-      awards: "Best African Film - Pan-African Film Festival",
-      description: "A coming-of-age story set along the banks of the Volta River, where tradition meets modernity.",
-      image: "/images/productions/rivers-song.jpg"
-    },
-    {
-      title: "Highlife Origins",
-      category: "Music Documentary",
-      year: 2021,
-      awards: "Official Selection - FESPACO",
-      description: "An exploration of Ghana's influential highlife music and its impact on global music trends.",
-      image: "/images/productions/highlife-origins.jpg"
-    },
-    {
-      title: "Accra Dreams",
-      category: "Short Film Collection",
-      year: 2020,
-      awards: "Special Mention - African Film Festival",
-      description: "A collection of five short films capturing the diverse experiences of life in Ghana's vibrant capital.",
-      image: "/images/productions/accra-dreams.jpg"
-    }
-  ];
+    const completed = productions.filter(p =>
+      p.status === "Completed"
+    );
+
+    const featured = current.find(p => p.featured === true) ||
+      (current.length > 0 ? current[0] : null);
+
+    return {
+      currentProductions: current,
+      completedProductions: completed,
+      featuredProduction: featured
+    };
+  }, [productions]);
+
+  // Filter current productions excluding the featured one
+  const nonFeaturedProductions = useMemo(() => {
+    return currentProductions.filter(p => p.id !== featuredProduction?.id);
+  }, [currentProductions, featuredProduction]);
+
 
   // Data for collaboration types
   const collaborationTypes: CollaborationType[] = [
@@ -652,11 +591,6 @@ const ProductionsPage = () => {
     }
   ];
 
-  // Find the featured production
-  const featuredProduction = currentProductions.find(p => p.featured);
-
-  // Filter current productions excluding the featured one
-  const nonFeaturedProductions = currentProductions.filter(p => !p.featured);
 
   return (
     <PageTransition>
@@ -771,7 +705,7 @@ const ProductionsPage = () => {
                     {/* Other Current Projects */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                       {nonFeaturedProductions.map((production, index) => (
-                        <SectionReveal key={production.title} delay={0.1 * (index % 3)}>
+                        <SectionReveal key={production.id || index} delay={0.1 * (index % 3)}>
                           <CurrentProductionCard
                             production={production}
                             index={index}
@@ -780,14 +714,29 @@ const ProductionsPage = () => {
                         </SectionReveal>
                       ))}
                     </div>
+                    {nonFeaturedProductions.length === 0 && !featuredProduction && (
+                      <div className="text-center py-12">
+                        <p className="text-gray-600 dark:text-gray-400">
+                          No current productions available at this time.
+                        </p>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     {completedProductions.map((production, index) => (
-                      <SectionReveal key={production.title} delay={0.1 * (index % 3)}>
+                      <SectionReveal key={production.id || index} delay={0.1 * (index % 3)}>
                         <CompletedProductionCard production={production} />
                       </SectionReveal>
                     ))}
+
+                    {completedProductions.length === 0 && (
+                      <div className="text-center py-12 col-span-3">
+                        <p className="text-gray-600 dark:text-gray-400">
+                          No completed productions available at this time.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>

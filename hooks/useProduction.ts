@@ -6,12 +6,12 @@ export function useProduction(slug: string | null) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProduction = useCallback(async (slug: string) => {
+  const fetchProduction = useCallback(async (prodSlug: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/productions/${slug}`);
+      const response = await fetch(`/api/productions/${prodSlug}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch production');
@@ -29,18 +29,18 @@ export function useProduction(slug: string | null) {
 
 
   useEffect(() => {
-    if (production) {
-      fetchProduction(production.slug!);
+    if (slug) {
+      fetchProduction(slug);
     } else {
       setProduction(null);
     }
-  }, [production, fetchProduction]);
+  }, [slug, fetchProduction]);
 
   const refetch = useCallback(() => {
-    if (production) {
-      fetchProduction(production.slug!);
+    if (slug) {
+      fetchProduction(slug);
     }
-  }, [production, fetchProduction]);
+  }, [slug, fetchProduction]);
 
   return { production, isLoading, error, refetch };
 }
