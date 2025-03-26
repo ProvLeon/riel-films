@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import PageTransition from "@/components/UI/PageTransition";
@@ -8,8 +8,17 @@ import { Button } from "@/components/UI/Button";
 import { Card } from "@/components/UI/Card";
 import Link from "next/link";
 import { ArrowRight, Play, Film, Globe, Users, Heart, Star, Award } from "lucide-react";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-const AboutPage = () => {
+// Loading component for Suspense
+const AboutPageLoading = () => (
+  <div className="h-screen flex items-center justify-center">
+    <LoadingSpinner size="large" />
+  </div>
+);
+
+// Main content component
+const AboutPageContent = () => {
   const coreValues = [
     {
       icon: <Star className="w-6 h-6 text-film-red-500" />,
@@ -454,6 +463,15 @@ const AboutPage = () => {
         </section>
       </div>
     </PageTransition>
+  );
+};
+
+// Main component with Suspense
+const AboutPage = () => {
+  return (
+    <Suspense fallback={<AboutPageLoading />}>
+      <AboutPageContent />
+    </Suspense>
   );
 };
 

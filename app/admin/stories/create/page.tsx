@@ -12,9 +12,10 @@ const CreateStoryLoading = () => (
   <div className="flex justify-center items-center h-64">
     <LoadingSpinner size="large" />
   </div>
-)
+);
 
-const CreateStoryForm = () => {
+// Separate the form to use useRouter inside Suspense
+const CreateStoryFormContent = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,12 +185,17 @@ const CreateStoryForm = () => {
     }
   };
 
+  // Handler to navigate back
+  const navigateBack = () => {
+    router.back();
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={() => router.back()}
+            onClick={navigateBack}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-900"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -703,7 +709,7 @@ const CreateStoryForm = () => {
           <Button
             variant="outline"
             type="button"
-            onClick={() => router.back()}
+            onClick={navigateBack}
           >
             Cancel
           </Button>
@@ -727,12 +733,18 @@ const CreateStoryForm = () => {
   );
 };
 
-const AdminCreateStoryPage = () => {
+// Wrap the form in Suspense
+const CreateStoryForm = () => {
   return (
     <Suspense fallback={<CreateStoryLoading />}>
-      <CreateStoryForm />
+      <CreateStoryFormContent />
     </Suspense>
-  )
-}
+  );
+};
+
+// Main component that gets exported
+const AdminCreateStoryPage = () => {
+  return <CreateStoryForm />;
+};
 
 export default AdminCreateStoryPage;
