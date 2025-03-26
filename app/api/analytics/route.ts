@@ -224,7 +224,7 @@ async function calculateDailyEngagementMetrics(db: PrismaClient, today: Date) {
 
     // For each session, count the number of page views
     const sessionPageViewCounts = await Promise.all(
-      sessionIds.map(async ({ sessionId }: { sessionId: string }) => {
+      sessionIds.map(async ({ sessionId }) => {
         const count = await db.analytics.count({
           where: {
             sessionId,
@@ -245,7 +245,7 @@ async function calculateDailyEngagementMetrics(db: PrismaClient, today: Date) {
 
     // Calculate average time on site
     const sessionData = await Promise.all(
-      sessionIds.map(async ({ sessionId }: { sessionId: string }) => {
+      sessionIds.map(async ({ sessionId }) => {
         const events = await db.analytics.findMany({
           where: {
             sessionId,

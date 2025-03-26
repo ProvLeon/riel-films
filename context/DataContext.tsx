@@ -8,7 +8,7 @@ import {
 import { Film, Production, Story, Settings } from '@/types/mongodbSchema';
 import { trackEvent as trackAnalyticsEvent, trackPageView as trackAnalyticsPageView } from '@/lib/analytics-client';
 import { AnalyticsEventType, ContentType } from '@/types/analytics';
-import { DailyStats, TopContent, AnalyticsDataType, DataContextType } from '@/types/analytics';
+import { AnalyticsDataType, DataContextType } from '@/types/analytics';
 
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
