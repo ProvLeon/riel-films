@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/UI/Button";
 import { Settings as SettingsIcon, Save, Upload, Globe, LogOut, Mail, Phone, Badge as BrandingWatermark, Link2, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +9,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { Settings } from "@/types/mongodbSchema";
 
-const AdminSettingsPage = () => {
+// Create a loading component for Suspense fallback
+const SettingsPageLoading = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner size="large" />
+  </div>
+);
+
+// Create a wrapper component that uses the hooks
+const SettingsPageContent = () => {
   const { user } = useAuth();
   const { settings, isLoadingSettings, refetchSettings } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -680,6 +688,15 @@ const AdminSettingsPage = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+// Main component with Suspense boundary
+const AdminSettingsPage = () => {
+  return (
+    <Suspense fallback={<SettingsPageLoading />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 };
 
