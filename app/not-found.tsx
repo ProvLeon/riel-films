@@ -1,13 +1,20 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Home, Film, Coffee } from "lucide-react";
 import { Button } from "@/components/UI/Button";
 import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-const NotFoundPage = () => {
+const NotFoundLoading = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner size="large" />
+  </div>
+);
+
+const NotFound = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -182,5 +189,12 @@ const NotFoundPage = () => {
     </PageTransition>
   );
 };
+const NotFoundPage = () => {
+  return (
+    <Suspense fallback={<NotFoundLoading />}>
+      <NotFound />
+    </Suspense>
+  )
+}
 
 export default NotFoundPage;
