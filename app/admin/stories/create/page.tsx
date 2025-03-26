@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
 import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, Image as ImageIcon, Type, Quote, Heading, Calendar } from "lucide-react";
@@ -8,7 +8,13 @@ import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import Image from "next/image";
 import { StoryContent } from "@/types/mongodbSchema";
 
-const AdminCreateStoryPage = () => {
+const CreateStoryLoading = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner size="large" />
+  </div>
+)
+
+const CreateStoryForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -720,5 +726,13 @@ const AdminCreateStoryPage = () => {
     </div>
   );
 };
+
+const AdminCreateStoryPage = () => {
+  return (
+    <Suspense fallback={<CreateStoryLoading />}>
+      <CreateStoryForm />
+    </Suspense>
+  )
+}
 
 export default AdminCreateStoryPage;
