@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useSpring, useScroll } from "framer-motion";
 
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   // Use Framer Motion's useScroll for accurate scroll tracking
   const { scrollYProgress } = useScroll();

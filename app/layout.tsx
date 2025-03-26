@@ -1,19 +1,22 @@
-import { ThemeProvider } from "@/context/ThemeProvider";
-import "./globals.css";
-import type { Metadata } from "next";
+import { Providers } from "./providers";
 import { Inter, Montserrat } from "next/font/google";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import "./globals.css"
 
 // Define fonts
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
 });
 
-export const metadata: Metadata = {
-  title: "Real Films - Creative Production MA",
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-montserrat',
+});
+
+export const metadata = {
+  title: "Riel Films - Creative Production MA",
   description: "Professional film and creative production education",
 };
 
@@ -28,36 +31,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${montserrat.variable}`}
     >
-      <head>
-        {/* Add this script that runs before page renders */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Get theme from localStorage or use system preference
-                const storageKey = "real-fi-theme";
-                const savedTheme = localStorage.getItem(storageKey);
-
-                if (savedTheme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else if (savedTheme === 'light') {
-                  document.documentElement.classList.add('light');
-                } else {
-                  // If theme is "system" or not set
-                  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-                  document.documentElement.classList.add(systemTheme);
-                }
-              })();
-            `,
-          }}
-        />
-      </head>
       <body>
-        <ThemeProvider>
-          <Header />
-          {children}
-          <Footer />
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

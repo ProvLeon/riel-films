@@ -1,9 +1,11 @@
-import { BlogPost } from '@/types/story';
+import { Story } from '@/types/mongodbSchema';
+// import { BlogPost } from '@/types/story';
 import { filterPosts, paginatePosts } from '@/utils/storyUtils';
 import { useCallback, useState } from 'react';
 
+
 interface UseStoriesProps {
-  allPosts: BlogPost[];
+  allPosts: Story[];
   defaultCategory?: string;
   postsPerPage?: number;
 }

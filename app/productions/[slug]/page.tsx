@@ -8,167 +8,22 @@ import SectionReveal from "@/components/UI/SectionReveal";
 import { Button } from "@/components/UI/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Play, Calendar, Clock, User, MessageCircle, ChevronRight, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Production } from '@/types/mongodbSchema';
+import { useProduction } from '@/hooks/useProduction';
 
-// Mock data for a single production
-const production = {
-  id: 1,
-  title: "Voices of the Delta",
-  category: "Documentary",
-  status: "In Production",
-  description: "A cinematic exploration of the vibrant communities along Ghana's Volta Delta and their resilience in the face of climate change.",
-  longDescription: "Through intimate portraits and breathtaking cinematography, 'Voices of the Delta' documents the rich cultural heritage and environmental challenges facing communities along Ghana's Volta Delta. The film follows local fishermen, farmers, and community leaders as they navigate the impacts of climate change, dam construction, and changing economic pressures while working to preserve their traditional way of life.",
-  image: "/images/productions/voices-delta.jpg",
-  slug: "voices-delta",
-  progress: 65,
-  director: "Emmanuel Koffi",
-  producer: "Nana Adwoa",
-  cinematographer: "Kofi Mensah",
-  editor: "Efua Owusu",
-  timeline: "Est. Completion: Q3 2023",
-  startDate: "January 2023",
-  estimatedCompletion: "September 2023",
-  locations: ["Volta Delta, Ghana", "Accra, Ghana", "Tema, Ghana"],
-  logline: "As climate change transforms Ghana's Volta Delta, local communities fight to preserve their heritage while adapting to a rapidly changing environment.",
-  synopsis: "Voices of the Delta follows three generations of a fishing family in Ghana's Volta Delta as they grapple with diminishing fish stocks, rising sea levels, and the erosion of traditional livelihoods. Through their personal journey, the film explores the broader impacts of climate change on coastal communities and documents innovative adaptation strategies emerging from local knowledge systems. Interweaving personal stories with expert perspectives, the documentary captures both the challenges and the resilience of delta communities as they navigate an uncertain future.",
-  team: [
-    {
-      name: "Emmanuel Koffi",
-      role: "Director",
-      bio: "Award-winning filmmaker with a focus on environmental documentaries",
-      image: "/images/hero/hero1.jpg"
-    },
-    {
-      name: "Nana Adwoa",
-      role: "Producer",
-      bio: "Experienced producer with over 15 documentary credits",
-      image: "/images/hero/hero3.jpg"
-    },
-    {
-      name: "Kofi Mensah",
-      role: "Director of Photography",
-      bio: "Cinematographer known for capturing stunning natural landscapes",
-      image: "/images/hero/hero2.jpg"
-    },
-    {
-      name: "Efua Owusu",
-      role: "Editor",
-      bio: "FESPACO award-winning editor with expertise in documentary storytelling",
-      image: "/images/hero/hero4.jpg"
-    }
-  ],
-  updates: [
-    {
-      date: "June 15, 2023",
-      title: "Principal photography nearing completion",
-      content: "We've completed filming in most of our key locations along the Volta Delta, capturing both the monsoon and dry seasons to document the full environmental cycle.",
-      image: "/images/hero/hero8.jpg"
-    },
-    {
-      date: "April 3, 2023",
-      title: "Expert interviews completed",
-      content: "This month we conducted interviews with environmental scientists, cultural historians, and policy experts to provide context for our community stories.",
-      image: "/images/hero/hero6.jpg"
-    },
-    {
-      date: "February 20, 2023",
-      title: "Community engagement workshops",
-      content: "Before beginning principal photography, we held participatory workshops with local communities to shape our storytelling approach and ensure ethical representation.",
-      image: "/images/hero/hero7.jpg"
-    }
-  ],
-  stages: [
-    {
-      name: "Development",
-      status: "completed",
-      milestones: [
-        "Research and community engagement",
-        "Treatment development",
-        "Production team assembly",
-        "Initial funding secured"
-      ]
-    },
-    {
-      name: "Pre-Production",
-      status: "completed",
-      milestones: [
-        "Location scouting",
-        "Production scheduling",
-        "Equipment preparation",
-        "Community workshops"
-      ]
-    },
-    {
-      name: "Production",
-      status: "in-progress",
-      milestones: [
-        "Principal photography",
-        "Expert interviews",
-        "B-roll collection",
-        "Sound recording"
-      ]
-    },
-    {
-      name: "Post-Production",
-      status: "upcoming",
-      milestones: [
-        "Footage organization",
-        "Rough cut assembly",
-        "Fine cut editing",
-        "Color grading"
-      ]
-    },
-    {
-      name: "Distribution",
-      status: "upcoming",
-      milestones: [
-        "Festival submissions",
-        "Community screenings",
-        "Distribution negotiations",
-        "Impact campaign"
-      ]
-    }
-  ],
-  supportOptions: [
-    {
-      title: "Production Partner",
-      description: "Become a production partner with prominent credit and creative input opportunities.",
-      investment: "$10,000+",
-      perks: ["Executive Producer credit", "Set visits", "Early screening access", "Creative consultation opportunities"]
-    },
-    {
-      title: "Impact Supporter",
-      description: "Support our educational impact campaign and community screenings.",
-      investment: "$5,000+",
-      perks: ["Associate Producer credit", "Impact report", "Invitation to premiere", "Community screening access"]
-    },
-    {
-      title: "Film Champion",
-      description: "Help us complete the film with essential post-production resources.",
-      investment: "$1,000+",
-      perks: ["Special Thanks credit", "Digital screener", "Premiere invitation", "Behind-the-scenes updates"]
-    }
-  ],
-  faq: [
-    {
-      question: "When will the film be completed?",
-      answer: "We're currently targeting completion in September 2023, with festival submissions beginning in Q4 2023."
-    },
-    {
-      question: "How can I support this production?",
-      answer: "We offer various support levels from Executive Producer opportunities to smaller contributions. Each comes with different benefits and recognition."
-    },
-    {
-      question: "Will there be community screenings?",
-      answer: "Yes, we're committed to screening the completed film in all communities where we filmed, before any commercial release."
-    },
-    {
-      question: "How are you ensuring ethical representation of communities?",
-      answer: "We've implemented a collaborative framework that includes community input at all stages of production, from development through the final edit. Community representatives review footage and provide feedback throughout the process."
-    }
-  ]
-};
+
+interface ProductionDetailPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+
+// const ProductionDetailPage = ({ params }: ProductionDetailPageProps) => {
+
 
 const ProductionDetailPage = ({ params }: { params: { slug: string } }) => {
+  const { production, isLoading, error } = useProduction(params.slug);
   const [activeTab, setActiveTab] = useState<'about' | 'updates' | 'team' | 'support'>('about');
   const [showTrailer, setShowTrailer] = useState(false);
   const [expandedFaqItem, setExpandedFaqItem] = useState<number | null>(null);

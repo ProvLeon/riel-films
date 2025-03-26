@@ -1,0 +1,129 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Film {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  slug            String   @unique // Already indexed as unique
+  category        String
+  year            String
+  description     String
+  longDescription String
+  image           String
+  director        String
+  producer        String
+  duration        String
+  languages       String[]
+  subtitles       String[]
+  releaseDate     String
+  awards          String[]
+  castCrew        Json[]
+  gallery         String[]
+  trailer         String
+  synopsis        String
+  quotes          Json[]
+  rating          Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  // Remove fulltext index as it's not supported
+
+  // Add compound indexes for common query patterns
+  @@index([category, year])
+  @@index([createdAt])
+}
+
+model Production {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  title               String
+  slug                String   @unique // Already indexed as unique
+  category            String
+  status              String
+  description         String
+  longDescription     String
+  image               String
+  progress            Int
+  director            String
+  producer            String
+  cinematographer     String
+  editor              String
+  timeline            String
+  startDate           String
+  estimatedCompletion String
+  locations           String[]
+  logline             String
+  synopsis            String
+  team                Json[]
+  updates             Json[]
+  stages              Json[]
+  supportOptions      Json[]
+  faq                 Json[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  // Remove fulltext index as it's not supported
+
+  // Add indexes for common query patterns
+  @@index([status])
+  @@index([category, status])
+  @@index([createdAt])
+}
+
+model Story {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  slug      String   @unique // Already indexed as unique
+  excerpt   String
+  content   Json[]
+  author    String
+  date      DateTime
+  image     String
+  category  String
+  readTime  String
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Remove fulltext index as it's not supported
+
+  // Add indexes for common query patterns
+  @@index([category])
+  @@index([featured])
+  @@index([date])
+  @@index([createdAt])
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique // Already indexed as unique
+  password  String?
+  image     String?
+  googleId  String?  @unique // Already indexed as unique
+  role      String   @default("editor")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Add index for role-based queries
+  @@index([role])
+  // Add index for name searches
+  @@index([name])
+}
+
+model Settings {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  siteName        String
+  siteDescription String
+  contactEmail    String
+  contactPhone    String
+  socialLinks     Json[]
+  logoLight       String
+  logoDark        String
+  metaImage       String
+  updatedAt       DateTime @updatedAt
+}

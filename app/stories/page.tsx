@@ -16,12 +16,16 @@ import CategoryExplorer from "@/components/stories/CategoryExplorer";
 import EmptyState from "@/components/stories/EmptyState";
 
 // Import data, hooks, and types
-import { featuredStory, allBlogPosts, categories } from "@/data/storiesData";
+// import { categories } from "@/data/storiesData";
 import { useStories } from "@/hooks/useStories";
 import { AnimatePresence } from "framer-motion";
+import { useStoriesList } from "@/hooks/useStoriesList";
 
 const StoriesPage = () => {
   const router = useRouter();
+  const { stories, isLoading } = useStoriesList();
+
+  const featuredStory = stories.find(story => story.featured);
 
   // Use our custom hook to handle all stories functionality
   const {
@@ -38,11 +42,19 @@ const StoriesPage = () => {
     handlePageChange,
     handleSearchChange,
     resetFilters
-  } = useStories({ allPosts: allBlogPosts });
+  } = useStories({
+    allPosts: stories,
+    defaultCategory: 'All Categories',
+    postsPerPage: 6
+  });
 
   const handlePostClick = (slug: string) => {
     router.push(`/stories/${slug}`);
   };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <PageTransition>

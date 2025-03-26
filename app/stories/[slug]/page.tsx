@@ -10,15 +10,24 @@ import { Button } from "@/components/UI/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { allBlogPosts } from "@/data/storiesData";
 import { formatDate } from "@/lib/utils";
+import { useStory } from "@/hooks/useStory";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
 const StoryPage = ({ params }: { params: { slug: string } }) => {
+  const { story, isLoading, error } = useStory(params.slug);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Find the requested story from our data
-  const story = allBlogPosts.find((post) => post.slug === params.slug);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error || !story) {
+    notFound();
+  }
 
   // Find related stories (same category, excluding current)
   const relatedStories = allBlogPosts
@@ -88,143 +97,6 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
     setShowShareOptions(false);
   };
 
-  // The content is a placeholder and would normally come from your CMS or API
-  const storyContent = [
-    {
-      type: "paragraph",
-      content: "The sun rose over the Volta River, casting golden reflections across the water as our film crew set up the first shot of the day. After months of pre-production planning, we were finally here—ready to capture the stories of the communities that have lived along these waters for generations."
-    },
-    {
-      type: "paragraph",
-      content: "Working on 'The River's Song' has been one of the most challenging yet rewarding experiences of my filmmaking career. Our team spent weeks living among the fishing communities, learning their traditions, understanding their challenges, and gaining their trust before a single frame was shot."
-    },
-    {
-      type: "heading",
-      content: "Gaining Trust: The Foundation of Authentic Storytelling"
-    },
-    {
-      type: "paragraph",
-      content: "When filming in communities that have rarely, if ever, been the subject of documentary films, establishing trust is paramount. We began by approaching community elders with respect, explaining our project's aims and how we hoped to represent their stories truthfully."
-    },
-    {
-      type: "paragraph",
-      content: "\"Many people come here to take our pictures and leave,\" one elder told us. \"But you are sitting with us, eating with us, listening to us. This is different.\""
-    },
-    {
-      type: "image",
-      url: "/images/hero/hero2.jpg",
-      caption: "Local fishermen prepare their nets at dawn on the Volta River"
-    },
-    {
-      type: "paragraph",
-      content: "This approach—prioritizing relationship-building over rushing to capture footage—ultimately resulted in scenes of unprecedented intimacy and authenticity. Community members gradually stopped noticing our cameras, allowing us to document genuine moments of their daily lives."
-    },
-    {
-      type: "heading",
-      content: "Technical Challenges in Remote Filming"
-    },
-    {
-      type: "paragraph",
-      content: "Filming in remote riverside locations presented numerous technical challenges. With no access to electricity, our equipment relied entirely on battery power, carefully rationed throughout each day. Our cinematographer, Kofi Mensah, developed an innovative system using solar chargers to maintain our camera equipment during the three-week shoot."
-    },
-    {
-      type: "quote",
-      content: "The lack of modern conveniences forced us to become more creative problem-solvers. When you can't rely on technology, you learn to rely more heavily on human ingenuity.",
-      attribution: "Nana Adwoa, Production Manager"
-    },
-    {
-      type: "paragraph",
-      content: "The unpredictable weather along the river posed another challenge. Sudden afternoon storms could derail our carefully planned shooting schedule, requiring flexibility and patience from the entire crew."
-    },
-    {
-      type: "paragraph",
-      content: "Despite these challenges, the natural beauty of the location provided stunning visuals that exceeded our expectations. The golden hour light reflecting off the Volta River created natural lighting conditions that would be impossible to replicate in a controlled environment."
-    },
-    {
-      type: "image",
-      url: "/images/hero/hero6.jpg",
-      caption: "Director Emmanuel Koffi reviews footage with local cultural advisors"
-    },
-    {
-      type: "heading",
-      content: "Cultural Sensitivity in Production"
-    },
-    {
-      type: "paragraph",
-      content: "Throughout production, we maintained a deep commitment to cultural sensitivity and ethical storytelling. We employed local cultural advisors who reviewed our shooting plans and provided guidance on appropriate ways to document sacred traditions and ceremonies."
-    },
-    {
-      type: "paragraph",
-      content: "When certain elders expressed discomfort with specific ceremonies being filmed, we immediately respected their wishes. This sometimes meant missing visually compelling material, but maintaining trust and respect was always our priority."
-    },
-    {
-      type: "paragraph",
-      content: "We also implemented a collaborative editing process, sharing rough cuts with community representatives to ensure the narrative we were crafting remained authentic to their lived experience."
-    },
-    {
-      type: "heading",
-      content: "Environmental Storytelling: Capturing Change"
-    },
-    {
-      type: "paragraph",
-      content: "A core theme of 'The River's Song' is the environmental changes affecting these river communities. Declining fish stocks, changing water levels, and increasing pollution are transforming a way of life that has existed for centuries."
-    },
-    {
-      type: "paragraph",
-      content: "To document these challenges visually, we employed both drone photography to capture the scale of environmental changes and macro photography to show their intimate impacts on daily life."
-    },
-    {
-      type: "paragraph",
-      content: "One of the most powerful sequences in the film juxtaposes archival photographs from the 1950s with present-day footage, visually demonstrating how dramatically the river ecosystem has transformed in just one human lifetime."
-    },
-    {
-      type: "quote",
-      content: "Our grandparents could catch enough fish in one morning to feed a family for days. Now our young men can fish all day and barely catch enough to sell at market.",
-      attribution: "Community Elder in 'The River's Song'"
-    },
-    {
-      type: "image",
-      url: "/images/hero/hero8.jpg",
-      caption: "Evening cinematography session capturing traditional music performances"
-    },
-    {
-      type: "heading",
-      content: "The Impact: Beyond the Screen"
-    },
-    {
-      type: "paragraph",
-      content: "As we wrapped production on 'The River's Song,' we realized our responsibility extended beyond simply making a compelling film. The communities had entrusted us with their stories, and we needed to ensure the project would benefit them in tangible ways."
-    },
-    {
-      type: "paragraph",
-      content: "We established the Volta River Heritage Fund, which directs a percentage of the film's proceeds toward environmental conservation efforts and educational programs in the communities where we filmed."
-    },
-    {
-      type: "paragraph",
-      content: "Additionally, we organized screenings in each community, ensuring that those who shared their lives with us would be the first to see the completed film. The emotional response at these screenings—seeing people recognize their own stories told with dignity and authenticity—remains the most rewarding aspect of this production journey."
-    },
-    {
-      type: "heading",
-      content: "Lessons for Future Productions"
-    },
-    {
-      type: "paragraph",
-      content: "The experience of making 'The River's Song' has profoundly influenced our approach to documentary filmmaking at Riel Films. We've learned that authentic storytelling requires time, patience, and a willingness to prioritize relationships over production schedules."
-    },
-    {
-      type: "paragraph",
-      content: "As we move forward with new projects across Africa, we carry these lessons with us: the importance of earning trust, the value of local collaboration, and the responsibility that comes with documenting communities facing environmental and cultural transitions."
-    },
-    {
-      type: "paragraph",
-      content: "The river communities taught us that the most powerful stories emerge not from imposing our narrative vision, but from creating space for people to share their own voices—and then listening deeply enough to hear the underlying melody of their experiences."
-    },
-    {
-      type: "paragraph",
-      content: "This is the true art of documentary filmmaking, and the guiding philosophy we'll continue to embrace in all future Riel Films productions."
-    }
-  ];
-
   return (
     <PageTransition>
       <div className="min-h-screen bg-white dark:bg-film-black-950 pt-24 pb-20">
@@ -288,7 +160,7 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
             <SectionReveal>
               <div className="lg:w-2/3">
                 <div className="prose prose-lg dark:prose-invert max-w-none">
-                  {storyContent.map((section, index) => {
+                  {story.content.map((section, index) => {
                     if (section.type === "paragraph") {
                       return <p key={index}>{section.content}</p>;
                     } else if (section.type === "heading") {

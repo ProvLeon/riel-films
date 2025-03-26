@@ -6,70 +6,17 @@ import Link from "next/link";
 import { Button } from "@/components/UI/Button";
 import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
+import { useFilmsList } from "@/hooks/useFilmsList"; // Changed to useFilmsList
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import type { Film } from "@/types/mongodbSchema"; // Import the Film type
 
-const FilmsPage = () => {
-  const films = [
-    {
-      id: 1,
-      title: "The River's Song",
-      category: "Feature Film",
-      year: "2023",
-      description: "A lyrical journey through Ghana's river communities as they face environmental challenges and preserve traditions.",
-      image: "/images/films/rivers-song.jpg",
-      slug: "rivers-song",
-      awards: ["Best Documentary - Pan African Film Festival", "Special Mention - Berlin International Film Festival"]
-    },
-    {
-      id: 2,
-      title: "Golden Dust",
-      category: "Feature Film",
-      year: "2022",
-      description: "The untold story of Ghana's gold mining history through the eyes of three generations of a family in Obuasi.",
-      image: "/images/films/golden-dust.jpg",
-      slug: "golden-dust",
-      awards: ["Best Cinematography - African Movie Academy Awards"]
-    },
-    {
-      id: 3,
-      title: "Market Tales",
-      category: "Documentary Series",
-      year: "2022",
-      description: "A vibrant exploration of West Africa's iconic markets and the entrepreneurs who bring them to life.",
-      image: "/images/films/market-tales.jpg",
-      slug: "market-tales",
-      awards: ["Audience Award - African Diaspora International Film Festival"]
-    },
-    {
-      id: 4,
-      title: "Harmattan Dreams",
-      category: "Short Film",
-      year: "2023",
-      description: "A poetic visual meditation on the Harmattan season and its impact on daily life across Ghana.",
-      image: "/images/films/harmattan-dreams.jpg",
-      slug: "harmattan-dreams",
-      awards: ["Best Short Film - Encounters Film Festival"]
-    },
-    {
-      id: 5,
-      title: "The Rhythm Keepers",
-      category: "Documentary",
-      year: "2022",
-      description: "An intimate portrait of traditional drummers preserving ancient rhythms in a rapidly modernizing world.",
-      image: "/images/films/rhythm-keepers.jpg",
-      slug: "rhythm-keepers",
-      awards: ["Best Music Documentary - Sound & Screen Film Festival"]
-    },
-    {
-      id: 6,
-      title: "Crossing Borders",
-      category: "Feature Film",
-      year: "2023",
-      description: "A powerful drama about family ties that span across different African countries and the journey to reunite.",
-      image: "/images/films/crossing-borders.jpg",
-      slug: "crossing-borders",
-      awards: ["Best Narrative Feature - New African Film Festival"]
-    }
-  ];
+
+const FilmsPage = ({ params }: { params: { slug: string } }) => {
+  const { films, isLoading, error, refetch } = useFilmsList();
+
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <div>Error: {error}</div>;
+  if (!films || films.length === 0) return <div>No films found</div>;
 
   const featuredFilm = films[0];
 
@@ -106,11 +53,11 @@ const FilmsPage = () => {
                   <p className="text-film-red-600 dark:text-film-red-500 font-medium mb-2">{featuredFilm.category} • {featuredFilm.year}</p>
                   <p className="text-gray-700 dark:text-gray-300 mb-6 text-lg">{featuredFilm.description}</p>
 
-                  {featuredFilm.awards && (
+                  {featuredFilm.awards && featuredFilm.awards.length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">Awards</h3>
                       <ul className="space-y-1">
-                        {featuredFilm.awards.map((award, index) => (
+                        {featuredFilm.awards.map((award: string, index: number) => (
                           <li key={index} className="flex items-center text-gray-700 dark:text-gray-300">
                             <span className="text-film-red-500 mr-2">•</span> {award}
                           </li>
@@ -144,7 +91,7 @@ const FilmsPage = () => {
             </SectionReveal>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {films.slice(1).map((film, index) => (
+              {films.slice(1).map((film: Film, index: number) => (
                 <SectionReveal key={film.id} delay={0.1 * (index % 3)}>
                   <Card className="h-full flex flex-col" isHoverable={true}>
                     <CardImage

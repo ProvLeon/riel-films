@@ -5,6 +5,8 @@ import { coursePageData } from "@/data/coursePageData";
 import BackToTop from "@/components/UI/BackToTop";
 import Main from "@/components/layout/Main";
 
+
+
 export default function Home() {
   return (
     <ErrorBoundary>

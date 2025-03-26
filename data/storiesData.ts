@@ -5,7 +5,8 @@ export const featuredStory = {
   date: "June 15, 2023",
   image: "/images/hero/hero4.jpg",
   slug: "behind-rivers-song",
-  readTime: "8 min read"
+  readTime: "8 min read",
+  category: "Behind the Scenes"
 };
 
 export const allBlogPosts = [

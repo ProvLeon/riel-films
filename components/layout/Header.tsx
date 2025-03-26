@@ -148,7 +148,7 @@ const Header = () => {
 
   return (
     <header
-      className={`w-full transition-all dark:bg-film-black-950/95 bg-white/95 backdrop-blur-sm sticky top-0 z-40 transition-shadow duration-300 ${isScrolled
+      className={`w-full transition-all dark:bg-film-black-950/95 bg-white/95 backdrop-blur-sm sticky top-0 z-40 duration-300 ${isScrolled
         ? "shadow-md py-3"
         : "py-4"
         }`}

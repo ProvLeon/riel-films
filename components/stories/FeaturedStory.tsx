@@ -3,16 +3,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, BookOpen, User } from 'lucide-react';
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
+import { Story } from '@/types/story';
 
 interface FeaturedStoryProps {
-  story: {
-    title: string;
-    excerpt: string;
-    author: string;
-    date: string;
-    image: string;
-    readTime: string;
-  };
+  story: Story;
   onClick: () => void;
 }
 

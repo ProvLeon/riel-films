@@ -8,14 +8,16 @@ import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, ArrowRight, ArrowUpRight, Clock, Calendar, AlertCircle, CheckCircle2, User, Award } from "lucide-react";
-
+import { useProductionsList } from "@/hooks/useProductionsList";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import { Production } from "@/types/mongodbSchema";
 // Types for better modularity
-interface Production {
-  title: string;
-  category: string;
-  description: string;
-  image: string;
-}
+// interface Production {
+//   title: string;
+//   category: string;
+//   description: string;
+//   image: string;
+// }
 
 interface CurrentProduction extends Production {
   status: string;
@@ -457,7 +459,8 @@ const ExploreCard = ({ title, description, image, link, delay }: {
 
 // Main page component
 const ProductionsPage = () => {
-  const [activeTab, setActiveTab] = useState("current");
+  const { productions, isLoading, error } = useProductionsList();
+  const [activeTab, setActiveTab] = useState<'current' | 'completed'>('current');
   const [hoveredProject, setHoveredProject] = useState<number | null>(null);
 
   // Data for current productions

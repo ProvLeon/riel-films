@@ -149,7 +149,7 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
   const [showShareOptions, setShowShareOptions] = useState(false);
 
   // Unwrap params using React.use
-  const { slug } = params;
+  const slug = params.slug;
 
   // Find the requested film from our data
   const film = films.find((film) => film.slug === slug);
