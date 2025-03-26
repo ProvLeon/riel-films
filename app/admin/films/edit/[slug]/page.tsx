@@ -1,18 +1,19 @@
-"use client";
-import { useState, useEffect } from "react";
+"use client"
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
 import { Save, ArrowLeft, Plus, X, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import { useFilm } from "@/hooks/useFilm";
 
-const AdminEditFilmPage = ({ params }: { params: { id: string } }) => {
+const AdminEditFilmPage = ({ params }: { params: { slug: string } }) => {
   const router = useRouter();
-  const { id } = params;
-
-  const [isLoading, setIsLoading] = useState(true);
+  // @ts-ignore
+  const { slug } = React.use(params)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { film, isLoading, error: filmError, refetch } = useFilm(slug);
 
   // Form state with default empty values
   const [formData, setFormData] = useState({
@@ -40,36 +41,14 @@ const AdminEditFilmPage = ({ params }: { params: { id: string } }) => {
   // Cast and Crew
   const [castCrew, setCastCrew] = useState([{ role: "", name: "" }]);
 
-  // Fetch film data on component mount
+  // Update form data when film is loaded
   useEffect(() => {
-    const fetchFilm = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const response = await fetch(`/api/films/${id}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch film');
-        }
-
-        const filmData = await response.json();
-
-        // Extract castCrew from filmData and set the rest to formData
-        const { castCrew: filmCastCrew, ...rest } = filmData;
-
-        setFormData(rest);
-        setCastCrew(filmCastCrew || [{ role: "", name: "" }]);
-      } catch (error: any) {
-        console.error('Error fetching film:', error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFilm();
-  }, [id]);
+    if (film) {
+      const { castCrew: filmCastCrew, ...rest } = film;
+      setFormData(rest);
+      setCastCrew(filmCastCrew || [{ role: "", name: "" }]);
+    }
+  }, [film]);
 
   // Helper function to handle basic input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -184,7 +163,7 @@ const AdminEditFilmPage = ({ params }: { params: { id: string } }) => {
         rating: Number(formData.rating)
       };
 
-      const response = await fetch(`/api/films/${id}`, {
+      const response = await fetch(`/api/films/${slug}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +193,19 @@ const AdminEditFilmPage = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  // The rest of the component is identical to the create page, but with the title changed to "Edit Film"
+  // Show error state if film failed to load
+  if (filmError && !film) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="text-red-600 text-lg mb-4">Error loading film: {filmError}</div>
+        <Button variant="primary" onClick={() => refetch()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  // The rest of the component remains the same
   return (
     <div>
       <div className="flex justify-between items-center mb-6">

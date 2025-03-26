@@ -9,6 +9,7 @@ import SectionReveal from "@/components/UI/SectionReveal";
 import { useFilmsList } from "@/hooks/useFilmsList"; // Changed to useFilmsList
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import type { Film } from "@/types/mongodbSchema"; // Import the Film type
+import { LinkCard } from "@/components/LinkCards";
 
 
 const FilmsPage = ({ params }: { params: { slug: string } }) => {
@@ -108,12 +109,12 @@ const FilmsPage = ({ params }: { params: { slug: string } }) => {
                       <CardDescription>{film.category} • {film.year}</CardDescription>
                       <p className="text-gray-700 dark:text-gray-300 mt-2">{film.description}</p>
                       <div className="mt-4">
-                        <Link href={`/films/${film.slug}`} className="text-film-red-600 dark:text-film-red-500 font-medium hover:underline inline-flex items-center">
+                        <LinkCard data={film} href={`/films/${film.slug}`} className="text-film-red-600 dark:text-film-red-500 font-medium hover:underline inline-flex items-center">
                           View details
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                           </svg>
-                        </Link>
+                        </LinkCard>
                       </div>
                     </CardContent>
                   </Card>

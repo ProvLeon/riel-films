@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export function useFilm(slug: string | null) {
   const [film, setFilm] = useState<Film | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchFilm = useCallback(async (filmSlug: string) => {
@@ -30,7 +30,7 @@ export function useFilm(slug: string | null) {
       }
 
       const data = await response.json();
-      // console.log('Film data received:', data); // Debugging
+      console.log('Film data received:', data); // Debugging
       setFilm(data);
     } catch (error: any) {
       console.error('Error in useFilm hook:', error); // Log for debugging

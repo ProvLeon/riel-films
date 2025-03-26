@@ -89,7 +89,6 @@ model Story {
   featured  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // Remove fulltext index as it's not supported
 
   // Add indexes for common query patterns
   @@index([category])
@@ -126,4 +125,65 @@ model Settings {
   logoDark        String
   metaImage       String
   updatedAt       DateTime @updatedAt
+}
+
+model Analytics {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  pageUrl     String
+  pageType    String // film, production, story, home, etc.
+  itemId      String? // Optional reference to specific content item
+  event       String // view, click, etc.
+  timestamp   DateTime @default(now())
+  referrer    String?
+  userAgent   String?
+  ipHash      String? // Hashed IP for privacy
+  sessionId   String? // Track session
+  visitorId   String? // Unique visitor ID
+  isNewUser   Boolean  @default(false) // Flag for new users
+  scrollDepth Int? // How far user scrolled
+  timeOnPage  Int? // Seconds on page
+  screenData  Json? // Screen/viewport information
+  extraData   Json? // Any additional event data
+
+  @@index([pageType, timestamp])
+  @@index([event, timestamp])
+  @@index([itemId])
+  @@index([visitorId, timestamp])
+  @@index([sessionId])
+  @@index([visitorId, pageType])
+}
+
+model DailyStats {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  date               DateTime @unique
+  pageViews          Int      @default(0)
+  uniqueVisitors     Int      @default(0)
+  newVisitors        Int      @default(0) // First time visitors
+  filmViews          Int      @default(0)
+  storyViews         Int      @default(0)
+  productionViews    Int      @default(0)
+  engagements        Int      @default(0)
+  avgTimeOnSite      Float    @default(0) // Average time in seconds
+  bounceRate         Float    @default(0) // Single page visit percentage
+  returningVisitors  Int      @default(0) // Returning visitors
+  avgEngagementScore Float    @default(0) // Overall engagement score (0-100)
+}
+
+// New model to track visitor history for better analytics
+model Visitor {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  visitorId         String   @unique // Cookie-based ID
+  firstSeen         DateTime @default(now())
+  lastSeen          DateTime @default(now())
+  totalVisits       Int      @default(1)
+  totalSessions     Int      @default(1)
+  browser           String?
+  device            String?
+  os                String?
+  country           String?
+  preferredContent  String? // Most viewed content type
+  engagementScore   Float? // Overall engagement score
+  averageTimeOnSite Float? // Average time per visit in seconds
+
+  @@index([lastSeen])
 }

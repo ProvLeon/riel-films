@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -14,12 +14,28 @@ import { useStory } from "@/hooks/useStory";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
 const StoryPage = ({ params }: { params: { slug: string } }) => {
-  const { slug } = params
+  // @ts-ignore
+  const { slug } = React.use(params)
   const { story, isLoading, error } = useStory(slug);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const fullHeight = document.body.scrollHeight;
+      const scrolled = window.scrollY;
+      const progress = scrolled / (fullHeight - windowHeight);
+
+      setScrollProgress(progress * 100);
+      setShowScrollTop(scrolled > windowHeight / 2);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
 
   if (isLoading) {
@@ -41,20 +57,7 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
   // }
 
   // Handle scroll events for progress indicator
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const fullHeight = document.body.scrollHeight;
-      const scrolled = window.scrollY;
-      const progress = scrolled / (fullHeight - windowHeight);
 
-      setScrollProgress(progress * 100);
-      setShowScrollTop(scrolled > windowHeight / 2);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Handle scroll to top
   const scrollToTop = () => {
@@ -100,7 +103,7 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-white dark:bg-film-black-950 pt-24 pb-20">
+      <div className="min-h-screen bg-white dark:bg-film-black-950 pt-2 pb-20">
         {/* Reading progress bar */}
         <div className="fixed top-[71px] left-0 right-0 h-1 bg-gray-200 dark:bg-film-black-800 z-30">
           <motion.div
@@ -110,7 +113,7 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
         </div>
 
         {/* Hero section */}
-        <div className="relative w-full h-[40vh] md:h-[60vh] lg:h-[70vh] overflow-hidden">
+        <div className="relative w-full h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
           <Image
             src={story.image}
             alt={story.title}

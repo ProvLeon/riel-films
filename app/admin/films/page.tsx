@@ -163,7 +163,7 @@ const AdminFilmsPage = () => {
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => router.push(`/admin/films/edit/${film.id}`)}
+                      onClick={() => router.push(`/admin/films/edit/${film.slug}`)}
                       className="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/30"
                       title="Edit"
                     >

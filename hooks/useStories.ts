@@ -1,8 +1,7 @@
+import { debounce } from '@/lib/utils';
 import { Story } from '@/types/mongodbSchema';
-// import { BlogPost } from '@/types/story';
 import { filterPosts, paginatePosts } from '@/utils/storyUtils';
-import { useCallback, useState } from 'react';
-
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseStoriesProps {
   allPosts: Story[];
@@ -19,9 +18,23 @@ export const useStories = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredPost, setHoveredPost] = useState<number | null>(null);
+  const [filteredPosts, setFilteredPosts] = useState<Story[]>(allPosts);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Filter posts based on selected category and search query
-  const filteredPosts = filterPosts(allPosts, selectedCategory, searchQuery);
+  // Debounced search handling
+  const debouncedSearchFilter = useCallback(
+    debounce((query: string, category: string) => {
+      setIsSearching(true);
+      const filtered = filterPosts(allPosts, category, query);
+      setFilteredPosts(filtered);
+      setIsSearching(false);
+    }, 300),
+    [allPosts]
+  );
+
+  useEffect(() => {
+    debouncedSearchFilter(searchQuery, selectedCategory);
+  }, [searchQuery, selectedCategory, debouncedSearchFilter]);
 
   // Paginate posts
   const { currentPosts, totalPages } = paginatePosts(filteredPosts, currentPage, postsPerPage);
@@ -57,6 +70,7 @@ export const useStories = ({
     currentPosts,
     totalPages,
     postsPerPage,
+    isSearching,
     setHoveredPost,
     handleCategoryChange,
     handlePageChange,

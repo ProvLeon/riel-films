@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export function useStory(storyId: string | null) {
   const [story, setStory] = useState<Story | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStory = useCallback(async (slug: string) => {

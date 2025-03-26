@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export function useProduction(slug: string | null) {
   const [production, setProduction] = useState<Production | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProduction = useCallback(async (prodSlug: string) => {

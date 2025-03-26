@@ -1,6 +1,7 @@
 import { Providers } from "./providers";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css"
+import PageViewTracker from "@/components/analytics/PageViewTracker";
 
 // Define fonts
 const inter = Inter({
@@ -33,6 +34,7 @@ export default function RootLayout({
     >
       <body>
         <Providers>{children}</Providers>
+        <PageViewTracker pageType="other" />
       </body>
     </html>
   );

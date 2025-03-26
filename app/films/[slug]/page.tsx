@@ -12,6 +12,7 @@ import { useFilm } from "@/hooks/useFilm";
 import { useFilmsList } from "@/hooks/useFilmsList";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Film } from "@/types/mongodbSchema";
+import PageViewTracker from "@/components/analytics/PageViewTracker";
 
 type SharePlatform = "twitter" | "facebook" | "linkedin" | "email" | "copy";
 
@@ -22,6 +23,7 @@ type PageParams = {
 };
 
 const FilmDetailPage = ({ params }: PageParams) => {
+  // @ts-ignore
   const { slug } = React.use(params);
   console.log(slug)
   const { film, isLoading, error } = useFilm(slug);
@@ -118,6 +120,7 @@ const FilmDetailPage = ({ params }: PageParams) => {
 
   return (
     <PageTransition>
+      <PageViewTracker pageType="film" itemId={film?.id} />
       <div className="min-h-screen bg-white dark:bg-film-black-950 pt-24 pb-20">
         {/* Hero section */}
         <div className="relative w-full h-[50vh] md:h-[70vh] overflow-hidden">

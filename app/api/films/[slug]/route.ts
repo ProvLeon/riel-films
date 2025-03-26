@@ -9,9 +9,9 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-
+    const { slug } = await params
     const film = await prisma.film.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
     });
 
     if (!film) {

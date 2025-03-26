@@ -6,31 +6,10 @@ import {
   ReactNode
 } from "react";
 import { Film, Production, Story, Settings } from '@/types/mongodbSchema';
+import { trackEvent as trackAnalyticsEvent, trackPageView as trackAnalyticsPageView } from '@/lib/analytics-client';
+import { AnalyticsEventType, ContentType } from '@/types/analytics';
+import { DailyStats, TopContent, AnalyticsDataType, DataContextType } from '@/types/analytics';
 
-
-// Define the context types
-interface DataContextType {
-  films: Film[];
-  isLoadingFilms: boolean;
-  errorFilms: string | null;
-
-  productions: Production[];
-  isLoadingProductions: boolean;
-  errorProductions: string | null;
-
-  stories: Story[];
-  isLoadingStories: boolean;
-  errorStories: string | null;
-
-  settings: Settings | null;
-  isLoadingSettings: boolean;
-  errorSettings: string | null;
-
-  fetchFilms: (params?: Record<string, any>) => Promise<void>;
-  fetchProductions: (params?: Record<string, any>) => Promise<void>;
-  fetchStories: (params?: Record<string, any>) => Promise<void>;
-  refetchSettings: () => Promise<void>;
-}
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -55,8 +34,55 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(false);
   const [errorSettings, setErrorSettings] = useState<string | null>(null);
 
+  // Analytics state
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsDataType | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
+  const [errorAnalytics, setErrorAnalytics] = useState<string | null>(null);
+
+  // Fetch analytics data
+  const fetchAnalytics = useCallback(async (days: number = 30, type?: string) => {
+    setIsLoadingAnalytics(true);
+    setErrorAnalytics(null);
+
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append('days', days.toString());
+      if (type) queryParams.append('type', type);
+
+      const response = await fetch(`/api/analytics?${queryParams.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+
+      const data = await response.json();
+      setAnalyticsData(data);
+    } catch (error: any) {
+      setErrorAnalytics(error.message || 'Failed to fetch analytics data');
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, []);
+
+  // Custom trackPageView that uses the library function
+  const trackPageView = useCallback((pageType: ContentType, itemId?: string) => {
+    trackAnalyticsPageView(pageType, itemId);
+  }, []);
+
+  // Custom trackEvent that uses the library function
+  const trackEvent = useCallback((
+    pageType: ContentType,
+    event: AnalyticsEventType,
+    itemId?: string,
+    extraData?: Record<string, any>
+  ) => {
+    trackAnalyticsEvent(pageType, event, itemId, extraData || {});
+  }, []);
+
   // Fetch films
-  const refetchFilms = useCallback(async (params: Record<string, any> = {}) => {
+  const fetchFilms = useCallback(async (params: Record<string, any> = {}) => {
     setIsLoadingFilms(true);
     setErrorFilms(null);
 
@@ -85,7 +111,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Fetch productions
-  const refetchProductions = useCallback(async (params: Record<string, any> = {}) => {
+  const fetchProductions = useCallback(async (params: Record<string, any> = {}) => {
     setIsLoadingProductions(true);
     setErrorProductions(null);
 
@@ -114,7 +140,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Fetch stories
-  const refetchStories = useCallback(async (params: Record<string, any> = {}) => {
+  const fetchStories = useCallback(async (params: Record<string, any> = {}) => {
     setIsLoadingStories(true);
     setErrorStories(null);
 
@@ -168,22 +194,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
     films,
     isLoadingFilms,
     errorFilms,
-    fetchFilms: refetchFilms,  // renamed here
+    fetchFilms,
 
     productions,
     isLoadingProductions,
     errorProductions,
-    fetchProductions: refetchProductions,  // renamed here
+    fetchProductions,
 
     stories,
     isLoadingStories,
     errorStories,
-    fetchStories: refetchStories,
+    fetchStories,
 
     settings,
     isLoadingSettings,
     errorSettings,
     refetchSettings,
+
+    analyticsData,
+    isLoadingAnalytics,
+    errorAnalytics,
+    fetchAnalytics,
+    trackPageView,
+    trackEvent
   };
 
   return (
