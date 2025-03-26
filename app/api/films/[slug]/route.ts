@@ -6,14 +6,16 @@ import { NextRequest, NextResponse } from "next/server";
 // GET a single film by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { slug: string } }
 ) {
   try {
+
     const film = await prisma.film.findUnique({
-      where: { id: params.id },
+      where: { slug: params.slug },
     });
 
     if (!film) {
+
       return NextResponse.json(
         { error: "Film not found" },
         { status: 404 }
@@ -33,7 +35,7 @@ export async function GET(
 // PATCH update a film (Admin only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { slug: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -46,13 +48,26 @@ export async function PATCH(
 
     const filmData = await req.json();
 
-    // Update film
-    const film = await prisma.film.update({
-      where: { id: params.id },
+    // First find the film by slug
+    const film = await prisma.film.findUnique({
+      where: { slug: params.slug },
+      select: { id: true }
+    });
+
+    if (!film) {
+      return NextResponse.json(
+        { error: "Film not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update film by ID
+    const updatedFilm = await prisma.film.update({
+      where: { id: film.id },
       data: filmData,
     });
 
-    return NextResponse.json(film);
+    return NextResponse.json(updatedFilm);
   } catch (error: any) {
     console.error("Error updating film:", error.message);
     return NextResponse.json(
@@ -65,7 +80,7 @@ export async function PATCH(
 // DELETE a film (Admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { slug: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -76,8 +91,21 @@ export async function DELETE(
       );
     }
 
+    // First find the film by slug
+    const film = await prisma.film.findUnique({
+      where: { slug: params.slug },
+      select: { id: true }
+    });
+
+    if (!film) {
+      return NextResponse.json(
+        { error: "Film not found" },
+        { status: 404 }
+      );
+    }
+
     await prisma.film.delete({
-      where: { id: params.id },
+      where: { id: film.id },
     });
 
     return NextResponse.json(

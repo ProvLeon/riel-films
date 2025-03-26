@@ -36,22 +36,22 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   // Films state
-  const [films, setFilms] = useState<any[]>([]);
+  const [films, setFilms] = useState<Film[]>([]);
   const [isLoadingFilms, setIsLoadingFilms] = useState<boolean>(false);
   const [errorFilms, setErrorFilms] = useState<string | null>(null);
 
   // Productions state
-  const [productions, setProductions] = useState<any[]>([]);
+  const [productions, setProductions] = useState<Production[]>([]);
   const [isLoadingProductions, setIsLoadingProductions] = useState<boolean>(false);
   const [errorProductions, setErrorProductions] = useState<string | null>(null);
 
   // Stories state
-  const [stories, setStories] = useState<any[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const [isLoadingStories, setIsLoadingStories] = useState<boolean>(false);
   const [errorStories, setErrorStories] = useState<string | null>(null);
 
   // Settings state
-  const [settings, setSettings] = useState<any | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState<boolean>(false);
   const [errorSettings, setErrorSettings] = useState<string | null>(null);
 

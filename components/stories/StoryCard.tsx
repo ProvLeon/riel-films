@@ -3,17 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, BookOpen, User } from 'lucide-react';
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
 import { Story } from '@/types/mongodbSchema';
-
-interface BlogPost {
-  title: string;
-  excerpt: string;
-  author: string;
-  date: string;
-  image: string;
-  category: string;
-  slug: string;
-  readTime: string;
-}
+import { formatDate } from '@/lib/utils';
 
 interface StoryCardProps {
   post: Story;
@@ -53,9 +43,9 @@ const StoryCard: React.FC<StoryCardProps> = ({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className="cursor-pointer"
+      className="cursor-pointer h-full"
     >
-      <Card className="h-full flex flex-col relative group" isHoverable={true}>
+      <Card className="h-full flex flex-col relative group overflow-hidden" isHoverable={true}>
         <div className="relative overflow-hidden">
           <CardImage
             src={post.image}
@@ -78,20 +68,29 @@ const StoryCard: React.FC<StoryCardProps> = ({
           </div>
         </div>
 
-        <CardContent className="flex-grow dark:text-white">
+        <CardContent className="flex flex-col flex-grow p-5 dark:text-white">
+          {/* Top metadata */}
           <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-3">
             <span className="flex items-center">
-              <Calendar size={14} className="mr-1" /> {post.date}
+              <Calendar size={14} className="mr-1" /> {formatDate(post.date)}
             </span>
             <span className="flex items-center">
               <BookOpen size={14} className="mr-1" /> {post.readTime}
             </span>
           </div>
-          <CardTitle className="group-hover:text-film-red-600 dark:group-hover:text-film-red-500 transition-colors mb-3 line-clamp-2">
-            {post.title}
-          </CardTitle>
-          <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">{post.excerpt}</p>
-          <div className="mt-auto flex justify-between items-center pt-4 border-t border-gray-100 dark:border-film-black-800">
+
+          {/* Title and excerpt - main content */}
+          <div className="flex-grow">
+            <CardTitle className="group-hover:text-film-red-600 dark:group-hover:text-film-red-500 transition-colors mb-3 line-clamp-2">
+              {post.title}
+            </CardTitle>
+            <p className="text-gray-700 dark:text-gray-300 line-clamp-3 text-sm">
+              {post.excerpt}
+            </p>
+          </div>
+
+          {/* Author and arrow - bottom info */}
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-film-black-800 flex justify-between items-center">
             <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
               <User size={14} className="mr-1" /> {post.author}
             </span>

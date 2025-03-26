@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, Usable } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -8,159 +8,62 @@ import SectionReveal from "@/components/UI/SectionReveal";
 import { Button } from "@/components/UI/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Play, Share2, Award, Calendar, Clock, User, ChevronDown, Star, ChevronRight } from "lucide-react";
+import { useFilm } from "@/hooks/useFilm";
+import { useFilmsList } from "@/hooks/useFilmsList";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import { Film } from "@/types/mongodbSchema";
 
-// Import production page utils
-const films = [
-  {
-    id: 1,
-    title: "The River's Song",
-    category: "Feature Film",
-    year: "2023",
-    description: "A lyrical journey through Ghana's river communities as they face environmental challenges and preserve traditions.",
-    longDescription: "In 'The River's Song,' we explore the delicate balance between tradition and change along Ghana's vital river systems. This documentary presents an intimate portrait of communities whose way of life is being transformed by environmental shifts and modernization, while also celebrating the cultural resilience and adaptive strategies that have sustained these communities for generations.",
-    image: "/images/films/rivers-song.jpg",
-    slug: "rivers-song",
-    director: "Emmanuel Koffi",
-    producer: "Nana Adwoa",
-    duration: "98 minutes",
-    languages: ["Twi", "English"],
-    subtitles: ["English", "French", "Spanish"],
-    releaseDate: "March 15, 2023",
-    awards: ["Best Documentary - Pan African Film Festival", "Special Mention - Berlin International Film Festival"],
-    castCrew: [
-      { role: "Director", name: "Emmanuel Koffi" },
-      { role: "Producer", name: "Nana Adwoa" },
-      { role: "Cinematographer", name: "Kofi Mensah" },
-      { role: "Editor", name: "Efua Owusu" },
-      { role: "Sound Design", name: "Joseph Quarcoo" }
-    ],
-    gallery: [
-      "/images/hero/hero1.jpg",
-      "/images/hero/hero8.jpg",
-      "/images/hero/hero3.jpg",
-      "/images/hero/hero6.jpg"
-    ],
-    trailer: "https://www.youtube.com/watch?v=example",
-    synopsis: "When a series of environmental changes threaten the traditional fishing practices of a small Ghanaian river community, a young fisher named Kwame must navigate between preserving his family's traditions and embracing new methods for survival. As he journeys along the river seeking solutions, he encounters various communities each responding differently to similar challenges, while an unexpected connection with a visiting environmental researcher opens his eyes to both the global context of local problems and possible sustainable paths forward.",
-    quotes: [
-      {
-        text: "A visually stunning and deeply moving portrait of communities at the crossroads of tradition and environmental change.",
-        source: "African Film Journal"
-      },
-      {
-        text: "Koffi's direction creates an intimate window into lives rarely seen on screen, giving voice to communities often overlooked.",
-        source: "Global Documentary Review"
-      }
-    ],
-    rating: 4.8
-  },
-  {
-    id: 2,
-    title: "Golden Dust",
-    category: "Feature Film",
-    year: "2022",
-    description: "The untold story of Ghana's gold mining history through the eyes of three generations of a family in Obuasi.",
-    longDescription: "Golden Dust weaves together personal narrative and historical documentation to tell the complex story of gold mining in Ghana, from traditional methods to industrial exploitation. Through the experiences of the Mensah family, whose three generations have worked in different capacities within the mining sector, the film examines questions of heritage, economic necessity, environmental impact, and the ongoing legacy of colonialism in resource extraction.",
-    image: "/images/films/golden-dust.jpg",
-    slug: "golden-dust",
-    director: "Ama Boateng",
-    producer: "Emmanuel Koffi",
-    duration: "112 minutes",
-    languages: ["Twi", "English"],
-    subtitles: ["English", "French", "German"],
-    releaseDate: "October 7, 2022",
-    awards: ["Best Cinematography - African Movie Academy Awards"],
-    castCrew: [
-      { role: "Director", name: "Ama Boateng" },
-      { role: "Producer", name: "Emmanuel Koffi" },
-      { role: "Writer", name: "Kwame Nsiah" },
-      { role: "Cinematographer", name: "Kofi Mensah" },
-      { role: "Production Designer", name: "Abena Osei" }
-    ],
-    gallery: [
-      "/images/hero/hero2.jpg",
-      "/images/hero/hero4.jpg",
-      "/images/hero/hero7.jpg",
-      "/images/hero/hero9.jpg"
-    ],
-    trailer: "https://www.youtube.com/watch?v=example2",
-    synopsis: "In the historic mining town of Obuasi, Solomon Mensah prepares to retire after 40 years working in the industrial gold mines. His father before him was a traditional gold panner, while his daughter studies environmental science with plans to address mining pollution. When Solomon discovers old family documents revealing their ancestral land was appropriated for the mine he dedicated his life to, the family faces difficult questions about heritage, livelihood, and justice. Their personal journey mirrors Ghana's complex relationship with its most valuable natural resource and the foreign interests that continue to influence its extraction.",
-    quotes: [
-      {
-        text: "A nuanced exploration of how gold has shaped not only Ghana's economy but the very identity of communities built around its extraction.",
-        source: "Mining World Magazine"
-      },
-      {
-        text: "Boateng's direction strikes a perfect balance between family drama and social commentary, resulting in a film that is both intimately personal and broadly relevant.",
-        source: "West African Cinema Review"
-      }
-    ],
-    rating: 4.6
-  },
-  {
-    id: 3,
-    title: "Market Tales",
-    category: "Documentary Series",
-    year: "2022",
-    description: "A vibrant exploration of West Africa's iconic markets and the entrepreneurs who bring them to life.",
-    longDescription: "Market Tales is an immersive documentary series that takes viewers into the heart of West Africa's bustling marketplaces. Each episode focuses on a different iconic market, from Ghana's Kejetia Market to Senegal's Sandaga Market, exploring the economic ecosystems, cultural significance, and personal stories of the traders who form the backbone of local economies. The series celebrates entrepreneurship, resilience, and the rich tapestry of West African commerce.",
-    image: "/images/films/market-tales.jpg",
-    slug: "market-tales",
-    director: "Kofi Mensah",
-    producer: "Nana Adwoa",
-    duration: "6 episodes, 45 minutes each",
-    languages: ["Multiple West African languages", "English"],
-    subtitles: ["English", "French", "Portuguese"],
-    releaseDate: "August 12, 2022",
-    awards: ["Audience Award - African Diaspora International Film Festival"],
-    castCrew: [
-      { role: "Creator & Director", name: "Kofi Mensah" },
-      { role: "Producer", name: "Nana Adwoa" },
-      { role: "Research Coordinator", name: "Fatou Diallo" },
-      { role: "Sound Recordist", name: "Joseph Quarcoo" },
-      { role: "Editor", name: "Efua Owusu" }
-    ],
-    gallery: [
-      "/images/hero/hero5.jpg",
-      "/images/hero/hero10.jpg",
-      "/images/hero/hero11.jpg",
-      "/images/hero/hero12.jpg"
-    ],
-    trailer: "https://www.youtube.com/watch?v=example3",
-    synopsis: "Market Tales journeys through six of West Africa's most vibrant and culturally significant marketplaces, revealing the intricate networks, generational knowledge, and entrepreneurial spirit that power these economic hubs. Each episode profiles different traders—from the fabric merchants of Mali's Grand Market to the tech dealers of Ghana's Makola—exploring how traditional commerce intersects with globalization, digital innovation, and changing consumer habits. Throughout the series, we discover how these markets serve not only as places of transaction but as vital social institutions where cultures blend, information flows, and communities are sustained.",
-    quotes: [
-      {
-        text: "A celebration of entrepreneurial spirit and cultural heritage that will forever change how you see African marketplaces.",
-        source: "Documentary World"
-      },
-      {
-        text: "Vibrant, informative, and deeply respectful of its subjects, Market Tales achieves that rare balance of being both educational and thoroughly entertaining.",
-        source: "Global Streaming Guide"
-      }
-    ],
-    rating: 4.7
-  }
-];
+type SharePlatform = "twitter" | "facebook" | "linkedin" | "email" | "copy";
 
-const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
+type PageParams = {
+  params: {
+    slug: string;
+  };
+};
+
+const FilmDetailPage = ({ params }: PageParams) => {
+  const { slug } = React.use(params);
+  console.log(slug)
+  const { film, isLoading, error } = useFilm(slug);
+  const { films } = useFilmsList();
   const [activeTab, setActiveTab] = useState<'about' | 'details' | 'gallery'>('about');
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [activeGalleryImage, setActiveGalleryImage] = useState(0);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [relatedFilms, setRelatedFilms] = useState<Film[]>([]);
+  const [otherFilmsByDirector, setOtherFilmsByDirector] = useState<Film[]>([]);
 
-  // Unwrap params using React.use
-  const slug = params.slug;
 
-  // Find the requested film from our data
-  const film = films.find((film) => film.slug === slug);
+  useEffect(() => {
+    if (films.length > 0 && film) {
+      // Find other films by same director (excluding current)
+      const directorFilms = films.filter(
+        f => f.director === film.director && f.slug !== slug
+      ).slice(0, 2);
 
-  // Find other films by same director (excluding current)
-  const otherFilmsByDirector = films
-    .filter((f) => f.director === film?.director && f.slug !== slug)
-    .slice(0, 2);
+      setOtherFilmsByDirector(directorFilms);
+
+      // Set related films (different from current)
+      setRelatedFilms(
+        films.filter(f => f.slug !== slug).slice(0, 3)
+      );
+    }
+  }, [films, film, slug]);
+
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   // If film doesn't exist, show 404
-  if (!film) {
+  // console.log(films)
+
+  if (error || !film) {
     notFound();
   }
 
@@ -181,7 +84,7 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
   };
 
   // Share film
-  const shareFilm = (platform: string) => {
+  const shareFilm = (platform: SharePlatform) => {
     const url = window.location.href;
     const text = `Check out this film: ${film.title}`;
 
@@ -206,6 +109,13 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
     setShowShareOptions(false);
   };
 
+  const galleryImages = film.gallery && film.gallery.length > 0
+    ? film.gallery
+    : [film.image, "/images/hero/hero1.jpg", "/images/hero/hero2.jpg"];
+
+  // Ensure gallery index is valid
+  const safeGalleryIndex = Math.min(activeGalleryImage, galleryImages.length - 1);
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-white dark:bg-film-black-950 pt-24 pb-20">
@@ -218,6 +128,9 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
             fill
             className="object-cover"
             priority
+            onError={(e) => {
+              e.currentTarget.src = "/images/hero/hero1.jpg"
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-film-black-950 via-film-black-900/70 to-transparent">
             <div className="container mx-auto px-4 h-full flex flex-col justify-end pb-12">
@@ -386,7 +299,7 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                             Awards & Recognition
                           </h2>
                           <ul className="space-y-3">
-                            {film.awards.map((award, index) => (
+                            {film.awards.map((award: string, index: number) => (
                               <li key={index} className="flex items-start">
                                 <div className="bg-film-red-100 dark:bg-film-red-900/30 rounded-full p-1 mr-3 mt-1">
                                   <Star className="h-4 w-4 text-film-red-600 dark:text-film-red-400" />
@@ -405,7 +318,7 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                             Critical Reception
                           </h2>
                           <div className="space-y-6">
-                            {film.quotes.map((quote, index) => (
+                            {film.quotes.map((quote: { text: string; source: string }, index: number) => (
                               <blockquote key={index} className="border-l-4 border-film-red-500 pl-6 py-2 italic">
                                 <p className="text-lg text-gray-800 dark:text-gray-200">"{quote.text}"</p>
                                 <footer className="mt-2 text-right text-gray-600 dark:text-gray-400 not-italic">
@@ -472,23 +385,59 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                           Cast & Crew
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {film.castCrew.map((person, index) => (
-                            <div key={index} className="flex items-center p-4 bg-gray-50 dark:bg-film-black-900 rounded-lg">
-                              <div className="w-12 h-12 bg-film-red-100 dark:bg-film-red-900/30 rounded-full flex items-center justify-center mr-4">
-                                <span className="text-film-red-600 dark:text-film-red-400 font-medium">
-                                  {person.name.charAt(0)}
-                                </span>
+                          {film.castCrew && film.castCrew.length > 0 ? (
+                            film.castCrew.map((person: { name: string; role: string }, index: number) => (
+                              <div key={index} className="flex items-center p-4 bg-gray-50 dark:bg-film-black-900 rounded-lg">
+                                <div className="w-12 h-12 bg-film-red-100 dark:bg-film-red-900/30 rounded-full flex items-center justify-center mr-4">
+                                  <span className="text-film-red-600 dark:text-film-red-400 font-medium">
+                                    {person.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-film-black-900 dark:text-white">
+                                    {person.name}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {person.role}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <h3 className="font-medium text-film-black-900 dark:text-white">
-                                  {person.name}
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                  {person.role}
-                                </p>
+                            ))
+                          ) : (
+                            // Fallback if no cast/crew data
+                            <>
+                              <div className="flex items-center p-4 bg-gray-50 dark:bg-film-black-900 rounded-lg">
+                                <div className="w-12 h-12 bg-film-red-100 dark:bg-film-red-900/30 rounded-full flex items-center justify-center mr-4">
+                                  <span className="text-film-red-600 dark:text-film-red-400 font-medium">
+                                    {film.director.charAt(0)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-film-black-900 dark:text-white">
+                                    {film.director}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Director
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                              <div className="flex items-center p-4 bg-gray-50 dark:bg-film-black-900 rounded-lg">
+                                <div className="w-12 h-12 bg-film-red-100 dark:bg-film-red-900/30 rounded-full flex items-center justify-center mr-4">
+                                  <span className="text-film-red-600 dark:text-film-red-400 font-medium">
+                                    {film.producer.charAt(0)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-film-black-900 dark:text-white">
+                                    {film.producer}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Producer
+                                  </p>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -561,20 +510,23 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                       {/* Featured image */}
                       <div className="relative aspect-video w-full overflow-hidden rounded-xl">
                         <Image
-                          src={film.gallery[activeGalleryImage]}
-                          alt={`${film.title} - Gallery image ${activeGalleryImage + 1}`}
+                          src={galleryImages[safeGalleryIndex]}
+                          alt={`${film.title} - Gallery image ${safeGalleryIndex + 1}`}
                           fill
                           className="object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/images/hero/hero1.jpg";
+                          }}
                         />
                       </div>
 
                       {/* Thumbnails */}
                       <div className="flex gap-4 mt-4 flex-wrap">
-                        {film.gallery.map((image, index) => (
+                        {galleryImages.map((image: string, index: number) => (
                           <button
                             key={index}
                             onClick={() => setActiveGalleryImage(index)}
-                            className={`relative w-24 h-24 overflow-hidden rounded-lg transition-all ${activeGalleryImage === index
+                            className={`relative w-24 h-24 overflow-hidden rounded-lg transition-all ${safeGalleryIndex === index
                               ? 'ring-4 ring-film-red-600 dark:ring-film-red-500'
                               : 'opacity-70 hover:opacity-100'
                               }`}
@@ -584,6 +536,9 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                               alt={`Thumbnail ${index + 1}`}
                               fill
                               className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "/images/hero/hero1.jpg";
+                              }}
                             />
                           </button>
                         ))}
@@ -711,6 +666,9 @@ const FilmDetailPage = ({ params }: { params: { slug: string } }) => {
                                   alt={relatedFilm.title}
                                   fill
                                   className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/images/hero/hero1.jpg";
+                                  }}
                                 />
                               </div>
                               <div>

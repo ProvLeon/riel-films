@@ -19,6 +19,7 @@ const FilmsPage = ({ params }: { params: { slug: string } }) => {
   if (!films || films.length === 0) return <div>No films found</div>;
 
   const featuredFilm = films[0];
+  console.log(films)
 
   return (
     <PageTransition>

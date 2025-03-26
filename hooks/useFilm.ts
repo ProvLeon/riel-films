@@ -1,24 +1,39 @@
+import { Film } from '@/types/mongodbSchema';
 import { useCallback, useEffect, useState } from 'react';
 
-export function useFilm(filmId: string | null) {
-  const [film, setFilm] = useState<any | null>(null);
+export function useFilm(slug: string | null) {
+  const [film, setFilm] = useState<Film | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFilm = useCallback(async (id: string) => {
+  const fetchFilm = useCallback(async (filmSlug: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/films/${id}`);
+      // console.log(`Fetching film with slug: ${filmSlug}`); // Debugging
+      const response = await fetch(`/api/films/${filmSlug}`);
 
+      // console.log(response)
       if (!response.ok) {
-        throw new Error('Failed to fetch film');
+        let errorMessage = `Failed to fetch film: ${response.status}`;
+
+        try {
+          const errorData = await response.json();
+          errorMessage += ` - ${errorData.error || ''}`;
+        } catch (e) {
+          // If parsing JSON fails, just use the status code
+        }
+
+        // console.error(errorMessage); // Log for debugging
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      // console.log('Film data received:', data); // Debugging
       setFilm(data);
     } catch (error: any) {
+      console.error('Error in useFilm hook:', error); // Log for debugging
       setError(error.message);
       setFilm(null);
     } finally {
@@ -27,18 +42,18 @@ export function useFilm(filmId: string | null) {
   }, []);
 
   useEffect(() => {
-    if (filmId) {
-      fetchFilm(filmId);
+    if (slug) {
+      fetchFilm(slug);
     } else {
       setFilm(null);
     }
-  }, [filmId, fetchFilm]);
+  }, [slug, fetchFilm]);
 
   const refetch = useCallback(() => {
-    if (filmId) {
-      fetchFilm(filmId);
+    if (slug) {
+      fetchFilm(slug);
     }
-  }, [filmId, fetchFilm]);
+  }, [slug, fetchFilm]);
 
   return { film, isLoading, error, refetch };
 }

@@ -14,7 +14,8 @@ import { useStory } from "@/hooks/useStory";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
 const StoryPage = ({ params }: { params: { slug: string } }) => {
-  const { story, isLoading, error } = useStory(params.slug);
+  const { slug } = params
+  const { story, isLoading, error } = useStory(slug);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -35,9 +36,9 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
     .slice(0, 3);
 
   // If story doesn't exist, show 404
-  if (!story) {
-    notFound();
-  }
+  // if (!story) {
+  //   notFound();
+  // }
 
   // Handle scroll events for progress indicator
   React.useEffect(() => {
