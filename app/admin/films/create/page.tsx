@@ -1,12 +1,18 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
 import { Save, ArrowLeft, Plus, X, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-const AdminCreateFilmPage = () => {
+const CreateFilmLoading = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner size="large" />
+  </div>
+);
+
+const CreateFilmForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -805,5 +811,13 @@ const AdminCreateFilmPage = () => {
     </div>
   );
 };
+
+const AdminCreateFilmPage = () => {
+  return (
+    <Suspense fallback={<CreateFilmLoading />}>
+      <CreateFilmForm />
+    </Suspense>
+  )
+}
 
 export default AdminCreateFilmPage;
