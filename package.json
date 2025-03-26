@@ -9,7 +9,7 @@
     "lint": "next lint",
     "migrate": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/migrate-data.ts",
     "create-admin": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/create-admin.ts",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --no-engine",
     "db:push": "prisma db push",
     "db:studio": "prisma studio"
   },
