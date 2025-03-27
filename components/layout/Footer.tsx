@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeSwitcher } from "@/components/UI/ThemeSwitcher";
@@ -10,9 +10,51 @@ import { Button } from "@/components/UI/Button";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { theme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [subscribeMessage, setSubscribeMessage] = useState("");
+  const [subscribeError, setSubscribeError] = useState(false);
 
   // Determine which logo to use based on theme
   const logoSrc = theme === "dark" ? "/logo_foot.png" : "/logo_foot.png";
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsSubmitting(true);
+    setSubscribeMessage("");
+    setSubscribeError(false);
+
+    try {
+      const response = await fetch("/api/subscribers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          source: "footer",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscribeMessage(data.message || "Successfully subscribed!");
+        setEmail("");
+      } else {
+        setSubscribeError(true);
+        setSubscribeMessage(data.error || "Failed to subscribe. Please try again.");
+      }
+    } catch (error) {
+      setSubscribeError(true);
+      setSubscribeMessage("An error occurred. Please try again later.");
+      console.error("Subscription error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="bg-gradient-to-b from-film-black-950 to-film-black-900 text-white pt-20 pb-8 relative overflow-hidden">
@@ -40,7 +82,7 @@ const Footer = () => {
               </div>
             </Link>
             <p className="text-gray-400 mb-6 max-w-md">
-              Dedicated to creating unforgettable cinematic experiences that
+              We are dedicated to creating unforgettable cinematic experiences that
               celebrate the rich tapestry of African storytelling. Through authentic narratives,
               we connect cultures and inspire audiences worldwide.
             </p>
@@ -215,12 +257,14 @@ const Footer = () => {
               Subscribe to our newsletter for the latest productions and
               African cinema insights.
             </p>
-            <form className="flex flex-col space-y-3">
+            <form className="flex flex-col space-y-3" onSubmit={handleSubscribe}>
               <div className="relative">
                 <input
                   type="email"
                   placeholder="Your email address"
                   className="w-full px-4 py-3 bg-film-black-800/50 border border-film-black-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-film-red-500 focus:border-transparent text-white placeholder-gray-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -234,9 +278,15 @@ const Footer = () => {
                 type="submit"
                 variant="primary"
                 className="w-full rounded-lg"
+                disabled={isSubmitting}
               >
-                Subscribe
+                {isSubmitting ? 'Subscribing...' : 'Subscribe'}
               </Button>
+              {subscribeMessage && (
+                <p className={`text-sm ${subscribeError ? 'text-red-400' : 'text-green-400'}`}>
+                  {subscribeMessage}
+                </p>
+              )}
             </form>
           </div>
         </div>

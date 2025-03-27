@@ -188,3 +188,18 @@ model Visitor {
 
   @@index([lastSeen])
 }
+
+model Subscriber {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  email         String    @unique
+  name          String?
+  subscribed    Boolean   @default(true)
+  subscribedAt  DateTime  @default(now())
+  lastEmailSent DateTime?
+  interests     String[]  @default([])
+  source        String? // Where they subscribed from
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([subscribed])
+}

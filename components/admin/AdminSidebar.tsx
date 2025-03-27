@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   LogOut,
+  Mail,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -101,6 +102,17 @@ const AdminSidebar = () => {
       subItems: [
         { href: '/admin/stories', text: 'All Stories' },
         { href: '/admin/stories/create', text: 'Add New Story' },
+      ]
+    },
+    {
+      href: '/admin/subscribers',
+      icon: <Mail className="h-5 w-5" />,
+      text: 'Subscribers',
+      access: ['admin', 'editor'],
+      subItems: [
+        { href: '/admin/subscribers', text: 'Overview' },
+        { href: '/admin/subscribers/list', text: 'Subscriber List' },
+        { href: '/admin/subscribers/campaigns', text: 'Email Campaigns' },
       ]
     },
     {

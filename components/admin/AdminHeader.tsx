@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { ThemeSwitcher } from "../UI/ThemeSwitcher";
 
 const AdminHeader = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -235,12 +236,13 @@ const AdminHeader = () => {
 
           {/* Theme switcher */}
           <div className="dropdown-container relative">
-            <button
+            {/* <button
               onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-film-black-800 text-gray-600 dark:text-gray-300"
             >
               {getThemeIcon()}
-            </button>
+            </button> */}
+            <ThemeSwitcher />
 
             <AnimatePresence>
               {isThemeDropdownOpen && (

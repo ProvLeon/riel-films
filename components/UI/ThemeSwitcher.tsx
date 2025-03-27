@@ -25,7 +25,7 @@ export function ThemeSwitcher() {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 dark:bg-film-black-800 text-film-red-500 dark:text-film-red-400 hover:bg-film-red-50 dark:hover:bg-film-black-700 transition-colors focus:outline-none focus:ring-2 focus:ring-film-red-500 dark:focus:ring-film-red-400 dark:focus:ring-offset-film-black-950"
+      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 dark:bg-film-black-800 text-film-red-500 dark:text-film-red-400 hover:bg-film-red-50 dark:hover:bg-film-black-700 transition-colors focus:outline-none"
       aria-label={isDark
         ? "Switch to light mode"
         : "Switch to dark mode"}

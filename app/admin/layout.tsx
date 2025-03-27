@@ -36,7 +36,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-film-black-950">
-      {/* {user && <AdminSidebar />} */}
+      {user && <AdminSidebar />}
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {user && <AdminHeader />}
