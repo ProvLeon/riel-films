@@ -1,4 +1,3 @@
-"use client";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Layout from "@/components/layout/Layout";
 import { coursePageData } from "@/data/coursePageData";

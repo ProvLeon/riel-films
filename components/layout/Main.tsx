@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -134,7 +134,11 @@ function Main({ className = "" }: { className?: string }) {
   return (
     <div className="relative bg-white dark:bg-film-black-950 min-h-screen">
       {/* Analytics tracker */}
-      <PageViewTracker pageType="home" />
+      <Suspense fallback={null}>
+        <PageViewTracker pageType="home" />
+      </Suspense>
+
+      {/* Back to top button */}
 
       {/* Subtle background pattern */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-5">
