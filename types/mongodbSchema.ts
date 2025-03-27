@@ -23,6 +23,7 @@ export type Film = {
   synopsis: string;
   quotes: { text: string; source: string }[];
   rating: number;
+  featured?: boolean; // Add this property
   createdAt: Date;
   updatedAt: Date;
 };

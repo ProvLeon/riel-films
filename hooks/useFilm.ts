@@ -1,20 +1,28 @@
 import { Film } from '@/types/mongodbSchema';
 import { useCallback, useEffect, useState } from 'react';
 
-export function useFilm(slug: string | null) {
+export function useFilm(slugOrId: string | null) {
   const [film, setFilm] = useState<Film | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFilm = useCallback(async (filmSlug: string) => {
+  const fetchFilm = useCallback(async (identifier: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // console.log(`Fetching film with slug: ${filmSlug}`); // Debugging
-      const response = await fetch(`/api/films/${filmSlug}`);
+      console.log(`Fetching film with identifier: ${identifier}`); // Debugging
 
-      // console.log(response)
+      // Determine if this is a MongoDB ID (24 hex chars) or a slug
+      const isMongoId = /^[0-9a-fA-F]{24}$/.test(identifier);
+
+      // Use the appropriate endpoint based on the type of identifier
+      const endpoint = isMongoId
+        ? `/api/films/id/${identifier}`
+        : `/api/films/${identifier}`;
+
+      const response = await fetch(endpoint);
+
       if (!response.ok) {
         let errorMessage = `Failed to fetch film: ${response.status}`;
 
@@ -25,7 +33,7 @@ export function useFilm(slug: string | null) {
           // If parsing JSON fails, just use the status code
         }
 
-        // console.error(errorMessage); // Log for debugging
+        console.error(errorMessage); // Log for debugging
         throw new Error(errorMessage);
       }
 
@@ -42,18 +50,18 @@ export function useFilm(slug: string | null) {
   }, []);
 
   useEffect(() => {
-    if (slug) {
-      fetchFilm(slug);
+    if (slugOrId) {
+      fetchFilm(slugOrId);
     } else {
       setFilm(null);
     }
-  }, [slug, fetchFilm]);
+  }, [slugOrId, fetchFilm]);
 
   const refetch = useCallback(() => {
-    if (slug) {
-      fetchFilm(slug);
+    if (slugOrId) {
+      fetchFilm(slugOrId);
     }
-  }, [slug, fetchFilm]);
+  }, [slugOrId, fetchFilm]);
 
   return { film, isLoading, error, refetch };
 }

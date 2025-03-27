@@ -12,7 +12,7 @@ datasource db {
 model Film {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   title           String
-  slug            String   @unique // Already indexed as unique
+  slug            String   @unique
   category        String
   year            String
   description     String
@@ -31,11 +31,12 @@ model Film {
   synopsis        String
   quotes          Json[]
   rating          Float
+  featured        Boolean  @default(false) // Add this field
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  // Remove fulltext index as it's not supported
 
-  // Add compound indexes for common query patterns
+  // Add index for featured field to optimize queries
+  @@index([featured])
   @@index([category, year])
   @@index([createdAt])
 }

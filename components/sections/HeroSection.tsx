@@ -49,7 +49,7 @@ const HeroSection = () => {
         >
           <div className="relative w-full h-full">
             <Image
-              src={featuredFilm.image || "/images/shade.png"}
+              src={featuredFilm.image || "/images/hero/hero1.jpg"}
               alt={featuredFilm.title}
               fill
               priority
