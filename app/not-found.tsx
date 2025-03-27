@@ -9,12 +9,13 @@ import SectionReveal from "@/components/UI/SectionReveal";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
 const NotFoundLoading = () => (
-  <div className="flex justify-center items-center h-64">
+  <div className="min-h-screen flex justify-center items-center bg-white dark:bg-film-black-950">
     <LoadingSpinner size="large" />
   </div>
 );
 
-const NotFound = () => {
+// The main content component
+const NotFoundContent = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ const NotFound = () => {
     { title: "Our Productions", href: "/productions", icon: <Coffee size={18} /> },
   ];
 
-  if (!mounted) return null;
+  if (!mounted) return <NotFoundLoading />;
 
   return (
     <PageTransition>
@@ -100,12 +101,12 @@ const NotFound = () => {
                 </Link>
               </Button>
 
-              <Link
-                href="javascript:history.back()"
+              <button
+                onClick={() => window.history.back()}
                 className="text-film-red-600 dark:text-film-red-500 hover:underline"
               >
                 Or go back to previous page
-              </Link>
+              </button>
             </motion.div>
           </SectionReveal>
 
@@ -189,12 +190,14 @@ const NotFound = () => {
     </PageTransition>
   );
 };
+
+// The main component with proper Suspense boundary
 const NotFoundPage = () => {
   return (
     <Suspense fallback={<NotFoundLoading />}>
-      <NotFound />
+      <NotFoundContent />
     </Suspense>
-  )
-}
+  );
+};
 
 export default NotFoundPage;
