@@ -14,8 +14,17 @@ const CreateStoryLoading = () => (
   </div>
 );
 
+// Main component that gets exported
+const AdminCreateStoryPage = () => {
+  return (
+    <Suspense fallback={<CreateStoryLoading />}>
+      <CreateStoryForm />
+    </Suspense>
+  );
+};
+
 // Separate the form to use useRouter inside Suspense
-const CreateStoryFormContent = () => {
+const CreateStoryForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -733,18 +742,6 @@ const CreateStoryFormContent = () => {
   );
 };
 
-// Wrap the form in Suspense
-const CreateStoryForm = () => {
-  return (
-    <Suspense fallback={<CreateStoryLoading />}>
-      <CreateStoryFormContent />
-    </Suspense>
-  );
-};
 
-// Main component that gets exported
-const AdminCreateStoryPage = () => {
-  return <CreateStoryForm />;
-};
 
 export default AdminCreateStoryPage;
