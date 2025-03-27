@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useData } from "@/context/DataContext";
 import { Button } from "@/components/UI/Button";
 import { Edit, Trash2, PlusCircle, Search, Filter, CalendarClock, Eye, ExternalLink } from "lucide-react";
@@ -9,7 +9,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { useRouter } from "next/navigation";
 
+
+const ProductionsLoading = () => (
+  <div className="flex justify-center items-center h-64">
+    <LoadingSpinner size="large" />
+  </div>
+)
+
+
 const AdminProductionsPage = () => {
+  return (
+    <Suspense fallback={<ProductionsLoading />}>
+      <AdminProductions />
+    </Suspense>
+  )
+}
+
+const AdminProductions = () => {
   const { productions, isLoadingProductions, fetchProductions } = useData();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -166,8 +182,8 @@ const AdminProductionsPage = () => {
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded-md ${viewMode === "grid"
-                  ? "bg-film-red-100 text-film-red-600 dark:bg-film-red-900/30 dark:text-film-red-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-film-black-800 dark:text-gray-400"
+                ? "bg-film-red-100 text-film-red-600 dark:bg-film-red-900/30 dark:text-film-red-400"
+                : "bg-gray-100 text-gray-600 dark:bg-film-black-800 dark:text-gray-400"
                 }`}
               aria-label="Grid view"
             >
@@ -178,8 +194,8 @@ const AdminProductionsPage = () => {
             <button
               onClick={() => setViewMode("list")}
               className={`p-2 rounded-md ${viewMode === "list"
-                  ? "bg-film-red-100 text-film-red-600 dark:bg-film-red-900/30 dark:text-film-red-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-film-black-800 dark:text-gray-400"
+                ? "bg-film-red-100 text-film-red-600 dark:bg-film-red-900/30 dark:text-film-red-400"
+                : "bg-gray-100 text-gray-600 dark:bg-film-black-800 dark:text-gray-400"
                 }`}
               aria-label="List view"
             >

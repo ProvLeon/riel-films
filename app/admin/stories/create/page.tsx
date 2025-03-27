@@ -14,7 +14,7 @@ const CreateStoryLoading = () => (
   </div>
 );
 
-// Main component that gets exported
+// Main component that gets exported - this won't use any client hooks directly
 const AdminCreateStoryPage = () => {
   return (
     <Suspense fallback={<CreateStoryLoading />}>
@@ -23,7 +23,7 @@ const AdminCreateStoryPage = () => {
   );
 };
 
-// Separate the form to use useRouter inside Suspense
+// This component will be wrapped in Suspense
 const CreateStoryForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -741,7 +741,5 @@ const CreateStoryForm = () => {
     </div>
   );
 };
-
-
 
 export default AdminCreateStoryPage;
