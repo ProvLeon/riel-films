@@ -5,6 +5,8 @@ import Image from "next/image";
 import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
 
+
+
 const ContactPage = () => {
   return (
     <PageTransition>
