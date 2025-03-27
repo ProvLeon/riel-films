@@ -9,7 +9,7 @@ const LoadingSpinner = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'larg
 
   return (
     <div className="flex items-center justify-center">
-      <div className={`animate-spin rounded-full border-4 border-t-primary border-r-transparent border-b-gray-300 border-l-gray-300 ${sizeClasses[size]}`}></div>
+      <div className={`animate-spin rounded-full border-4 border-t-red-600 border-r-transparent border-b-red-800 border-l-red-700 ${sizeClasses[size]}`}></div>
     </div>
   );
 };
