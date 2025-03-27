@@ -1,6 +1,6 @@
-import { AnalyticsData } from '@/types/analytics';
+import { AnalyticsDataType } from '@/types/analytics';
 
-export async function fetchAnalyticsData(days: number = 30, type?: string): Promise<AnalyticsData> {
+export async function fetchAnalyticsData(days: number = 30, type?: string): Promise<AnalyticsDataType> {
   const queryParams = new URLSearchParams();
   queryParams.append('days', days.toString());
   if (type) queryParams.append('type', type);

@@ -1,37 +1,34 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import ContentSection from "@/components/ContentSection";
-import VideoSection from "@/components/VideoSection";
-import AccordionSection from "@/components/AccordionSection";
-import QuoteSection from "@/components/QuoteSection";
-import TutorGrid from "@/components/TutorGrid";
-// Import modular section components
-import FacilitiesSection from "@/components/PageSections/FacilitiesSection";
-import CoursesGrid from "@/components/PageSections/CoursesGrid";
-import CTASection from "@/components/PageSections/CTASection";
-// Import data
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight, Play } from "lucide-react";
+
+// Components
+import BackToTop from "@/components/UI/BackToTop";
+import { Button } from "@/components/UI/Button";
+import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
+import HeroSection from "@/components/sections/HeroSection";
+
+// Data and utilities
 import { coursePageData } from "@/data/coursePageData";
 import { PageData } from "@/types";
-import BackToTop from "@/components/UI/BackToTop";
 import { getRevealClass } from "@/lib/utils";
-import HeroSection from "@/components/sections/HeroSection";
 
 interface MainProps {
   data?: PageData;
   className?: string;
 }
 
-// Key sections for our film company landing page
+// Section IDs for animation tracking
 const sectionIds = [
-  "overview",
-  "video-showcase",
-  "our-storytelling",
-  "production-values",
-  "our-team",
-  "facilities",
-  "community",
-  "productions"
+  "featured",
+  "trending",
+  "productions",
+  "documentaries",
+  "stories",
+  "about"
 ];
 
 function Main({ data = coursePageData, className = "" }: MainProps) {
@@ -100,193 +97,380 @@ function Main({ data = coursePageData, className = "" }: MainProps) {
     return () => clearTimeout(timer);
   }, [isVisible]);
 
-  // Verify that data exists and has required properties
-  if (!data || !data.overview || !data.creativeProduction) {
-    console.error("Missing required data for Main component:", data);
-    return <div className="p-8 text-center">Error loading page data</div>;
-  }
+  // Sample film data (simulated for demonstration)
+  const featuredFilms = [
+    {
+      id: "1",
+      title: "African Horizons",
+      image: "/images/hero/hero1.jpg",
+      year: "2023",
+      category: "Documentary",
+      description: "A journey through the untold stories of West Africa's emerging filmmakers.",
+      featured: true,
+      slug: "african-horizons"
+    },
+    {
+      id: "2",
+      title: "Echoes of Savanna",
+      image: "/images/hero/hero2.jpg",
+      year: "2023",
+      category: "Drama",
+      description: "A powerful story of tradition and modernity in a changing Ghana.",
+      featured: true,
+      slug: "echoes-of-savanna"
+    },
+    {
+      id: "3",
+      title: "Beyond the Sahel",
+      image: "/images/hero/hero3.jpg",
+      year: "2022",
+      category: "Documentary",
+      description: "The environmental challenges and resilience in the Sahel region.",
+      featured: false,
+      slug: "beyond-the-sahel"
+    },
+    {
+      id: "4",
+      title: "Urban Rhythms",
+      image: "/images/hero/hero4.jpg",
+      year: "2022",
+      category: "Drama",
+      description: "Life, music and culture in the vibrant streets of Accra.",
+      featured: false,
+      slug: "urban-rhythms"
+    },
+    {
+      id: "5",
+      title: "The Silent History",
+      image: "/images/hero/hero5.jpg",
+      year: "2021",
+      category: "Historical",
+      description: "Uncovering the untold stories of Ghana's independence movement.",
+      featured: false,
+      slug: "silent-history"
+    },
+    {
+      id: "6",
+      title: "Coastal Tales",
+      image: "/images/hero/hero6.jpg",
+      year: "2021",
+      category: "Documentary",
+      description: "The living traditions of Ghana's coastal communities.",
+      featured: false,
+      slug: "coastal-tales"
+    },
+  ];
+
+  // Productions in development
+  const productions = data.relatedCourses.courses.map(course => ({
+    id: course.title.toLowerCase().replace(/\s+/g, '-'),
+    title: course.title,
+    image: course.imageSrc,
+    description: course.description,
+    category: course.type,
+    slug: course.href.replace('/', '')
+  }));
+
+  // Stories and documentaries
+  const stories = data.relatedCourses.shortCourses?.courses.map(course => ({
+    id: course.title.toLowerCase().replace(/\s+/g, '-'),
+    title: course.title,
+    description: course.description,
+    slug: course.href.replace('/', '')
+  })) || [];
 
   return (
-    <div className={`relative bg-white dark:bg-film-black-950 ${className}`}>
-      {/* Background pattern */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="w-full h-full max-w-[1920px] mx-auto">
-          <Image
-            src={data.heroBackground}
-            fill
-            className="object-cover opacity-[0.03] dark:opacity-[0.05]"
-            alt=""
-            aria-hidden="true"
-            quality={85}
-          />
-        </div>
+    <div className="relative bg-white dark:bg-film-black-950 min-h-screen">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-5">
+        <div className="absolute inset-0 bg-[url('/images/grain.png')] bg-repeat opacity-20"></div>
       </div>
 
-      {/* Main content container */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col">
         <main className="flex-grow">
+          {/* Hero Section - Full width banner */}
           <HeroSection />
 
-          {/* Wrap sections in consistent container */}
-          <div className="container-custom py-16">
-            {/* About Riel Films */}
-            <section
-              id="overview"
-              className={`scroll-reveal mb-24 ${getRevealClass({ id: "overview", isVisible })}`}
-            >
-              <ContentSection
-                title={data.overview.title}
-                content={data.overview.paragraphs}
-              />
-            </section>
-
-            {/* Featured Film/Showreel */}
-            <section
-              id="video-showcase"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "video-showcase", isVisible })}`}
-            >
-              <VideoSection
-                videoTitle="Shaping the Future of African Storytelling"
-                videoDescription="Experience our award-winning authentic African narratives"
-              />
-            </section>
-
-            {/* Our Storytelling Philosophy */}
-            <section
-              id="our-storytelling"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-storytelling", isVisible })}`}
-            >
-              <ContentSection
-                title="Our Authentic Storytelling"
-                content={[
-                  "At Riel Films, we believe in the power of authentic representation. We are committed to portraying genuine African experiences, cultures, and perspectives with integrity and respect, ensuring that our films reflect the diversity and richness of the continent's storytelling traditions.",
-                  "We embrace creativity as the heart of our filmmaking process, encouraging innovation, experimentation, and artistic expression to craft unique and unforgettable cinematic experiences that captivate audiences and leave a lasting impression.",
-                ]}
-              />
-            </section>
-
-            {/* Production Values */}
-            <section
-              id="production-values"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "production-values", isVisible })}`}
-            >
-              <AccordionSection
-                title="Our Production Values"
-                items={[
-                  {
-                    title: "Authenticity",
-                    content:
-                      "We are committed to portraying genuine African experiences, cultures, and perspectives with integrity and respect, ensuring that our films reflect the diversity and richness of the continent's storytelling traditions.",
-                  },
-                  {
-                    title: "Creativity",
-                    content:
-                      "We embrace creativity as the heart of our filmmaking process, encouraging innovation, experimentation, and artistic expression to craft unique and unforgettable cinematic experiences that captivate audiences and leave a lasting impression.",
-                  },
-                  {
-                    title: "Excellence",
-                    content:
-                      "We strive for excellence in every aspect of our work, from scriptwriting and production to post-production and distribution, setting high standards for quality and craftsmanship to ensure that our films meet and exceed the expectations of our audience and industry peers.",
-                  },
-                  {
-                    title: "Inclusivity",
-                    content:
-                      "We value inclusivity and diversity in all aspects of our filmmaking endeavors, fostering an inclusive and collaborative environment where voices from all backgrounds are heard, represented, and celebrated.",
-                  },
-                  {
-                    title: "Impact",
-                    content:
-                      "We are driven by the belief that storytelling has the power to inspire change and make a positive impact on society. We aim to create films that not only entertain but also provoke thought, spark dialogue, and contribute to a deeper understanding of African cultures and issues, both locally and globally.",
-                  },
-                ]}
-                isDarkMode={true}
-              />
-            </section>
-
-            {/* Our Creative Team */}
-            <section
-              id="our-team"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "our-team", isVisible })}`}
-            >
-              <TutorGrid
-                title="Our Creative Team"
-                description="Meet the talented filmmakers, writers, directors, and producers behind our authentic African narratives."
-              />
-            </section>
-
-            {/* Vision Statement */}
-            <section
-              id="vision-quote"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "vision-quote", isVisible })}`}
-            >
-              <QuoteSection
-                quote={data.quotes[0].quote}
-                author={data.quotes[0].author}
-              />
-            </section>
-          </div>
-
-          {/* Production Facilities - Full Width Section */}
+          {/* Featured Content - Netflix-style spotlight */}
           <section
-            id="facilities"
-            className={`scroll-reveal mb-24 ${getRevealClass({ id: "facilities", isVisible })}`}
+            id="featured"
+            className={`scroll-reveal px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-12 ${getRevealClass({ id: "featured", isVisible })}`}
           >
-            <FacilitiesSection {...data.facilities} />
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-film-black-900 dark:text-white">Featured Films</h2>
+              <Link
+                href="/films"
+                className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline"
+              >
+                View all <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+              {featuredFilms.filter(film => film.featured).map((film) => (
+                <motion.div
+                  key={film.id}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Link href={`/films/${film.slug}`}>
+                    <div className="relative h-[250px] md:h-[350px] rounded-lg overflow-hidden group">
+                      <Image
+                        src={film.image}
+                        alt={film.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-film-black-900/90 via-film-black-900/30 to-transparent">
+                      </div>
+                      <div className="absolute bottom-0 left-0 p-6 w-full">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-film-red-500 font-medium">{film.category}</span>
+                          <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <span className="text-gray-300">{film.year}</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">{film.title}</h3>
+                        <p className="text-gray-300 line-clamp-2">{film.description}</p>
+
+                        <Button
+                          variant="primary"
+                          className="mt-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                          size="sm"
+                          icon={<Play className="h-4 w-4" />}
+                        >
+                          Watch Now
+                        </Button>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </section>
 
-          {/* African Storytelling Community */}
-          <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
-            <section
-              id="community"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "community", isVisible })}`}
-            >
-              <ContentSection
-                title="Our African Storytelling Community"
-                content={[
-                  "Riel Films serves diverse audiences, from local Ghanaian moviegoers who appreciate authentic storytelling and cultural representation to diaspora Africans living abroad who seek authentic portrayals of their culture and stories.",
-                  "We also connect with international film enthusiasts interested in exploring stories from Africa and other non-Western cultures, including film festivals and organizations focusing on showcasing diverse voices and perspectives. Through our work, we foster a sense of community among fans of African cinema, encouraging dialogue, collaboration, and mutual support within the Riel Films community and beyond.",
-                ]}
-              />
-            </section>
-
-            {/* Value Proposition Quote */}
-            <section
-              id="value-quote"
-              className={`scroll-reveal pt-20 md:pt-32 ${getRevealClass({ id: "value-quote", isVisible })}`}
-            >
-              <QuoteSection
-                quote={data.quotes[2].quote}
-                author="Riel Films Value Proposition"
-              />
-            </section>
-          </div>
-
-          {/* Our Productions */}
-          <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
-            <section
-              id="productions"
-              className={`scroll-reveal pt-24 ${getRevealClass({ id: "productions", isVisible })}`}
-            >
-              <CoursesGrid
-                title={data.relatedCourses.title}
-                courses={data.relatedCourses.courses}
-                shortCourses={data.relatedCourses.shortCourses}
-              />
-            </section>
-          </div>
-
-          {/* CTA Section */}
+          {/* Trending Films - Horizontal scrollable row */}
           <section
-            id="cta"
-            className={`scroll-reveal mt-24 ${getRevealClass({ id: "cta", isVisible })}`}
+            id="trending"
+            className={`scroll-reveal mt-8 mb-16 ${getRevealClass({ id: "trending", isVisible })}`}
           >
-            <CTASection
-              title={data.cta.title}
-              subtitle={data.cta.subtitle}
-              primaryCta={data.cta.primaryCta}
-              secondaryCta={data.cta.secondaryCta}
-            />
+            <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <h2 className="text-2xl font-bold text-film-black-900 dark:text-white mb-6">Trending Now</h2>
+            </div>
+
+            <div className="relative">
+              <div className="flex space-x-4 overflow-x-auto pb-8 px-4 sm:px-6 lg:px-8 hide-scrollbar">
+                {featuredFilms.map((film) => (
+                  <motion.div
+                    key={film.id}
+                    className="flex-none w-[250px]"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Link href={`/films/${film.slug}`} className="block group">
+                      <div className="relative h-[150px] rounded-lg overflow-hidden mb-2">
+                        <Image
+                          src={film.image}
+                          alt={film.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-film-black-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-film-red-600/90 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                              <Play className="h-5 w-5 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="font-medium text-film-black-900 dark:text-white group-hover:text-film-red-500 transition-colors">{film.title}</h3>
+                      <div className="flex space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>{film.year}</span>
+                        <span>•</span>
+                        <span>{film.category}</span>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Shadow indicators for horizontal scrolling */}
+              <div className="absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white dark:from-film-black-950 to-transparent pointer-events-none"></div>
+              <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white dark:from-film-black-950 to-transparent pointer-events-none"></div>
+            </div>
           </section>
+
+          {/* About Riel Films - Concise section with video */}
+          <section className="bg-film-black-900 dark:bg-film-black-900/30 py-24">
+            <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-6">The Voice of African Cinema</h2>
+                  <p className="text-gray-300 mb-6 text-lg">
+                    At Riel Films, we create authentic African stories through documentary film. Our mission is to showcase the richness and diversity of African culture, traditions, and contemporary life to global audiences.
+                  </p>
+                  <p className="text-gray-300 mb-8">
+                    We collaborate with talented filmmakers across the continent to produce compelling narratives that educate, entertain, and inspire viewers worldwide.
+                  </p>
+                  <Button variant="primary">
+                    <Link href="/about">
+                      About Our Studio
+                    </Link>
+                  </Button>
+                </div>
+
+                <div className="relative h-[300px] md:h-[350px] rounded-lg overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center bg-film-black-900/20 z-10">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="h-16 w-16 md:h-20 md:w-20 bg-film-red-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+                    >
+                      <Play className="h-8 w-8 text-white ml-1" />
+                    </motion.div>
+                  </div>
+                  <Image
+                    src="/images/hero/hero7.jpg"
+                    alt="Our Studio"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Productions - Grid layout with hover effects */}
+          <section
+            id="productions"
+            className={`scroll-reveal px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-16 ${getRevealClass({ id: "productions", isVisible })}`}
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-bold text-film-black-900 dark:text-white">Current Productions</h2>
+              <Link
+                href="/productions"
+                className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline"
+              >
+                All Productions <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {productions.slice(0, 3).map((production) => (
+                <motion.div
+                  key={production.id}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Link href={`/productions/${production.slug}`} className="block h-full group">
+                    <Card className="h-full flex flex-col border-0 shadow-md dark:bg-film-black-900/40 hover:shadow-xl transition-shadow duration-300">
+                      <CardImage
+                        src={production.image}
+                        alt={production.title}
+                        className="transition-transform duration-500 group-hover:scale-105"
+                        aspectRatio="aspect-[16/9]"
+                        overlay={true}
+                      />
+                      <CardContent className="flex-grow dark:text-white">
+                        <div className="flex justify-between items-start mb-2">
+                          <CardTitle className="group-hover:text-film-red-600 dark:group-hover:text-film-red-500 transition-colors">
+                            {production.title}
+                          </CardTitle>
+                        </div>
+                        <div className="text-sm text-film-red-600 dark:text-film-red-400 mb-2">
+                          {production.category}
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
+                          {production.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* Stories section - Simpler list view with hover effects */}
+          <section
+            id="stories"
+            className={`scroll-reveal bg-gray-50 dark:bg-film-black-900/30 py-16 ${getRevealClass({ id: "stories", isVisible })}`}
+          >
+            <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-film-black-900 dark:text-white">Latest Stories</h2>
+                <Link
+                  href="/stories"
+                  className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline"
+                >
+                  All Stories <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {stories.slice(0, 4).map((story, index) => (
+                  <motion.div
+                    key={story.id}
+                    whileHover={{ x: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Link href={`/stories/${story.slug}`} className="block">
+                      <div className="flex items-center p-4 bg-white dark:bg-film-black-800/40 rounded-lg hover:shadow-md transition-shadow group">
+                        <div className="flex-grow">
+                          <h3 className="font-medium text-film-black-900 dark:text-white group-hover:text-film-red-600 dark:group-hover:text-film-red-500 transition-colors">
+                            {story.title}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-1">
+                            {story.description}
+                          </p>
+                        </div>
+                        <div className="h-10 w-10 rounded-full bg-film-red-50 dark:bg-film-red-900/20 flex items-center justify-center group-hover:bg-film-red-100 dark:group-hover:bg-film-red-900/40 transition-colors">
+                          <ArrowRight className="h-4 w-4 text-film-red-600 dark:text-film-red-400 transform group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Call to Action - Netflix-style membership banner */}
+          <section className="py-24 bg-gradient-to-r from-film-red-600 to-film-red-800 dark:from-film-red-700 dark:to-film-red-900">
+            <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Experience Authentic African Cinema</h2>
+              <p className="text-xl text-white text-opacity-90 mb-8 max-w-3xl mx-auto">
+                Join our community to discover exclusive content, behind-the-scenes footage, and special screenings of our award-winning films.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Button
+                  variant="primary"
+                  className=" text-film-red-800 border-none hover:bg-gray-100 text-black-900"
+                >
+                  <Link href="/films" className="flex items-center">
+                    Explore Our Films
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 ml-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                </Button>
+                <Button variant="outline">
+                  <Link href="/contact">
+                    Contact Our Team
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+
         </main>
         <BackToTop />
       </div>

@@ -3,6 +3,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePageData } from "@/hooks/usePageData";
+import { fetchUsers } from "@/lib/users";
+import { UserSection } from '@/components/dashboard/UserSection';
+import { ActivitySection } from '@/components/dashboard/ActivitySection';
+import { useUsers } from '@/hooks/useUsers';
 import {
   Film,
   Youtube,
@@ -35,6 +39,7 @@ import {
   YAxis
 } from "recharts";
 import { cn } from "@/lib/utils";
+
 
 // Dashboard components
 const StatsCard = ({
@@ -445,6 +450,7 @@ const AdminDashboardPage = () => {
     fetchProductions,
     fetchStories
   } = useData();
+  const { users, isLoading: isLoadingUsers } = useUsers()
 
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -471,6 +477,9 @@ const AdminDashboardPage = () => {
 
   // Generate activity items based on real data
   const generateActivityItems = useCallback(() => {
+    // Don't try to generate activities if we don't have users loaded yet
+    if (users.length === 0) return [];
+
     const activities: any[] = [];
     const combinedItems = [
       ...films.map(film => ({ type: 'film', item: film })),
@@ -480,27 +489,23 @@ const AdminDashboardPage = () => {
 
     // Sort by creation date, most recent first
     combinedItems.sort((a, b) => {
-      const dateA = new Date(a.item.createdAt || a.item.date);
-      const dateB = new Date(b.item.createdAt || b.item.date);
+      const dateA = new Date(a.item.createdAt || a.item.updatedAt);
+      const dateB = new Date(b.item.createdAt || b.item.updatedAt);
       return dateB.getTime() - dateA.getTime();
     });
 
     // Generate activity messages for the most recent items
     combinedItems.slice(0, 5).forEach((entry, idx) => {
       const { type, item } = entry;
-      const date = new Date(item.createdAt || item.date);
+      const date = new Date(item.createdAt || item.updatedAt);
 
       // Format relative time
       const timeAgo = getRelativeTimeString(date);
 
-      // Random users (in a real app, this would come from the database)
-      const users = [
-        { name: "Emmanuel Koffi", image: "/images/hero/hero1.jpg" },
-        { name: "Nana Adwoa", image: "/images/hero/hero3.jpg" },
-        { name: "Kofi Mensah", image: "/images/hero/hero2.jpg" }
-      ];
+      // Deterministically assign a user to each activity
+      const userIndex = Math.abs(hashString(item.id) % users.length);
+      const user = users[userIndex];
 
-      const userIndex = Math.floor(Math.random() * users.length);
       const action = date > new Date(Date.now() - 86400000) ? "added" : "updated";
 
       activities.push({
@@ -508,14 +513,24 @@ const AdminDashboardPage = () => {
         action: action === "added" ? `added a new ${type}` : `updated ${type}`,
         item: item.title,
         time: timeAgo,
-        user: users[userIndex].name,
-        userImage: users[userIndex].image,
+        user: user.name,
+        userImage: user.image || '/images/avatar/placeholder.jpg',
         isNew: idx === 0 && date > new Date(Date.now() - 3600000) // New if less than an hour old
       });
     });
 
     return activities;
-  }, [films, productions, stories]);
+  }, [films, productions, stories, users]); // Add users to the dependency array
+
+  function hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  }
 
   // Refresh all data
   const refreshAllData = useCallback(async () => {
@@ -842,33 +857,7 @@ const AdminDashboardPage = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
           </div>
 
-          {isLoading && recentActivity.length === 0 ? (
-            <div className="py-12 flex justify-center">
-              <Loader2 className="h-8 w-8 text-film-red-600 animate-spin" />
-            </div>
-          ) : (
-            <div className="space-y-1 divide-y divide-gray-100 dark:divide-film-black-800">
-              <AnimatePresence>
-                {recentActivity.length > 0 ? (
-                  recentActivity.map((activity) => (
-                    <RecentActivityItem
-                      key={activity.id}
-                      action={activity.action}
-                      item={activity.item}
-                      time={activity.time}
-                      user={activity.user}
-                      userImage={activity.userImage}
-                      isNew={activity.isNew}
-                    />
-                  ))
-                ) : (
-                  <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                    <p>No recent activity</p>
-                  </div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+          <ActivitySection />
 
           <div className="mt-4">
             <Link
@@ -1066,6 +1055,13 @@ const AdminDashboardPage = () => {
             </motion.div>
           </Link>
         </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <UserSection />
+        </motion.div>
       </motion.div>
     </div>
   );

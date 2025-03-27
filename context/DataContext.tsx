@@ -5,10 +5,11 @@ import {
   useCallback,
   ReactNode
 } from "react";
-import { Film, Production, Story, Settings } from '@/types/mongodbSchema';
+import { Film, Production, Story, Settings, User } from '@/types/mongodbSchema';
 import { trackEvent as trackAnalyticsEvent, trackPageView as trackAnalyticsPageView } from '@/lib/analytics-client';
 import { AnalyticsEventType, ContentType } from '@/types/analytics';
 import { AnalyticsDataType, DataContextType } from '@/types/analytics';
+import { fetchUsers } from "@/lib/users";
 
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -38,6 +39,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsDataType | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState<boolean>(false);
   const [errorAnalytics, setErrorAnalytics] = useState<string | null>(null);
+
+  // fetch users
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false);
+  const [errorUsers, setErrorUsers] = useState<string | null>(null);
+
+
+  const fetchUsersData = useCallback(async () => {
+    setIsLoadingUsers(true);
+    setErrorUsers(null);
+
+    try {
+      const data = await fetchUsers();
+      setUsers(data);
+    } catch (error: any) {
+      setErrorUsers(error.message);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, []);
+
 
   // Fetch analytics data
   const fetchAnalytics = useCallback(async (days: number = 30, type?: string) => {
@@ -216,7 +238,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     errorAnalytics,
     fetchAnalytics,
     trackPageView,
-    trackEvent
+    trackEvent,
+
+    users,
+    isLoadingUsers,
+    errorUsers,
+    fetchUsersData
   };
 
   return (

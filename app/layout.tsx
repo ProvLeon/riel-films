@@ -1,7 +1,8 @@
 import { Providers } from "./providers";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css"
-// import PageViewTracker from "@/components/analytics/PageViewTracker";
+import PageViewTracker from "@/components/analytics/PageViewTracker";
+import { Suspense } from "react";
 
 // Define fonts
 const inter = Inter({
@@ -21,6 +22,9 @@ export const metadata = {
   description: "Professional film and creative production education",
 };
 
+const AnalyticsFallback = () => null;
+
+
 export default function RootLayout({
   children,
 }: {
@@ -34,8 +38,10 @@ export default function RootLayout({
     >
       <body>
         <Providers>{children}</Providers>
-        {/* <PageViewTracker pageType="other" /> */}
+        <Suspense fallback={<AnalyticsFallback />}>
+          <PageViewTracker pageType="other" />
+        </Suspense>
       </body>
-    </html>
+    </html >
   );
 }

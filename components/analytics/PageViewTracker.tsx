@@ -20,7 +20,7 @@ export default function PageViewTracker({
   const searchParams = useSearchParams();
   const viewTracked = useRef(false);
   const initialized = useRef(false);
-  const lastPathRef = useRef(pathname);
+  const lastPathRef = useRef('');
 
   // Initialize analytics system once per page load
   useEffect(() => {
@@ -28,10 +28,16 @@ export default function PageViewTracker({
       initializeAnalytics();
       initialized.current = true;
     }
+
+    // Store initial path
+    lastPathRef.current = pathname || '';
   }, []);
 
   // Reset tracking flag when path or search params change
   useEffect(() => {
+    // Skip if pathname is not available yet
+    if (!pathname) return;
+
     // Don't track admin routes or excluded patterns
     if (excludeRegex && excludeRegex.test(pathname)) {
       viewTracked.current = true; // Mark as tracked to prevent tracking
@@ -47,6 +53,9 @@ export default function PageViewTracker({
 
   // Track the actual page view
   useEffect(() => {
+    // Skip if pathname is not available yet
+    if (!pathname) return;
+
     // Skip if already tracked or should be excluded
     if (viewTracked.current || (excludeRegex && excludeRegex.test(pathname))) {
       return;

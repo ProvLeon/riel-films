@@ -1,20 +1,12 @@
 "use client";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
 import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, User, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-// Loading component for Suspense
-const CreateProductionLoading = () => (
-  <div className="flex justify-center items-center h-64">
-    <LoadingSpinner size="large" />
-  </div>
-);
-
-// Main form component that uses useRouter
-const CreateProductionForm = () => {
+const AdminCreateProductionPage = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -333,11 +325,6 @@ const CreateProductionForm = () => {
     });
   };
 
-  // Handler for navigate back
-  const navigateBack = () => {
-    router.back();
-  };
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,7 +358,7 @@ const CreateProductionForm = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={navigateBack}
+            onClick={() => router.back()}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-900"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -1322,7 +1309,7 @@ const CreateProductionForm = () => {
               <Button
                 variant="outline"
                 type="button"
-                onClick={navigateBack}
+                onClick={() => router.back()}
               >
                 Cancel
               </Button>
@@ -1345,15 +1332,6 @@ const CreateProductionForm = () => {
         </form>
       </div>
     </div>
-  );
-};
-
-// Main component with Suspense boundary
-const AdminCreateProductionPage = () => {
-  return (
-    <Suspense fallback={<CreateProductionLoading />}>
-      <CreateProductionForm />
-    </Suspense>
   );
 };
 

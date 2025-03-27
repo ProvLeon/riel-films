@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useData } from "@/context/DataContext";
 import { Button } from "@/components/UI/Button";
 import { Edit, Trash2, PlusCircle, Search, Filter, Star } from "lucide-react";
@@ -9,22 +9,7 @@ import { motion } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { useRouter } from "next/navigation";
 
-const FilmsLoading = () => (
-  <div className="flex justify-center items-center h-64">
-    <LoadingSpinner size="large" />
-  </div>
-)
-
-
 const AdminFilmsPage = () => {
-  return (
-    <Suspense fallback={<FilmsLoading />}>
-      <AdminFilms />
-    </Suspense>
-  )
-}
-
-const AdminFilms = () => {
   const { films, isLoadingFilms, fetchFilms } = useData();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");

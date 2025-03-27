@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
@@ -21,15 +21,7 @@ import { AnimatePresence } from "framer-motion";
 import { useStoriesList } from "@/hooks/useStoriesList";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-// Loading component for Suspense
-const StoriesPageLoading = () => (
-  <div className="min-h-screen flex justify-center items-center bg-white dark:bg-film-black-950">
-    <LoadingSpinner size="large" />
-  </div>
-);
-
-// Main content component
-const StoriesPageContent = () => {
+const StoriesPage = () => {
   const router = useRouter();
   const { stories, isLoading } = useStoriesList();
 
@@ -176,15 +168,6 @@ const StoriesPageContent = () => {
         </div>
       </div>
     </PageTransition>
-  );
-};
-
-// Main component with proper Suspense boundary
-const StoriesPage = () => {
-  return (
-    <Suspense fallback={<StoriesPageLoading />}>
-      <StoriesPageContent />
-    </Suspense>
   );
 };
 

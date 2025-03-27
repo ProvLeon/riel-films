@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
 import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, Image as ImageIcon, Type, Quote, Heading, Calendar } from "lucide-react";
@@ -8,23 +8,7 @@ import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import Image from "next/image";
 import { StoryContent } from "@/types/mongodbSchema";
 
-const CreateStoryLoading = () => (
-  <div className="flex justify-center items-center h-64">
-    <LoadingSpinner size="large" />
-  </div>
-);
-
-// Main component that gets exported - this won't use any client hooks directly
 const AdminCreateStoryPage = () => {
-  return (
-    <Suspense fallback={<CreateStoryLoading />}>
-      <CreateStoryForm />
-    </Suspense>
-  );
-};
-
-// This component will be wrapped in Suspense
-const CreateStoryForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,17 +178,12 @@ const CreateStoryForm = () => {
     }
   };
 
-  // Handler to navigate back
-  const navigateBack = () => {
-    router.back();
-  };
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
           <button
-            onClick={navigateBack}
+            onClick={() => router.back()}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-900"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -718,7 +697,7 @@ const CreateStoryForm = () => {
           <Button
             variant="outline"
             type="button"
-            onClick={navigateBack}
+            onClick={() => router.back()}
           >
             Cancel
           </Button>

@@ -19,10 +19,7 @@ interface ProductionDetailPageProps {
 }
 
 
-// const ProductionDetailPage = ({ params }: ProductionDetailPageProps) => {
-
-
-const ProductionDetailPage = ({ params }: { params: { slug: string } }) => {
+const ProductionDetailPage = ({ params }: ProductionDetailPageProps) => {
   const { slug } = params
   const { production, isLoading, error } = useProduction(slug);
   const [activeTab, setActiveTab] = useState<'about' | 'updates' | 'team' | 'support'>('about');
