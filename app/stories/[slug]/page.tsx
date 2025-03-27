@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -13,9 +13,15 @@ import { formatDate } from "@/lib/utils";
 import { useStory } from "@/hooks/useStory";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 
-const StoryPage = ({ params }: { params: { slug: string } }) => {
-  // @ts-ignore
-  const { slug } = React.use(params)
+// Loading component for Suspense
+const StoryPageLoading = () => (
+  <div className="min-h-screen flex justify-center items-center bg-white dark:bg-film-black-950">
+    <LoadingSpinner size="large" />
+  </div>
+);
+
+// Main content component
+const StoryPageContent = ({ slug }: { slug: string }) => {
   const { story, isLoading, error } = useStory(slug);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
@@ -37,7 +43,6 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -48,16 +53,8 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
 
   // Find related stories (same category, excluding current)
   const relatedStories = allBlogPosts
-    .filter((post) => post.category === story?.category && post.slug !== params.slug)
+    .filter((post) => post.category === story?.category && post.slug !== slug)
     .slice(0, 3);
-
-  // If story doesn't exist, show 404
-  // if (!story) {
-  //   notFound();
-  // }
-
-  // Handle scroll events for progress indicator
-
 
   // Handle scroll to top
   const scrollToTop = () => {
@@ -400,6 +397,15 @@ const StoryPage = ({ params }: { params: { slug: string } }) => {
         </AnimatePresence>
       </div>
     </PageTransition>
+  );
+};
+
+// Main component with Suspense
+const StoryPage = ({ params }: { params: { slug: string } }) => {
+  return (
+    <Suspense fallback={<StoryPageLoading />}>
+      <StoryPageContent slug={params.slug} />
+    </Suspense>
   );
 };
 
