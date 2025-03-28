@@ -832,13 +832,13 @@ const ProductionsPage = () => {
           </section>
 
           {/* Call to Action */}
-          <section className="mb-16 md:mb-24">
+          <section className="mb-16 md:mb-24 opacity-95">
             <SectionReveal direction="up">
               <div className="relative overflow-hidden rounded-2xl">
                 <div className="absolute inset-0 -z-10">
                   <div className="absolute inset-0 bg-gradient-to-r from-film-red-800 to-film-black-900 dark:from-film-red-900 dark:to-film-black-950 opacity-95 z-10"></div>
                   <Image
-                    src="/images/productions/cta-bg.jpg"
+                    src="/images/hero/hero1.jpg"
                     alt="Production scene"
                     fill
                     className="object-cover object-center"

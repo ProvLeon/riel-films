@@ -62,9 +62,7 @@ const StoriesPage = () => {
     router.push(`/stories/${slug}`);
   };
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+
 
   // Handle case where no featured story is found
   const featuredStoryToDisplay = featuredStory || (stories.length > 0 ? stories[0] : null);

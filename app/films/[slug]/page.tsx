@@ -13,6 +13,8 @@ import { useFilmsList } from "@/hooks/useFilmsList";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Film } from "@/types/mongodbSchema";
 import PageViewTracker from "@/components/analytics/PageViewTracker";
+// import Skeleton from "@/components/UI/Skeleton";
+import { FilmDetailSkeleton } from "@/components/skeletons/FilmDetailSkeleton";
 
 type SharePlatform = "twitter" | "facebook" | "linkedin" | "email" | "copy";
 
@@ -56,11 +58,10 @@ const FilmDetailPage = ({ params }: PageParams) => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
+      <FilmDetailSkeleton />
     );
   }
+
 
   // If film doesn't exist, show 404
   // console.log(films)

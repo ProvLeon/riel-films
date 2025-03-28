@@ -10,12 +10,19 @@ import { useFilmsList } from "@/hooks/useFilmsList"; // Changed to useFilmsList
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import type { Film } from "@/types/mongodbSchema"; // Import the Film type
 import { LinkCard } from "@/components/LinkCards";
+import Skeleton from "@/components/UI/Skeleton";
+import { FilmsPageSkeleton } from "@/components/skeletons/FilmsPageSkeleton";
 
 
-const FilmsPage = ({ params }: { params: { slug: string } }) => {
-  const { films, isLoading, error, refetch } = useFilmsList();
+const FilmsPage = () => {
+  const { films, isLoading, error } = useFilmsList();
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading && films.length === 0) {
+    return (
+      <FilmsPageSkeleton />
+    );
+  }
+
   if (error) return <div>Error: {error}</div>;
   if (!films || films.length === 0) return <div>No films found</div>;
 
@@ -39,8 +46,8 @@ const FilmsPage = ({ params }: { params: { slug: string } }) => {
                 <div className="lg:col-span-3">
                   <div className="relative aspect-video rounded-xl overflow-hidden">
                     <CardImage
-                      src={featuredFilm.image}
-                      alt={featuredFilm.title}
+                      src={featuredFilm?.image}
+                      alt={featuredFilm?.title}
                       aspectRatio="aspect-video"
                       overlay={true}
                     />

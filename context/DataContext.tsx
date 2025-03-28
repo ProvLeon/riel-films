@@ -17,7 +17,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
   // Films state
   const [films, setFilms] = useState<Film[]>([]);
-  const [isLoadingFilms, setIsLoadingFilms] = useState<boolean>(false);
+  const [isLoadingFilms, setIsLoadingFilms] = useState<boolean>(true);
   const [errorFilms, setErrorFilms] = useState<string | null>(null);
 
   // Productions state
