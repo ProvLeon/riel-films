@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState, useCallback, Suspense } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, Info } from "lucide-react";
+import Image from "next/image";
 
 // Components
 import BackToTop from "@/components/UI/BackToTop";
@@ -12,13 +12,14 @@ import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
 import PageViewTracker from "@/components/analytics/PageViewTracker";
 import EngagementTracker from "@/components/analytics/EngagementTracker";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import HeroSection from "@/components/sections/HeroSection";
+import CTASection from "@/components/sections/CTASection";
 
 // Hooks and data
 import { useFilmsList } from "@/hooks/useFilmsList";
 import { useProductionsList } from "@/hooks/useProductionsList";
 import { useStoriesList } from "@/hooks/useStoriesList";
 import { getRevealClass } from "@/lib/utils";
-// import { ContentType } from "@/types/analytics";
 
 // Section IDs for animation tracking
 const sectionIds = [
@@ -34,8 +35,6 @@ function Main({ className = "" }: { className?: string }) {
   // State for intersection observer animations
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [autoplayEnabled, setAutoplayEnabled] = useState(true);
 
   // Fetch actual data from API using hooks
   const { films, isLoading: filmsLoading } = useFilmsList({ limit: 8 });
@@ -56,17 +55,6 @@ function Main({ className = "" }: { className?: string }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasScrolled]);
-
-  // Autoplay for hero section
-  useEffect(() => {
-    if (!autoplayEnabled || filmsLoading || films.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % films.length);
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [films, autoplayEnabled, filmsLoading]);
 
   // Set up intersection observer for scroll animations
   useEffect(() => {
@@ -118,17 +106,6 @@ function Main({ className = "" }: { className?: string }) {
   const featuredFilms = films.filter(film => film.featured || film.rating > 4.0).slice(0, 2);
   const trendingFilms = films.slice(0, 6);
 
-  // Get the current featured film for hero section
-  const featuredFilm = films[currentSlide] || null;
-
-  const handleSlideChange = useCallback((index: number) => {
-    setCurrentSlide(index);
-    setAutoplayEnabled(false); // Pause autoplay when user manually changes slides
-
-    // Resume autoplay after 15 seconds
-    setTimeout(() => setAutoplayEnabled(true), 15000);
-  }, []);
-
   const isLoading = filmsLoading || productionsLoading || storiesLoading;
 
   return (
@@ -138,8 +115,6 @@ function Main({ className = "" }: { className?: string }) {
         <PageViewTracker pageType="home" />
       </Suspense>
 
-      {/* Back to top button */}
-
       {/* Subtle background pattern */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-5">
         <div className="absolute inset-0 bg-[url('/images/grain.png')] bg-repeat opacity-20"></div>
@@ -148,130 +123,9 @@ function Main({ className = "" }: { className?: string }) {
       {/* Main content */}
       <div className="relative z-10 flex flex-col">
         <main className="flex-grow">
-          {/* Hero Section - Netflix style featured content */}
-          <section id="hero" className="relative w-full h-[85vh] overflow-hidden">
-            {isLoading ? (
-              <div className="relative w-full h-full bg-gradient-to-r from-film-black-950 to-film-black-900 flex items-center justify-center">
-                <LoadingSpinner size="large" />
-              </div>
-            ) : (
-              <>
-                {/* Featured backdrop with smooth transitions */}
-                <AnimatePresence mode="wait">
-                  {featuredFilm && (
-                    <motion.div
-                      key={featuredFilm.id}
-                      className="absolute inset-0"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.7 }}
-                    >
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={featuredFilm.image || "/images/hero/hero1.jpg"}
-                          alt={featuredFilm.title}
-                          fill
-                          priority
-                          className="object-cover object-center"
-                          sizes="100vw"
-                        />
-
-                        {/* Netflix-style gradient overlay that's stronger at bottom */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-film-black-950 via-film-black-950/80 to-transparent"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/90 to-transparent"></div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Content area */}
-                <div className="absolute inset-0 flex flex-col justify-center px-4 sm:px-12 md:px-16 lg:px-24">
-                  <div className="max-w-3xl">
-                    <AnimatePresence mode="wait">
-                      {featuredFilm && (
-                        <motion.div
-                          key={featuredFilm.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          {/* Netflix-style large title */}
-                          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 text-white leading-none">
-                            {featuredFilm.title}
-                          </h1>
-
-                          {/* Film metadata row */}
-                          <div className="flex items-center gap-3 mb-4 text-white/80 text-sm">
-                            <span className="text-film-red-500 font-semibold">{featuredFilm.year}</span>
-                            <span className="bg-white/20 px-1 rounded">{featuredFilm.rating ? `${featuredFilm.rating.toFixed(1)}/5` : "PG"}</span>
-                            <span>{featuredFilm.duration || "1h 45m"}</span>
-                            <span>{featuredFilm.category}</span>
-                          </div>
-
-                          {/* Description */}
-                          <p className="text-white text-lg mb-8 line-clamp-3 md:line-clamp-none">
-                            {featuredFilm.description}
-                          </p>
-
-                          {/* Call-to-action buttons */}
-                          <div className="flex flex-wrap gap-4">
-                            <EngagementTracker
-                              contentType="film"
-                              contentId={featuredFilm.id}
-                              contentTitle={featuredFilm.title}
-                              contentCategory={featuredFilm.category}
-                              action="click"
-                            >
-                              <Button variant="primary" size="lg">
-                                <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
-                                  <Play className="mr-2 h-5 w-5" fill="currentColor" />
-                                  Watch Now
-                                </Link>
-                              </Button>
-                            </EngagementTracker>
-
-                            <EngagementTracker
-                              contentType="film"
-                              contentId={featuredFilm.id}
-                              contentTitle={featuredFilm.title}
-                              contentCategory={featuredFilm.category}
-                              action="click"
-                              details={{ action: "more-info" }}
-                            >
-                              <Button variant="secondary" size="lg">
-                                <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
-                                  <Info className="mr-2 h-5 w-5" />
-                                  More Info
-                                </Link>
-                              </Button>
-                            </EngagementTracker>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-
-                {/* Slide indicators (Netflix style dots) */}
-                {films.length > 1 && (
-                  <div className="absolute bottom-10 right-10 flex space-x-2">
-                    {films.slice(0, 5).map((_, index) => (
-                      <button
-                        key={index}
-                        className={`w-3 h-3 rounded-full transition-all ${index === currentSlide
-                          ? "bg-white scale-110"
-                          : "bg-white/50 hover:bg-white/80"
-                          }`}
-                        onClick={() => handleSlideChange(index)}
-                        aria-label={`View slide ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
+          {/* Hero Section - Using the HeroSection component */}
+          <section id="hero" className="relative">
+            <HeroSection />
           </section>
 
           {/* Featured Content - Netflix-style spotlight */}
@@ -583,67 +437,19 @@ function Main({ className = "" }: { className?: string }) {
             </div>
           </section>
 
-          {/* Call to Action - Netflix-style membership banner */}
-          <section className="relative overflow-hidden bg-gradient-to-b from-film-red-600 via-film-red-500 to-film-black-900 dark:from-film-red-700 dark:via-film-red-800 dark:to-film-black-900/20 py-20 md:py-24">
-            {/* Decorative elements */}
-            <div className="absolute -left-24 top-1/2 transform -translate-y-1/2 w-64 h-64 rounded-full bg-film-red-400 dark:bg-film-red-900 opacity-20 blur-3xl"></div>
-            <div className="absolute -right-24 -bottom-24 transform w-80 h-80 rounded-full bg-film-red-300 dark:bg-film-red-900 opacity-10 blur-3xl"></div>
-
-            <div className="container mx-auto px-4 md:px-6 lg:px-8 text-center relative z-10 max-w-5xl">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
-                  Join Our Community of African Film Enthusiasts
-                </h2>
-                <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 text-white text-opacity-90">
-                  Subscribe to get updates on our latest releases, behind-the-scenes content, and exclusive stories.
-                </p>
-                <div className="flex flex-wrap justify-center gap-6">
-                  <EngagementTracker
-                    contentType="home"
-                    contentId="cta-primary"
-                    contentTitle="Explore Films CTA"
-                    action="click"
-                  >
-                    <Button variant="primary">
-                      <Link href="/films" className="flex items-center">
-                        Explore Our Films
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 ml-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </Link>
-                    </Button>
-                  </EngagementTracker>
-
-                  <EngagementTracker
-                    contentType="home"
-                    contentId="cta-secondary"
-                    contentTitle="About Mission CTA"
-                    action="click"
-                  >
-                    <Button variant="outline">
-                      <Link href="/about">
-                        About Our Mission
-                      </Link>
-                    </Button>
-                  </EngagementTracker>
-                </div>
-              </motion.div>
-            </div>
-          </section>
+          {/* Call to Action - Using CTASection component */}
+          <CTASection
+            title="Join Our Community of African Film Enthusiasts"
+            subtitle="Subscribe to get updates on our latest releases, behind-the-scenes content, and exclusive stories."
+            primaryCta={{
+              text: "Explore Our Films",
+              link: "/films"
+            }}
+            secondaryCta={{
+              text: "About Our Mission",
+              link: "/about"
+            }}
+          />
         </main>
         <BackToTop />
       </div>

@@ -255,7 +255,7 @@ const Header = () => {
                 </div>
 
                 <div className="flex items-center justify-between px-4 py-4 mt-4 border-t border-film-black-700">
-                  <Button variant="primary">
+                  <Button variant="primary" onClick={() => setIsMenuOpen(false)}>
                     <Link href="/contact">Contact Us</Link>
                   </Button>
                   <ThemeSwitcher />

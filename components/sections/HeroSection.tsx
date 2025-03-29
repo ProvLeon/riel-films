@@ -6,6 +6,9 @@ import Image from "next/image";
 import { Play, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFilmsList } from "@/hooks/useFilmsList";
+import EngagementTracker from "@/components/analytics/EngagementTracker";
+import { CardSkeleton, HeroSkeleton } from "../UI/SkeletonLoaders";
+
 
 const HeroSection = () => {
   const { films, isLoading } = useFilmsList({ limit: 5 });
@@ -27,7 +30,8 @@ const HeroSection = () => {
     return (
       <div className="relative w-full aspect-[16/9] md:aspect-[2.5/1] h-[70vh] bg-gradient-to-r from-film-black-950 to-film-black-900 animate-pulse">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-film-red-600 border-t-transparent rounded-full animate-spin"></div>
+          {/* <CardSkeleton hasImage={true} animation="shimmer" className="w-full" hasFooter={false} /> */}
+          <HeroSkeleton withGradient={true} withBadge={false} />
         </div>
       </div>
     );
@@ -58,8 +62,8 @@ const HeroSection = () => {
             />
 
             {/* Netflix-style gradient overlay that's stronger at bottom */}
-            <div className="absolute inset-0 bg-gradient-to-t from-film-black-950 via-film-black-950/80 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/90 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t dark:from-film-black-950 dark:via-film-black-950/80 from-gray-900/90 via-gray-900/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r dark:from-film-black-950/90 from-gray-700/90 to-transparent"></div>
           </div>
         </motion.div>
       </AnimatePresence>
@@ -83,7 +87,7 @@ const HeroSection = () => {
               {/* Film metadata row */}
               <div className="flex items-center gap-3 mb-4 text-white/80 text-sm">
                 <span className="text-film-red-500 font-semibold">{featuredFilm.year}</span>
-                <span className="bg-white/20 px-1 rounded">{featuredFilm.rating || "PG"}</span>
+                <span className="bg-white/20 px-1 rounded">{featuredFilm.rating ? `${featuredFilm.rating.toFixed(1)}/5` : "PG"}</span>
                 <span>{featuredFilm.duration || "1h 45m"}</span>
                 <span>{featuredFilm.category}</span>
               </div>
@@ -95,18 +99,40 @@ const HeroSection = () => {
 
               {/* Call-to-action buttons */}
               <div className="flex flex-wrap gap-4">
-                <Button variant="primary" size="lg">
-                  <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
-                    <Play className="mr-2 h-5 w-5" fill="currentColor" />
-                    Watch Now
-                  </Link>
-                </Button>
-                <Button variant="secondary" size="lg">
-                  <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
-                    <Info className="mr-2 h-5 w-5" />
-                    More Info
-                  </Link>
-                </Button>
+                <EngagementTracker
+                  contentType="film"
+                  contentId={featuredFilm.id}
+                  contentTitle={featuredFilm.title}
+                  contentCategory={featuredFilm.category}
+                  action="click"
+                >
+                  <Button variant="primary" size="lg">
+                    <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
+                      <Play className="mr-2 h-5 w-5" fill="currentColor" />
+                      Watch Now
+                    </Link>
+                  </Button>
+                </EngagementTracker>
+
+                <EngagementTracker
+                  contentType="film"
+                  contentId={featuredFilm.id}
+                  contentTitle={featuredFilm.title}
+                  contentCategory={featuredFilm.category}
+                  action="click"
+                  details={{ action: "more-info" }}
+                >
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="text-white dark:text-white border-white dark:border-white hover:bg-white/20 dark:hover:bg-white/20 hover:text-white"
+                  >
+                    <Link href={`/films/${featuredFilm.slug}`} className="flex items-center text-white">
+                      <Info className="mr-2 h-5 w-5" />
+                      <span className="text-white">More Info</span>
+                    </Link>
+                  </Button>
+                </EngagementTracker>
               </div>
             </motion.div>
           </AnimatePresence>
