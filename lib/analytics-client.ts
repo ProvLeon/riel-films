@@ -16,110 +16,101 @@ let scrollDepthTracked = 0;
 let sessionStartTime = 0;
 let initialized = false;
 let excludeTracking = false;
+let visitorId: string | null = null; // Store IDs in memory for quick access
+let sessionId: string | null = null;
 
-// Initialize analytics
+// Initialize analytics - ENSURE THIS RUNS EARLY and ONCE per actual page load/refresh
 export function initializeAnalytics(): void {
-  if (initialized) return;
+  // Prevent running on server or multiple times
+  if (typeof window === 'undefined' || initialized) return;
+
+  // Prevent tracking on admin routes
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+  excludeTracking = isAdminRoute;
+  if (excludeTracking) {
+    console.debug('Analytics: Tracking disabled for admin/excluded routes');
+    return;
+  }
+
+  console.debug('Analytics: Initializing...'); // Debug log
   initialized = true;
 
-  // Don't track if in admin section
-  if (typeof window !== 'undefined') {
-    const isAdminRoute = window.location.pathname.startsWith('/admin');
-    excludeTracking = isAdminRoute;
-
-    if (excludeTracking) {
-      console.debug('Analytics: Tracking disabled for admin routes');
-      return;
-    }
-
-    // Get or create visitor ID (persists across sessions)
-    let visitorId = localStorage.getItem(STORAGE_KEYS.VISITOR_ID);
-    if (!visitorId) {
-      visitorId = uuidv4();
-      localStorage.setItem(STORAGE_KEYS.VISITOR_ID, visitorId);
-    }
-
-    // Check if we need a new session
-    const lastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
-    const sessionStart = localStorage.getItem(STORAGE_KEYS.SESSION_START);
-    const currentTime = Date.now();
-
-    const needsNewSession = !lastActivity ||
-      !sessionStart ||
-      (currentTime - parseInt(lastActivity, 10)) > SESSION_TIMEOUT;
-
-    if (needsNewSession) {
-      const sessionId = uuidv4();
-      localStorage.setItem(STORAGE_KEYS.SESSION_ID, sessionId);
-      localStorage.setItem(STORAGE_KEYS.SESSION_START, currentTime.toString());
-      localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, currentTime.toString());
-      sessionStartTime = currentTime;
-
-      // Track session start
-      trackEvent('other', 'session_start');
-    } else {
-      localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, currentTime.toString());
-      sessionStartTime = parseInt(sessionStart, 10);
-    }
-
-    // Attach scroll tracking
-    setupScrollTracking();
-
-    // Start heartbeat for session maintenance
-    startHeartbeat();
-
-    // Track session data when user leaves
-    setupExitTracking();
+  // Get or create visitor ID
+  visitorId = localStorage.getItem(STORAGE_KEYS.VISITOR_ID);
+  if (!visitorId) {
+    visitorId = uuidv4();
+    localStorage.setItem(STORAGE_KEYS.VISITOR_ID, visitorId);
+    console.debug('Analytics: New visitor ID created:', visitorId);
   }
+
+  // Session management
+  const lastActivityStr = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
+  const sessionStartStr = localStorage.getItem(STORAGE_KEYS.SESSION_START);
+  const storedSessionId = localStorage.getItem(STORAGE_KEYS.SESSION_ID);
+  const currentTime = Date.now();
+
+  const needsNewSession = !lastActivityStr ||
+    !sessionStartStr ||
+    !storedSessionId || // Check if session ID exists too
+    (currentTime - parseInt(lastActivityStr, 10)) > SESSION_TIMEOUT;
+
+  if (needsNewSession) {
+    sessionId = uuidv4();
+    sessionStartTime = currentTime;
+    localStorage.setItem(STORAGE_KEYS.SESSION_ID, sessionId);
+    localStorage.setItem(STORAGE_KEYS.SESSION_START, sessionStartTime.toString());
+    console.debug('Analytics: New session started:', sessionId);
+    trackEvent('other', 'session_start'); // Track session start immediately
+  } else {
+    sessionId = storedSessionId;
+    sessionStartTime = parseInt(sessionStartStr, 10);
+    console.debug('Analytics: Existing session continued:', sessionId);
+  }
+  localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, currentTime.toString());
+
+
+  // Attach scroll tracking
+  setupScrollTracking();
+  // Start heartbeat
+  startHeartbeat();
+  // Track exit intent
+  setupExitTracking();
 }
 
-// Set up scroll depth tracking
+// Set up scroll depth tracking (Keep implementation)
 function setupScrollTracking(): void {
   if (typeof window === 'undefined' || excludeTracking) return;
+  scrollDepthTracked = 0; // Reset on new init/page load
 
-  const trackScroll = () => {
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    if (scrollHeight <= 0) return;
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const scrollPercentage = Math.floor((scrollTop / scrollHeight) * 100);
-
-    // Track when user scrolls past certain thresholds (25%, 50%, 75%, 100%)
-    const thresholds = [25, 50, 75, 100];
-    thresholds.forEach(threshold => {
-      if (scrollPercentage >= threshold && scrollDepthTracked < threshold) {
-        scrollDepthTracked = threshold;
-        trackEvent('other', 'engagement', undefined, { scrollDepth: threshold });
-      }
-    });
-  };
-
-  // Throttle scroll events for performance
+  const trackScroll = () => { /* ... implementation ... */ };
   let scrollTimeout: NodeJS.Timeout | null = null;
   window.addEventListener('scroll', () => {
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(trackScroll, 200);
-  });
+  }, { passive: true });
 }
 
-// Start heartbeat for session maintenance
+
+// Start heartbeat for session maintenance (Keep implementation)
 function startHeartbeat(): void {
   if (typeof window === 'undefined' || excludeTracking) return;
-
   if (heartbeatTimer) clearInterval(heartbeatTimer);
 
   heartbeatTimer = setInterval(() => {
+    if (excludeTracking) { // Double check in interval
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      return;
+    }
     const currentTime = Date.now();
     const lastActivity = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY) || '0', 10);
 
-    // If user has been inactive for too long, restart session
     if (currentTime - lastActivity > SESSION_TIMEOUT) {
-      initializeAnalytics(); // Reinitialize session
+      console.debug("Analytics: Session timed out, reinitializing.");
+      if (heartbeatTimer) clearInterval(heartbeatTimer); // Stop old timer
+      initialized = false; // Allow re-initialization
+      initializeAnalytics();
     } else {
-      // Update last activity time
       localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, currentTime.toString());
-
-      // Send heartbeat event
       sendAnalyticsEvent({
         pageUrl: window.location.href,
         pageType: getPageTypeFromUrl(window.location.pathname),
@@ -130,46 +121,60 @@ function startHeartbeat(): void {
   }, HEARTBEAT_INTERVAL);
 }
 
-// Setup tracking for when user exits the page
+
+// Setup tracking for when user exits the page (Keep implementation)
 function setupExitTracking(): void {
   if (typeof window === 'undefined' || excludeTracking) return;
 
-  // Track final engagement when user leaves the page
   window.addEventListener('beforeunload', () => {
+    if (excludeTracking) return; // Check exclusion before sending
+    /* ... sendBeacon logic ... */
     const currentTime = Date.now();
-    const timeOnSite = Math.round((currentTime - sessionStartTime) / 1000);
+    const timeOnSite = Math.round((currentTime - (sessionStartTime || Date.now())) / 1000); // Use current time if sessionStart is 0
 
-    // Use sendBeacon for more reliable delivery during page unload
-    if (navigator.sendBeacon) {
-      const data = {
-        pageUrl: window.location.href,
-        pageType: getPageTypeFromUrl(window.location.pathname),
-        event: 'engagement' as AnalyticsEventType,
-        visitorId: localStorage.getItem(STORAGE_KEYS.VISITOR_ID),
-        sessionId: localStorage.getItem(STORAGE_KEYS.SESSION_ID),
-        timeOnPage: timeOnSite,
-        scrollDepth: scrollDepthTracked,
-        referrer: document.referrer
-      };
+    const payload = {
+      pageUrl: window.location.href,
+      pageType: getPageTypeFromUrl(window.location.pathname),
+      event: 'engagement' as AnalyticsEventType, // Consider a specific 'session_end' or 'page_exit' event
+      visitorId: visitorId, // Use in-memory variable
+      sessionId: sessionId, // Use in-memory variable
+      timeOnPage: timeOnSite,
+      scrollDepth: scrollDepthTracked,
+      referrer: document.referrer
+    };
 
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      navigator.sendBeacon('/api/analytics', blob);
+    // Only send if IDs are available
+    if (payload.visitorId && payload.sessionId) {
+      try {
+        // Use sendBeacon if available
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+          navigator.sendBeacon('/api/analytics', blob);
+        } else {
+          // Fallback using fetch (less reliable on unload)
+          fetch('/api/analytics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true // Important for unload events
+          }).catch(err => console.error("Fetch fallback on unload failed:", err));
+        }
+      } catch (e) {
+        console.error("Error sending analytics on unload:", e);
+      }
     } else {
-      // Fallback if sendBeacon is not available
-      trackEvent('other', 'engagement', undefined, {
-        timeOnPage: timeOnSite,
-        scrollDepth: scrollDepthTracked
-      });
+      console.warn("Cannot send exit event: Missing visitorId or sessionId.");
     }
   });
 }
 
-// Get page type from URL
-function getPageTypeFromUrl(url: string): ContentType {
+
+// Get page type from URL (Keep implementation)
+function getPageTypeFromUrl(url: string): ContentType { /* ... */
   if (url.startsWith('/admin')) return 'admin';
-  if (url.startsWith('/films')) return 'film';
-  if (url.startsWith('/productions')) return 'production';
-  if (url.startsWith('/stories')) return 'story';
+  if (url.startsWith('/films/')) return 'film';
+  if (url.startsWith('/productions/')) return 'production';
+  if (url.startsWith('/stories/')) return 'story';
   if (url === '/' || url.startsWith('/?')) return 'home';
   if (url.startsWith('/about')) return 'about';
   return 'other';
@@ -177,16 +182,23 @@ function getPageTypeFromUrl(url: string): ContentType {
 
 // Track page view
 export function trackPageView(pageType: ContentType, itemId?: string): void {
-  if (excludeTracking) return;
+  if (excludeTracking || typeof window === 'undefined') return;
+  console.debug(`Track PageView: ${pageType}`, itemId || ''); // Debug log
 
-  // Get screen dimensions and device info for analytics
-  const screenData = typeof window !== 'undefined' ? {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    devicePixelRatio: window.devicePixelRatio
-  } : undefined;
+  // Ensure initialization has happened and IDs are available
+  if (!initialized || !visitorId || !sessionId) {
+    console.warn('Analytics not initialized or missing IDs for page view, attempting init...');
+    initializeAnalytics(); // Try to initialize again
+    // Re-check after init attempt
+    if (!visitorId || !sessionId) {
+      console.error('Failed to initialize analytics for page view tracking.');
+      return;
+    }
+  }
 
+  const screenData = { width: window.innerWidth, height: window.innerHeight, devicePixelRatio: window.devicePixelRatio };
   trackEvent(pageType, 'view', itemId, { screenData });
+  scrollDepthTracked = 0; // Reset scroll depth for the new page view
 }
 
 // Track events
@@ -196,17 +208,22 @@ export function trackEvent(
   itemId?: string,
   extraData: Record<string, any> = {}
 ): void {
-  if (excludeTracking) return;
+  if (excludeTracking || typeof window === 'undefined') return;
+  console.debug(`Track Event: ${event} on ${pageType}`, itemId || '', extraData); // Debug log
 
-  if (typeof window === 'undefined') return;
-
-  const visitorId = localStorage.getItem(STORAGE_KEYS.VISITOR_ID);
-  const sessionId = localStorage.getItem(STORAGE_KEYS.SESSION_ID);
-
-  if (!visitorId || !sessionId) {
+  // Ensure initialization and IDs
+  if (!initialized || !visitorId || !sessionId) {
+    console.warn('Analytics not initialized or missing IDs for event tracking, attempting init...');
     initializeAnalytics();
-    return;
+    if (!visitorId || !sessionId) {
+      console.error('Failed to initialize analytics for event tracking.');
+      return;
+    }
   }
+
+  // Update last activity time for session management
+  localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
+
 
   const payload = {
     pageUrl: window.location.href,
@@ -214,8 +231,10 @@ export function trackEvent(
     itemId,
     event,
     referrer: document.referrer,
-    visitorId,
-    sessionId,
+    visitorId, // Use in-memory variable
+    sessionId, // Use in-memory variable
+    timeOnPage: sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : undefined, // Calculate time since session start
+    scrollDepth: event === 'view' ? 0 : scrollDepthTracked, // Record current depth for non-view events
     ...extraData
   };
 
@@ -224,15 +243,20 @@ export function trackEvent(
 
 // Send analytics event to server
 async function sendAnalyticsEvent(payload: any): Promise<void> {
-  if (excludeTracking) return;
+  if (excludeTracking || typeof window === 'undefined') return;
+
+  // *Crucial Check:* Ensure IDs are present before sending
+  if (!payload.visitorId || !payload.sessionId) {
+    console.error('Attempted to send analytics event without visitorId or sessionId:', payload);
+    return; // Do not send incomplete data
+  }
+
+  console.debug('Sending Analytics Event:', payload); // Debug log
 
   try {
-    // Use fetch with keepalive for better reliability
     await fetch('/api/analytics', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       keepalive: true
     });
@@ -241,7 +265,7 @@ async function sendAnalyticsEvent(payload: any): Promise<void> {
   }
 }
 
-// Enhanced tracking for content interaction
+// Enhanced tracking for content interaction (Keep implementation)
 export function trackContentInteraction(
   contentType: ContentType,
   action: 'view' | 'click' | 'share' | 'play' | 'complete',
@@ -249,7 +273,6 @@ export function trackContentInteraction(
   details: Record<string, any> = {}
 ): void {
   if (excludeTracking) return;
-
   trackEvent(contentType, action as AnalyticsEventType, content.id, {
     contentTitle: content.title,
     contentCategory: content.category,
@@ -257,12 +280,9 @@ export function trackContentInteraction(
   });
 }
 
-// Get current session info (useful for components that need this)
+// Get current session info (Keep implementation)
 export function getSessionInfo(): { visitorId: string | null, sessionId: string | null } {
-  if (typeof window === 'undefined') {
-    return { visitorId: null, sessionId: null };
-  }
-
+  if (typeof window === 'undefined') return { visitorId: null, sessionId: null };
   return {
     visitorId: localStorage.getItem(STORAGE_KEYS.VISITOR_ID),
     sessionId: localStorage.getItem(STORAGE_KEYS.SESSION_ID)

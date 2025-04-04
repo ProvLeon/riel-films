@@ -1,101 +1,60 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, Users, Mail, AtSign, Calendar, ArrowUp, ArrowDown,
-  Trash2, Activity, Globe, Clock, Filter
-} from 'lucide-react';
+  UserCheck, UserX, Activity, Globe, BarChartHorizontal, Info
+} from 'lucide-react'; // Removed unused icons
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+  Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import LoadingSpinner from '@/components/UI/LoadingSpinner';
+import AnalyticsCard from '@/components/admin/AnalyticsCard'; // Ensure correct path
 
 const SubscriberAnalytics = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30d'); // '7d', '30d', '90d', '1y'
+  const [timeRange, setTimeRange] = useState('30d');
   const [analyticsData, setAnalyticsData] = useState<any>(null);
 
+  // Custom Tooltip for Charts
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const date = new Date(label);
+      const formattedDate = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+      return (
+        <div className="bg-white dark:bg-film-black-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-film-black-700 text-xs">
+          <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">{formattedDate}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={`item-${index}`} style={{ color: entry.color }}>
+              {`${entry.name}: ${entry.value.toLocaleString()}${entry.unit || ''}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   useEffect(() => {
-    // In a real application, fetch data from API
     const fetchData = async () => {
       setIsLoading(true);
-
       // Simulate API call
-      setTimeout(() => {
-        // Generate mock data based on time range
-        const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
-        const mockData = {
-          summary: {
-            totalSubscribers: 1250,
-            activeSubscribers: 1100,
-            growthRate: 12.4,
-            averageOpenRate: 32.5,
-            averageClickRate: 5.8,
-            unsubscribeRate: 0.4
-          },
-          subscriberGrowth: generateTimeSeriesData(days, 'growth'),
-          emailStats: generateTimeSeriesData(days, 'email'),
-          subscriberSources: [
-            { name: 'Website', value: 650, color: '#3182CE' },
-            { name: 'Social Media', value: 320, color: '#8B5CF6' },
-            { name: 'Referral', value: 180, color: '#F05252' },
-            { name: 'Event', value: 100, color: '#16BDCA' }
-          ],
-          topCountries: [
-            { name: 'Ghana', value: 380, percent: 30.4 },
-            { name: 'Nigeria', value: 280, percent: 22.4 },
-            { name: 'South Africa', value: 210, percent: 16.8 },
-            { name: 'Kenya', value: 160, percent: 12.8 },
-            { name: 'Others', value: 220, percent: 17.6 }
-          ]
-        };
-
-        setAnalyticsData(mockData);
-        setIsLoading(false);
-      }, 1200);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
+      const mockData = generateMockAnalyticsData(days); // Assuming this function exists
+      setAnalyticsData(mockData);
+      setIsLoading(false);
     };
-
     fetchData();
   }, [timeRange]);
 
-  // Helper to generate time series data
-  function generateTimeSeriesData(days: number, type: 'growth' | 'email') {
-    const data = [];
-    const now = new Date();
-
-    // Different startValue based on type
-    let startValue = type === 'growth' ? 950 : 25;
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - i);
-
-      if (type === 'growth') {
-        // For growth, we want an upward trend with some variation
-        const variationFactor = 1 + (Math.random() * 0.1 - 0.02); // -2% to +8% variation
-        startValue = Math.round(startValue * variationFactor);
-
-        data.push({
-          date: date.toISOString().split('T')[0],
-          subscribers: startValue,
-          newSubscribers: Math.round(Math.random() * 12) + 2,
-          unsubscribes: Math.round(Math.random() * 3)
-        });
-      } else {
-        // For email stats, we want somewhat consistent metrics with variations
-        const openRate = startValue + (Math.random() * 10 - 5); // ±5% variation
-
-        data.push({
-          date: date.toISOString().split('T')[0],
-          openRate: Math.min(Math.max(openRate, 15), 45), // Clamp between 15-45%
-          clickRate: Math.min(Math.max(openRate * 0.2, 3), 10) // Click rate is roughly 20% of open rate
-        });
-      }
-    }
-
-    return data;
-  }
+  const summary = useMemo(() => analyticsData?.summary || {}, [analyticsData]);
+  const growthData = useMemo(() => analyticsData?.subscriberGrowth || [], [analyticsData]);
+  const emailData = useMemo(() => analyticsData?.emailStats || [], [analyticsData]);
+  const sourcesData = useMemo(() => analyticsData?.subscriberSources || [], [analyticsData]);
+  const countriesData = useMemo(() => analyticsData?.topCountries || [], [analyticsData]);
 
   if (isLoading) {
     return (
@@ -108,539 +67,168 @@ const SubscriberAnalytics = () => {
   return (
     <div className="space-y-8">
       {/* Header and time range selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-film-black-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-film-black-800">
         <div className="flex items-center">
           <TrendingUp className="h-6 w-6 text-film-red-600 mr-3" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Subscriber Analytics
           </h2>
         </div>
-
-        <div className="flex items-center space-x-2 bg-white dark:bg-film-black-800 p-1 rounded-lg shadow-sm border border-gray-200 dark:border-film-black-700">
-          <button
-            onClick={() => setTimeRange('7d')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${timeRange === '7d'
-              ? 'bg-film-red-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-700'
-              }`}
-          >
-            7 days
-          </button>
-          <button
-            onClick={() => setTimeRange('30d')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${timeRange === '30d'
-              ? 'bg-film-red-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-700'
-              }`}
-          >
-            30 days
-          </button>
-          <button
-            onClick={() => setTimeRange('90d')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${timeRange === '90d'
-              ? 'bg-film-red-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-700'
-              }`}
-          >
-            90 days
-          </button>
-          <button
-            onClick={() => setTimeRange('1y')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${timeRange === '1y'
-              ? 'bg-film-red-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-700'
-              }`}
-          >
-            1 year
-          </button>
+        {/* Time Range Selector */}
+        <div className="flex items-center space-x-1 bg-gray-100 dark:bg-film-black-800 p-1 rounded-lg">
+          {['7d', '30d', '90d', '1y'].map(range => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${timeRange === range ? 'bg-film-red-600 text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-700'}`}
+            >
+              {range === '1y' ? '1 Year' : `${range.replace('d', '')} Days`}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-start justify-between">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-
-            <div className="flex items-center text-sm">
-              <span className={`flex items-center ${analyticsData.summary.growthRate > 0
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
-                }`}>
-                {analyticsData.summary.growthRate > 0 ? (
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                ) : (
-                  <ArrowDown className="h-3 w-3 mr-1" />
-                )}
-                {Math.abs(analyticsData.summary.growthRate)}%
-              </span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">vs last period</span>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Subscribers</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {analyticsData.summary.totalSubscribers.toLocaleString()}
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {analyticsData.summary.activeSubscribers.toLocaleString()} active ({Math.round(analyticsData.summary.activeSubscribers / analyticsData.summary.totalSubscribers * 100)}%)
-            </p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-start justify-between">
-            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-              <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Average Open Rate</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {analyticsData.summary.averageOpenRate.toFixed(1)}%
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Click rate: {analyticsData.summary.averageClickRate.toFixed(1)}%
-            </p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-start justify-between">
-            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-              <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Unsubscribe Rate</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {analyticsData.summary.unsubscribeRate.toFixed(2)}%
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Industry avg: 0.5%
-            </p>
-          </div>
-        </motion.div>
+        <AnalyticsCard title="Total Subscribers" value={summary.totalSubscribers} change={summary.growthRate > 0 ? `+${summary.growthRate}%` : `${summary.growthRate}%`} icon={<Users className="h-6 w-6" />} color="blue" />
+        <AnalyticsCard title="Active Subscribers" value={summary.activeSubscribers} unit={`(${Math.round(summary.activeSubscribers / summary.totalSubscribers * 100)}%)`} icon={<UserCheck className="h-6 w-6" />} color="green" />
+        <AnalyticsCard title="Unsubscribed" value={summary.totalSubscribers - summary.activeSubscribers} change={`${summary.unsubscribeRate}%`} icon={<UserX className="h-6 w-6" />} color="red" isNegativeGood={true} />
+        <AnalyticsCard title="Avg. Open Rate" value={summary.averageOpenRate} unit="%" icon={<Mail className="h-6 w-6" />} color="purple" />
+        <AnalyticsCard title="Avg. Click Rate" value={summary.averageClickRate} unit="%" icon={<AtSign className="h-6 w-6" />} color="amber" />
       </div>
 
-      {/* Charts section */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Subscriber growth chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              <Activity className="h-5 w-5 text-film-red-600 mr-2" />
-              Subscriber Growth
-            </h3>
-          </div>
-
+        {/* Subscriber Growth Chart */}
+        <motion.div className="chart-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <h3 className="chart-title"><Activity className="chart-icon" />Subscriber Growth</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={analyticsData.subscriberGrowth}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.1} />
-                <XAxis
-                  dataKey="date"
-                  stroke="#888"
-                  fontSize={12}
-                  tickFormatter={(date) => {
-                    const d = new Date(date);
-                    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                  }}
-                />
-                <YAxis stroke="#888" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    borderColor: '#ddd',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  formatter={(value: number) => [`${value.toLocaleString()}`, '']}
-                  labelFormatter={(date) => {
-                    const d = new Date(date);
-                    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="subscribers"
-                  name="Total Subscribers"
-                  stroke="#E53E3E"
-                  strokeWidth={2}
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="newSubscribers"
-                  name="New Subscribers"
-                  stroke="#38A169"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="unsubscribes"
-                  name="Unsubscribes"
-                  stroke="#718096"
-                  strokeWidth={2}
-                />
-              </LineChart>
+              <AreaChart data={growthData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorSubs" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3182CE" stopOpacity={0.8} /><stop offset="95%" stopColor="#3182CE" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="colorNew" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#38A169" stopOpacity={0.8} /><stop offset="95%" stopColor="#38A169" stopOpacity={0} /></linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Area type="monotone" dataKey="subscribers" name="Total" stroke="#3182CE" fillOpacity={1} fill="url(#colorSubs)" />
+                <Area type="monotone" dataKey="newSubscribers" name="New" stroke="#38A169" fillOpacity={1} fill="url(#colorNew)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
-        {/* Email performance chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              <Mail className="h-5 w-5 text-film-red-600 mr-2" />
-              Email Engagement
-            </h3>
-          </div>
-
+        {/* Email Engagement Chart */}
+        <motion.div className="chart-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+          <h3 className="chart-title"><Mail className="chart-icon" />Email Engagement</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={analyticsData.emailStats}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.1} />
-                <XAxis
-                  dataKey="date"
-                  stroke="#888"
-                  fontSize={12}
-                  tickFormatter={(date) => {
-                    const d = new Date(date);
-                    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                  }}
-                />
-                <YAxis stroke="#888" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    borderColor: '#ddd',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, '']}
-                  labelFormatter={(date) => {
-                    const d = new Date(date);
-                    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="openRate"
-                  name="Open Rate"
-                  stroke="#4C51BF"
-                  strokeWidth={2}
-                  activeDot={{ r: 8 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="clickRate"
-                  name="Click Rate"
-                  stroke="#ED8936"
-                  strokeWidth={2}
-                />
+              <LineChart data={emailData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} unit="%" />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Line type="monotone" dataKey="openRate" name="Open Rate" stroke="#8B5CF6" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} unit="%" />
+                <Line type="monotone" dataKey="clickRate" name="Click Rate" stroke="#ED8936" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} unit="%" />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
       </div>
 
-      {/* More analytics rows */}
+      {/* Subscriber Sources and Geo Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Subscriber sources */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              <AtSign className="h-5 w-5 text-film-red-600 mr-2" />
-              Subscriber Sources
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Pie chart */}
+        {/* Subscriber Sources */}
+        <motion.div className="chart-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+          <h3 className="chart-title"><AtSign className="chart-icon" />Subscriber Sources</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={analyticsData.subscriberSources}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {analyticsData.subscriberSources.map((entry: any) => (
-                      <Cell key={`cell-${entry.name}`} fill={entry.color} />
-                    ))}
+                  <Pie data={sourcesData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {sourcesData.map((entry: any) => <Cell key={`cell-${entry.name}`} fill={entry.color} className="focus:outline-none ring-1 ring-inset ring-white/10 dark:ring-black/10" />)}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) => [`${value.toLocaleString()} subscribers`, '']}
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      borderColor: '#ddd',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
+                  <Tooltip formatter={(value: number) => [`${value.toLocaleString()}`, 'Subscribers']} content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-
-            {/* Legend/stats */}
-            <div className="flex flex-col justify-center">
-              <div className="space-y-4">
-                {analyticsData.subscriberSources.map((source: any) => (
-                  <div key={source.name} className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div
-                        className="w-3 h-3 rounded-full mr-2"
-                        style={{ backgroundColor: source.color }}
-                      ></div>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{source.name}</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {source.value.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-3">
+              {sourcesData.map((source: any) => (
+                <div key={source.name} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center"><div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: source.color }}></div><span className="text-gray-700 dark:text-gray-300">{source.name}</span></div>
+                  <span className="font-medium text-gray-900 dark:text-white">{source.value.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Geographic distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              <Globe className="h-5 w-5 text-film-red-600 mr-2" />
-              Geographic Distribution
-            </h3>
-          </div>
-
-          <div className="h-64">
+        {/* Geographic Distribution */}
+        <motion.div className="chart-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+          <h3 className="chart-title"><Globe className="chart-icon" />Geographic Distribution (Top 5)</h3>
+          <div className="h-64 pr-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={analyticsData.topCountries}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.1} />
-                <XAxis type="number" stroke="#888" fontSize={12} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="#888"
-                  fontSize={12}
-                  width={100}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    borderColor: '#ddd',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  formatter={(value: number) => [`${value.toLocaleString()} subscribers`, '']}
-                />
-                <Legend />
-                <Bar
-                  dataKey="value"
-                  name="Subscribers"
-                  fill="#E53E3E"
-                  radius={[0, 4, 4, 0]}
-                />
+              <BarChart data={countriesData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} horizontal={false} />
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Subscribers" fill="#E53E3E" radius={[0, 4, 4, 0]} barSize={15}>
+                  {countriesData.map((entry: any, index: number) => <Cell key={`cell-${index}`} fillOpacity={1 - index * 0.1} className="focus:outline-none" />)}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
       </div>
 
-      {/* Recent activity section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-            <Clock className="h-5 w-5 text-film-red-600 mr-2" />
-            Recent Subscriber Activity
-          </h3>
-          <button className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm">
-            <Filter className="h-4 w-4 mr-1" />
-            Filter
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-film-black-700">
-            <thead className="bg-gray-50 dark:bg-film-black-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Event
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Source
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-film-black-900 divide-y divide-gray-200 dark:divide-film-black-800">
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-700 dark:text-teal-300 text-sm font-medium">
-                      KO
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">kofi.owusu@example.com</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                    Subscribed
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Today, 10:23 AM
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Homepage
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-700 dark:text-purple-300 text-sm font-medium">
-                      AA
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">ama.agyei@example.com</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    Opened Email
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Yesterday, 3:45 PM
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Campaign: "New Documentary Release"
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-700 dark:text-pink-300 text-sm font-medium">
-                      NN
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">nana.nyarko@example.com</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                    Unsubscribed
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Sep 12, 2023
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Campaign: "Monthly Newsletter"
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-700 dark:text-orange-300 text-sm font-medium">
-                      JA
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">joshua.addo@example.com</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                    Clicked Link
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Sep 10, 2023
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                  Campaign: "New Documentary Release"
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+      {/* Placeholder for Recent Activity - could reuse ActivitySection if needed */}
+      {/* <motion.div className="chart-container" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}> ... </motion.div> */}
     </div>
   );
 };
+
+// Helper function to generate mock data (ensure this exists)
+function generateMockAnalyticsData(days: number) {
+  function generateTimeSeriesData(days: number, type: 'growth' | 'email') {
+    const data = []; const now = new Date(); let value = type === 'growth' ? 950 : 25;
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now); date.setDate(now.getDate() - i);
+      if (type === 'growth') {
+        value = Math.round(value * (1 + (Math.random() * 0.03 - 0.005)));
+        data.push({ date: date.toISOString().split('T')[0], subscribers: value, newSubscribers: Math.round(Math.random() * 5) + 1 });
+      } else {
+        value += (Math.random() * 4 - 2);
+        data.push({ date: date.toISOString().split('T')[0], openRate: Math.min(Math.max(value, 20), 40), clickRate: Math.min(Math.max(value * 0.25, 2), 8) });
+      }
+    } return data;
+  }
+  const totalSubs = 1250 + Math.floor(Math.random() * 50);
+  const activeSubs = Math.round(totalSubs * (0.85 + Math.random() * 0.1));
+  return {
+    summary: { totalSubscribers: totalSubs, activeSubscribers: activeSubs, growthRate: (Math.random() * 10 + 5).toFixed(1), averageOpenRate: (Math.random() * 15 + 25).toFixed(1), averageClickRate: (Math.random() * 3 + 4).toFixed(1), unsubscribeRate: (Math.random() * 0.3 + 0.2).toFixed(2) },
+    subscriberGrowth: generateTimeSeriesData(days, 'growth'),
+    emailStats: generateTimeSeriesData(days, 'email'),
+    subscriberSources: [{ name: 'Website', value: 650, color: '#3182CE' }, { name: 'Social', value: 320, color: '#8B5CF6' }, { name: 'Referral', value: 180, color: '#F05252' }, { name: 'Event', value: 100, color: '#16BDCA' }],
+    topCountries: [{ name: 'Ghana', value: 380 }, { name: 'Nigeria', value: 280 }, { name: 'S. Africa', value: 210 }, { name: 'Kenya', value: 160 }, { name: 'USA', value: 120 }],
+  };
+}
+
+
+// Add CSS for chart containers
+const styles = `
+  .chart-container { @apply bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800; }
+  .chart-title { @apply text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center; }
+  .chart-icon { @apply h-5 w-5 text-film-red-600 mr-2; }
+  /* Tailwind doesn't directly support chart styling, added for reference */
+  .recharts-tooltip-wrapper { outline: none; }
+  .recharts-legend-item { margin-right: 10px !important; }
+`;
+if (typeof window !== 'undefined') { const styleSheet = document.createElement("style"); styleSheet.innerText = styles; document.head.appendChild(styleSheet); }
+
 
 export default SubscriberAnalytics;

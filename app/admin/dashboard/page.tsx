@@ -1,38 +1,89 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { motion } from "framer-motion";
 import {
-  Activity, Film, Users, TrendingUp,
-  Eye, Clock, BarChart2, Calendar,
-  ChevronRight, LayoutDashboard, Bell
+  Film, Users, TrendingUp, Eye, Clock, BarChart2, Calendar,
+  ChevronRight, LayoutDashboard, Bell, Video, FileText, AlertCircle,
+  Activity as ActivityIcon // Renamed to avoid conflict
 } from 'lucide-react';
+import Link from "next/link";
 import { ActivitySection } from "@/components/dashboard/ActivitySection";
 import { UserSection } from "@/components/dashboard/UserSection";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import ContentCarousel from "@/components/admin/ContentCarousel";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert";
+import { Button } from "@/components/UI/Button"; // Import Button
+
+// Mock data (can be removed if real data is available)
+const MOCK_TEAM_COUNT = 12;
+const MOCK_RECENT_FILMS = 3;
+const MOCK_ACTIVE_PRODUCTIONS = 1;
+const MOCK_STORIES_PUBLISHED = 5;
 
 export default function DashboardPage() {
-  const { films, productions, stories } = useData();
-  const [timeRange, setTimeRange] = useState<number>(30);
+  const { films, productions, stories, isLoadingFilms, isLoadingProductions, isLoadingStories } = useData();
+  const [timeRange] = useState<number>(30); // Default analytics time range
 
-  // Get current date for header display
   const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+
+  const statsCards = [
+    { title: "Total Films", value: films.length, icon: <Film className="h-6 w-6 text-blue-600 dark:text-blue-400" />, color: "blue", trend: `+${MOCK_RECENT_FILMS} this month`, loading: isLoadingFilms },
+    { title: "Total Productions", value: productions.length, icon: <Video className="h-6 w-6 text-purple-600 dark:text-purple-400" />, color: "purple", trend: `${MOCK_ACTIVE_PRODUCTIONS} active`, loading: isLoadingProductions },
+    { title: "Published Stories", value: stories.length, icon: <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />, color: "green", trend: `+${MOCK_STORIES_PUBLISHED} this month`, loading: isLoadingStories },
+    { title: "Team Members", value: MOCK_TEAM_COUNT, icon: <Users className="h-6 w-6 text-amber-600 dark:text-amber-400" />, color: "amber", trend: "Manage users", loading: false },
+  ];
+
+  const upcomingReleases = [
+    { id: 1, title: "Echoes of the Savannah", type: "Documentary", duration: "1h 45m", releaseDate: "Oct 15, 2024", weeksAway: 3 },
+    { id: 2, title: "Urban Rhythms", type: "Short Film", duration: "25m", releaseDate: "Nov 01, 2024", weeksAway: 5 },
+    { id: 3, title: "Generations", type: "Feature Film", duration: "2h 10m", releaseDate: "Nov 20, 2024", weeksAway: 8 },
+  ];
+
+  // Tailwind classes for card colors (more maintainable)
+  const cardColorClasses: Record<string, string> = {
+    blue: "bg-blue-50 dark:bg-blue-900/20",
+    purple: "bg-purple-50 dark:bg-purple-900/20",
+    green: "bg-green-50 dark:bg-green-900/20",
+    amber: "bg-amber-50 dark:bg-amber-900/20",
+  };
+  const trendColorClasses: Record<string, string> = {
+    blue: "text-blue-600 dark:text-blue-400",
+    purple: "text-purple-600 dark:text-purple-400",
+    green: "text-green-600 dark:text-green-400",
+    amber: "text-amber-600 dark:text-amber-400",
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+  const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
+
+  // Error Boundary Fallback Component
+  const ErrorFallback = ({ title, message }: { title: string; message: string }) => (
+    <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-red-200 dark:border-red-800">
+      <AlertTitle className="text-red-600 dark:text-red-400">{title}</AlertTitle>
+      <AlertDescription className="text-red-500 dark:text-red-300 mt-2">{message}</AlertDescription>
+    </div>
+  );
 
   return (
     <div className="bg-gray-50 dark:bg-film-black-950 min-h-screen pb-12">
-      {/* Page Header - Netflix style with gradient */}
-      <div className="bg-gradient-to-r from-film-black-900 to-film-red-900 dark:from-film-black-950 dark:to-film-red-950 text-white py-6 px-6 shadow-lg mb-6">
+      {/* Page Header - Refined styling */}
+      <div className="bg-gradient-to-r from-film-black-900 to-film-red-900 dark:from-film-black-950 dark:to-film-red-950 text-white py-6 px-6 shadow-lg mb-8 rounded-b-xl">
         <div className="max-w-screen-2xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+          >
+            <motion.div variants={itemVariants}>
               <div className="flex items-center">
                 <LayoutDashboard className="h-7 w-7 text-film-red-500 mr-3" />
                 <h1 className="text-2xl md:text-3xl font-bold text-white">
@@ -40,249 +91,182 @@ export default function DashboardPage() {
                 </h1>
               </div>
               <p className="text-gray-300 mt-1">
-                {currentDate} · Welcome back to your content analytics
+                {currentDate} &nbsp;&nbsp;·&nbsp;&nbsp; Welcome back!
               </p>
-            </div>
+            </motion.div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <button className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+            <motion.div variants={itemVariants} className="flex items-center gap-4">
+              <div className="relative dropdown-container">
+                <Button variant="ghost" size="icon" className="bg-white/10 hover:bg-white/20 relative">
                   <Bell className="h-5 w-5 text-white" />
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-film-red-500 rounded-full"></span>
-                </button>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-film-red-500 rounded-full border-2 border-film-black-900"></span>
+                </Button>
+                {/* Dropdown content would go here */}
               </div>
-              <button className="flex items-center gap-2 bg-film-red-600 hover:bg-film-red-700 text-white px-4 py-2 rounded-lg transition-colors shadow-md">
-                <Eye className="h-4 w-4" />
-                <span className="hidden md:inline">View Site</span>
-              </button>
-            </div>
-          </div>
+              <Link href="/" target="_blank" rel="noopener noreferrer">
+                <Button variant="secondary" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-transparent">
+                  <Eye className="h-4 w-4 mr-1.5" />
+                  View Site
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
-        {/* Quick Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {/* Active Content Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-film-black-900 rounded-xl p-5 border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mr-4">
-                <Film className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        {/* Quick Stats Cards - Added hover effect */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"
+        >
+          {statsCards.map((card) => (
+            <motion.div
+              key={card.title}
+              variants={itemVariants}
+              className="bg-white dark:bg-film-black-900 rounded-xl p-5 border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+            >
+              <div className="flex items-start">
+                <div className={`${cardColorClasses[card.color]} p-3 rounded-lg mr-4 flex-shrink-0`}>
+                  {card.icon}
+                </div>
+                <div className="overflow-hidden">
+                  <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium truncate">{card.title}</h3>
+                  <p className={`text-2xl font-bold text-gray-900 dark:text-white mt-1 ${card.loading ? 'animate-pulse' : ''}`}>
+                    {card.loading ? '...' : card.value}
+                  </p>
+                  <p className={`text-xs ${trendColorClasses[card.color]} flex items-center mt-1 truncate`}>
+                    {card.trend}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Films</h3>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{films.length}</p>
-                <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-1">
-                  <span className="flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-                    </svg>
-                    3 new this month
-                  </span>
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Productions Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-film-black-900 rounded-xl p-5 border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start">
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg mr-4">
-                <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Productions</h3>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{productions.length}</p>
-                <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-1">
-                  <span className="flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-                    </svg>
-                    1 active production
-                  </span>
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Stories Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-film-black-900 rounded-xl p-5 border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start">
-              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg mr-4">
-                <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M19 8l-7 5-7-5M5 19h14a2 2 0 002-2V9a2 2 0 00-2-2h-1" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Stories</h3>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stories.length}</p>
-                <p className="text-xs text-green-600 dark:text-green-400 flex items-center mt-1">
-                  <span className="flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-                    </svg>
-                    5 published this month
-                  </span>
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Team Members Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white dark:bg-film-black-900 rounded-xl p-5 border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start">
-              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mr-4">
-                <Users className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Team Members</h3>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">12</p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center mt-1">
-                  <span className="flex items-center">
-                    2 admin, 10 editors
-                  </span>
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {/* Analytics Dashboard */}
-        <div className="mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-10"
+        >
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <TrendingUp className="h-5 w-5 text-film-red-600 mr-2" />
-              Analytics Overview
+              Analytics Overview (Last {timeRange} Days)
             </h2>
-            <a
+            <Link
               href="/admin/analytics"
-              className="text-film-red-600 hover:text-film-red-700 dark:text-film-red-500 dark:hover:text-film-red-400 text-sm font-medium flex items-center"
+              className="text-film-red-600 hover:text-film-red-700 dark:text-film-red-500 dark:hover:text-film-red-400 text-sm font-medium flex items-center group"
             >
               Full Analytics
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
+              <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-
-          <ErrorBoundary>
+          <ErrorBoundary fallback={
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error Loading Analytics</AlertTitle>
+              <AlertDescription>Could not load the analytics dashboard component.</AlertDescription>
+            </Alert>
+          }>
             <AnalyticsDashboard defaultTimeRange={timeRange} condensed={true} />
           </ErrorBoundary>
-        </div>
+        </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           {/* Activity Feed */}
-          <ErrorBoundary>
+          <ErrorBoundary fallback={<ErrorFallback title="Error Loading Activity" message="Could not display recent activity." />}>
             <ActivitySection />
           </ErrorBoundary>
 
-          {/* Team Members Section (takes 2 columns) */}
+          {/* Team Members Section */}
           <div className="lg:col-span-2">
-            <ErrorBoundary>
+            <ErrorBoundary fallback={<ErrorFallback title="Error Loading Team" message="Could not display team members." />}>
               <UserSection />
             </ErrorBoundary>
           </div>
         </div>
 
         {/* Content Sections */}
-        <div className="mt-8">
-          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800 mb-10">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
               <Film className="h-5 w-5 text-film-red-600 mr-2" />
               Content Management
             </h2>
-
-            <ErrorBoundary>
-              <ContentCarousel
-                title="Most Viewed Films"
-                items={films.slice(0, 10)}
-                type="film"
-              />
+            <ErrorBoundary fallback={<p className="text-red-500">Error loading films.</p>}>
+              <ContentCarousel title="Most Viewed Films" items={films.slice(0, 10)} type="film" />
             </ErrorBoundary>
-
-            <ErrorBoundary>
-              <ContentCarousel
-                title="Recent Productions"
-                items={productions.slice(0, 10)}
-                type="production"
-              />
+            <ErrorBoundary fallback={<p className="text-red-500">Error loading productions.</p>}>
+              <ContentCarousel title="Recent Productions" items={productions.slice(0, 10)} type="production" />
             </ErrorBoundary>
-
-            <ErrorBoundary>
-              <ContentCarousel
-                title="Popular Stories"
-                items={stories.slice(0, 10)}
-                type="story"
-              />
+            <ErrorBoundary fallback={<p className="text-red-500">Error loading stories.</p>}>
+              <ContentCarousel title="Popular Stories" items={stories.slice(0, 10)} type="story" />
             </ErrorBoundary>
           </div>
-        </div>
+        </motion.div>
 
         {/* Upcoming Calendar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.5 }}
           className="mt-8 bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800"
         >
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
             <Calendar className="h-5 w-5 text-film-red-600 mr-2" />
             Upcoming Releases
           </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="relative border border-gray-200 dark:border-film-black-800 rounded-lg p-4 hover:border-film-red-500 dark:hover:border-film-red-600 transition-colors"
+          {/* Enhanced Upcoming Release Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {upcomingReleases.length > 0 ? upcomingReleases.map((item) => (
+              <motion.div
+                key={item.id}
+                whileHover={{ y: -5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                className="relative border border-gray-200 dark:border-film-black-800 rounded-lg p-5 hover:border-film-red-500 dark:hover:border-film-red-600 transition-all duration-300 hover:shadow-md bg-gray-50/50 dark:bg-film-black-800/30"
               >
-                <div className="absolute top-4 right-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 text-xs rounded-full">
+                <div className="absolute top-4 right-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 text-xs rounded-full font-medium">
                   Upcoming
                 </div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">Film Title {item}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      Documentary · 1h 45m
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                      <Calendar className="h-4 w-4 mr-1 text-film-red-500" />
-                      <span>Oct 15, 2023</span>
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-lg">{item.title}</h3>
+                  <p className="text-sm text-film-red-600 dark:text-film-red-400 mb-3">
+                    {item.type} · {item.duration}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center mb-1">
+                    <Calendar className="h-4 w-4 mr-1.5 text-gray-500" />
+                    Release: {item.releaseDate}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                    <Clock className="h-4 w-4 mr-1.5 text-gray-500" />
+                    <span>{item.weeksAway} weeks from now</span>
+                  </p>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-film-black-800 flex justify-between">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">3 weeks from now</span>
-                  <a
-                    href="#"
-                    className="text-film-red-600 hover:text-film-red-700 dark:text-film-red-500 dark:hover:text-film-red-400 text-xs font-medium"
+                <div className="mt-5 pt-4 border-t border-gray-100 dark:border-film-black-700 flex justify-end">
+                  <Link
+                    href={`/admin/productions/edit/${item.id}`} // Example link
+                    className="text-film-red-600 hover:text-film-red-700 dark:text-film-red-500 dark:hover:text-film-red-400 text-sm font-medium group flex items-center"
                   >
                     View details
-                  </a>
+                    <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
                 </div>
+              </motion.div>
+            )) : (
+              <div className="md:col-span-3 text-center py-8 text-gray-500 dark:text-gray-400">
+                No upcoming releases scheduled.
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
       </div>

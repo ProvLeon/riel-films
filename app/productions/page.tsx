@@ -7,36 +7,17 @@ import Link from "next/link";
 import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, ArrowRight, ArrowUpRight, Clock, Calendar, AlertCircle, CheckCircle2, User, Award } from "lucide-react";
+import { Play, ArrowRight, ArrowUpRight, Clock, Calendar, AlertCircle, CheckCircle2, User, Award, Milestone, Users, HelpCircle } from "lucide-react"; // Added icons
 import { useProductionsList } from "@/hooks/useProductionsList";
-import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Production } from "@/types/mongodbSchema";
+// import { ProductionsPageSkeleton } from "@/components/skeletons/ProductionsPageSkeleton"; // Import skeleton
+import { getStatusColor } from "@/lib/utils"; // Import status color util
 
-interface CollaborationType {
-  title: string;
-  icon: string;
-  description: string;
-  benefits: string[];
-}
-
-interface ProcessStep {
-  title: string;
-  description: string;
-  icon: string;
-  activities: string[];
-}
-
-interface FAQ {
-  q: string;
-  a: string;
-}
-
-interface Testimonial {
-  quote: string;
-  author: string;
-  position: string;
-  image: string;
-}
+// --- Interfaces (Keep or move to types file) ---
+interface CollaborationType { title: string; image: string; description: string; benefits: string[]; }
+interface ProcessStep { title: string; description: string; icon: string; activities: string[]; }
+interface FAQ { q: string; a: string; }
+interface Testimonial { quote: string; author: string; position: string; image: string; }
 
 const statusColor = (status: string) => {
   switch (status) {
@@ -128,75 +109,30 @@ const FeaturedProductionCard = ({ production }: { production: Production }) => {
 };
 
 // Component for current production card
-const CurrentProductionCard = ({ production, index, onHover }: {
-  production: Production;
-  index: number;
-  onHover: (index: number | null) => void;
-  isHovered?: boolean;
-}) => {
-
-
-  return (
-    <motion.div
-      onMouseEnter={() => onHover(index)}
-      onMouseLeave={() => onHover(null)}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="h-full"
-    >
-      <Card className="h-full flex flex-col overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300">
+const CurrentProductionCard = ({ production, index }: { production: Production, index: number }) => (
+  <motion.div key={production.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -5 }} className="h-full">
+    <Link href={`/productions/${production.slug}`} className="block h-full group">
+      <Card className="h-full flex flex-col overflow-hidden relative shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-film-black-800 bg-white dark:bg-film-black-900">
         <div className="relative">
-          <CardImage
-            src={production.image}
-            alt={production.title}
-            aspectRatio="aspect-video"
-          />
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end p-6 transition-opacity duration-300 opacity-0 hover:opacity-100`}
-          >
-            <Button variant="primary" size="sm" className="group">
-              Learn More
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
+          <CardImage src={production.image} alt={production.title} aspectRatio="aspect-video" />
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(production.status)}`}>{production.status}</div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+            <Button variant="primary" size="sm" className="group pointer-events-none">Learn More <ArrowRight className="ml-1 h-4 w-4" /></Button>
           </div>
         </div>
-
-        <CardContent className="flex-grow">
-          <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
-            <CardTitle className="text-film-black-900 dark:text-white text-xl">{production.title}</CardTitle>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor(production.status)}`}>
-              {production.status}
-            </span>
-          </div>
-          <CardDescription className="mb-2">{production.category}</CardDescription>
-          <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3 text-sm">{production.description}</p>
-
-          <div className="mt-auto pt-4 border-t border-gray-100 dark:border-film-black-800">
-            <div className="flex items-center gap-2 mb-3 text-sm text-gray-600 dark:text-gray-400">
-              <Clock className="w-4 h-4" />
-              <span>{production.timeline}</span>
-            </div>
-
-            {/* Progress bar */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                <span className="font-medium text-film-red-600 dark:text-film-red-500">{production.progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                <motion.div
-                  initial={{ width: '5%' }}
-                  animate={{ width: `${production.progress}%` }}
-                  transition={{ duration: 0.8, delay: 0.2 * index, ease: "easeOut" }}
-                  className="bg-film-red-600 dark:bg-film-red-500 h-2 rounded-full"
-                />
-              </div>
-            </div>
+        <CardContent className="p-4 flex-grow flex flex-col">
+          <CardTitle className="text-film-black-900 dark:text-white text-lg mb-2 line-clamp-1 group-hover:text-film-red-600 dark:group-hover:text-film-red-500 transition-colors">{production.title}</CardTitle>
+          <CardDescription className="text-sm mb-3">{production.category}</CardDescription>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">{production.description}</p>
+          <div className="mt-auto pt-3 border-t border-gray-100 dark:border-film-black-800">
+            <div className="flex items-center gap-2 mb-2 text-xs text-gray-500 dark:text-gray-400"><Clock className="w-3.5 h-3.5" /><span>{production.timeline || 'Ongoing'}</span></div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><motion.div className="bg-film-red-500 h-1.5 rounded-full" initial={{ width: '0%' }} animate={{ width: `${production.progress}%` }} transition={{ duration: 0.8, delay: 0.2 * index }} /></div>
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
-};
+    </Link>
+  </motion.div>
+);
 
 // Component for completed production card
 const CompletedProductionCard = ({ production }: { production: Production }) => {
@@ -253,7 +189,7 @@ const CollaborationCard = ({ collaboration, index }: { collaboration: Collaborat
     >
       <div className="flex flex-col sm:flex-row gap-6 mb-6">
         <div className="w-16 h-16 flex-shrink-0 bg-film-red-100 dark:bg-film-red-900/30 rounded-full flex items-center justify-center">
-          <Image src={collaboration.icon} width={32} height={32} alt={collaboration.title} />
+          <Image src={collaboration.image} width={32} height={32} alt={collaboration.title} />
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2 text-film-black-900 dark:text-white">{collaboration.title}</h3>
@@ -428,70 +364,51 @@ const ExploreCard = ({ title, description, image, link, delay }: {
 };
 
 // Main page component
+
 const ProductionsPage = () => {
   const { productions, isLoading, error } = useProductionsList();
   const [activeTab, setActiveTab] = useState<'current' | 'completed'>('current');
-  const [hoveredProject, setHoveredProject] = useState<number | null>(null);
 
-  // Process the fetched productions
-  const {
-    currentProductions,
-    completedProductions,
-    featuredProduction
-  } = useMemo(() => {
-    const current = productions.filter(p =>
-      p.status === "In Production" ||
-      p.status === "Pre-Production" ||
-      p.status === "Development"
-    );
-
-    const completed = productions.filter(p =>
-      p.status === "Completed"
-    );
-
-    const featured = current.find(p => p.featured === true) ||
-      (current.length > 0 ? current[0] : null);
-
-    return {
-      currentProductions: current,
-      completedProductions: completed,
-      featuredProduction: featured
-    };
+  const { currentProductions, completedProductions, featuredProduction } = useMemo(() => {
+    const current = productions.filter(p => ["Development", "Pre-Production", "In Production", "Post-Production"].includes(p.status));
+    const completed = productions.filter(p => p.status === "Completed");
+    const featured = current.find(p => p.featured) || (current.length > 0 ? current[0] : null);
+    return { currentProductions: current, completedProductions: completed, featuredProduction: featured };
   }, [productions]);
 
-  // Filter current productions excluding the featured one
   const nonFeaturedProductions = useMemo(() => {
     return currentProductions.filter(p => p.id !== featuredProduction?.id);
   }, [currentProductions, featuredProduction]);
 
-
   // Data for collaboration types
+  // --- Static Data (Move to data file or CMS) ---
   const collaborationTypes: CollaborationType[] = [
     {
       title: "Co-Production",
-      icon: "/images/icons/co-production.svg",
+      image: "/images/icons/co-production.svg",
       description: "Partner with us to co-produce feature films, documentaries, or series that align with our vision for authentic African storytelling.",
       benefits: ["Shared creative control", "Combined resources", "Access to diverse markets"]
     },
     {
       title: "Distribution",
-      icon: "/images/icons/distribution.svg",
+      image: "/images/icons/distribution.svg",
       description: "Help bring our completed films to audiences worldwide through theatrical, streaming, or broadcast partnerships.",
       benefits: ["Exclusive content", "Cultural diversity", "Award-winning productions"]
     },
     {
       title: "Production Services",
-      icon: "/images/icons/production-services.svg",
+      image: "/images/icons/production-services.svg",
       description: "Utilize our local knowledge, production expertise, and networks for your production needs in Ghana and across West Africa.",
       benefits: ["Local expertise", "Experienced crews", "Logistical support"]
     },
     {
       title: "Talent Development",
-      icon: "/images/icons/talent.svg",
+      image: "/images/icons/talent.svg",
       description: "Support our initiatives to train and develop emerging African filmmaking talent through workshops and mentorship programs.",
       benefits: ["Community impact", "Talent discovery", "Sustainable industry growth"]
     }
   ];
+
 
   // Data for process steps
   const processSteps: ProcessStep[] = [
@@ -596,148 +513,41 @@ const ProductionsPage = () => {
     <PageTransition>
       <div className="min-h-screen bg-white dark:bg-film-black-950">
         {/* Hero Section */}
-        <section className="relative py-16 md:py-24 lg:py-32 overflow-hidden">
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/90 to-film-black-900/70 z-10" />
-            <Image
-              src="/images/hero/hero9.jpg"
-              alt="Production Background"
-              fill
-              className="object-cover object-center"
-              priority
-            />
-          </div>
-
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="max-w-3xl">
-              <SectionReveal>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">
-                  Our <span className="text-film-red-500">Productions</span>
-                </h1>
-              </SectionReveal>
-
-              <SectionReveal delay={0.1}>
-                <p className="text-lg md:text-xl dark:text-gray-200 text-gray-600 mb-8 leading-relaxed">
-                  From concept to screen, we bring authentic African stories to life through
-                  compelling narratives and visually stunning cinematography.
-                </p>
-              </SectionReveal>
-
-              <SectionReveal delay={0.2}>
-                <div className="flex flex-wrap gap-4">
-                  <Button variant="primary" className="group">
-                    <Link href="#current-projects" className="flex items-center">
-                      View Current Projects
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10">
-                    <Link href="/films">Explore Completed Films</Link>
-                  </Button>
-                </div>
-              </SectionReveal>
+        <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden bg-gradient-to-br from-film-black-900 to-film-black-950">
+          {/* ... (Hero background image and gradient as before) ... */}
+          <div className="absolute inset-0 -z-10"><div className="absolute inset-0 bg-gradient-to-r from-film-black-950/90 to-film-black-900/70 z-10" /><Image src="/images/hero/hero9.jpg" alt="Production Background" fill className="object-cover object-center opacity-30" priority /></div>
+          <div className="container mx-auto px-4 sm:px-6 relative z-10">
+            <div className="max-w-3xl text-center mx-auto">
+              <SectionReveal><h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">Our <span className="text-film-red-500">Productions</span></h1></SectionReveal>
+              <SectionReveal delay={0.1}><p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">From initial concept to final cut, we meticulously craft narratives that resonate deeply, reflecting authentic experiences and fostering global understanding.</p></SectionReveal>
+              <SectionReveal delay={0.2}><div className="flex flex-wrap gap-4 justify-center"><Button variant="primary" className="group" size="lg"><Link href="#current-projects" className="flex items-center">View Current Projects <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link></Button><Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10" size="lg"><Link href="/films">Explore Completed Films</Link></Button></div></SectionReveal>
             </div>
           </div>
         </section>
 
+
         <div className="container mx-auto px-4 sm:px-6">
           {/* Projects Tabs Section */}
-          <section id="current-projects" className="mb-16 md:mb-24 pt-4 md:pt-0 scroll-mt-24">
+          <section id="current-projects" className="py-16 md:py-20 scroll-mt-20">
+            {/* ... (Tabs and content rendering logic as before, using CurrentProductionCard and CompletedProductionCard) ... */}
             <SectionReveal>
               <div className="mb-8 border-b border-gray-200 dark:border-film-black-800">
                 <div className="flex space-x-4 md:space-x-8 overflow-x-auto scrollbar-hide">
-                  <button
-                    onClick={() => setActiveTab("current")}
-                    aria-selected={activeTab === "current"}
-                    className={`py-4 px-1 text-lg font-medium relative ${activeTab === "current"
-                      ? "text-film-red-600 dark:text-film-red-500"
-                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      }`}
-                  >
-                    Current Projects
-                    {activeTab === "current" && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 dark:bg-film-red-500"
-                      />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("completed")}
-                    aria-selected={activeTab === "completed"}
-                    className={`py-4 px-1 text-lg font-medium relative whitespace-nowrap ${activeTab === "completed"
-                      ? "text-film-red-600 dark:text-film-red-500"
-                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      }`}
-                  >
-                    Completed Productions
-                    {activeTab === "completed" && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 dark:bg-film-red-500"
-                      />
-                    )}
-                  </button>
+                  <button onClick={() => setActiveTab("current")} aria-selected={activeTab === "current"} className={`py-4 px-1 text-lg font-medium relative ${activeTab === "current" ? "text-film-red-600 dark:text-film-red-500" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}>{activeTab === "current" && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 dark:bg-film-red-500" />)} Current Projects </button>
+                  <button onClick={() => setActiveTab("completed")} aria-selected={activeTab === "completed"} className={`py-4 px-1 text-lg font-medium relative whitespace-nowrap ${activeTab === "completed" ? "text-film-red-600 dark:text-film-red-500" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}>{activeTab === "completed" && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 dark:bg-film-red-500" />)} Completed Productions</button>
                 </div>
               </div>
             </SectionReveal>
-
             <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="mb-16"
-              >
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
                 {activeTab === "current" ? (
                   <>
-                    {/* Featured Project */}
-                    {featuredProduction && (
-                      <SectionReveal delay={0.1}>
-                        <div className="mb-16">
-                          <FeaturedProductionCard production={featuredProduction} />
-                        </div>
-                      </SectionReveal>
-                    )}
-
-                    {/* Other Current Projects */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                      {nonFeaturedProductions.map((production, index) => (
-                        <SectionReveal key={production.id || index} delay={0.1 * (index % 3)}>
-                          <CurrentProductionCard
-                            production={production}
-                            index={index}
-                            onHover={setHoveredProject}
-                          />
-                        </SectionReveal>
-                      ))}
-                    </div>
-                    {nonFeaturedProductions.length === 0 && !featuredProduction && (
-                      <div className="text-center py-12">
-                        <p className="text-gray-600 dark:text-gray-400">
-                          No current productions available at this time.
-                        </p>
-                      </div>
-                    )}
+                    {featuredProduction && (<SectionReveal delay={0.1}><div className="mb-16"><FeaturedProductionCard production={featuredProduction} /></div></SectionReveal>)}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"> {nonFeaturedProductions.map((production, index) => (<CurrentProductionCard key={production.id || index} production={production} index={index} />))}</div>
+                    {currentProductions.length === 0 && (<div className="text-center py-12 text-gray-600 dark:text-gray-400">No current productions to display.</div>)}
                   </>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {completedProductions.map((production, index) => (
-                      <SectionReveal key={production.id || index} delay={0.1 * (index % 3)}>
-                        <CompletedProductionCard production={production} />
-                      </SectionReveal>
-                    ))}
-
-                    {completedProductions.length === 0 && (
-                      <div className="text-center py-12 col-span-3">
-                        <p className="text-gray-600 dark:text-gray-400">
-                          No completed productions available at this time.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"> {completedProductions.map((production, index) => (<CompletedProductionCard key={production.id || index} production={production} />))} {completedProductions.length === 0 && (<div className="text-center py-12 col-span-full text-gray-600 dark:text-gray-400">No completed productions yet.</div>)}</div>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -1049,5 +859,6 @@ const ProductionsPage = () => {
     </PageTransition>
   );
 };
+
 
 export default ProductionsPage;

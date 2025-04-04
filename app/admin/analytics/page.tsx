@@ -1,141 +1,106 @@
 "use client";
-import { useState } from "react";
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useState, Suspense } from "react";
 import { TrendingUp, Film, FileText, Video, BarChart2, ArrowLeft } from 'lucide-react';
-import AdminHeader from "@/components/admin/AdminHeader";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert"; // Use Alert
+
+type ActiveTab = 'overview' | 'films' | 'stories' | 'productions';
 
 export default function AnalyticsPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'films' | 'stories' | 'productions'>('overview');
-  const [timeRange, setTimeRange] = useState<number>(30);
-  const { analyticsData, fetchAnalyticsData } = useAnalytics();
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [timeRange, setTimeRange] = useState<number>(30); // Keep track of selected time range
 
   return (
     <div className="bg-gray-50 dark:bg-film-black-950 min-h-screen">
-      <AdminHeader />
-
-      <div className="p-6">
+      <div className="p-4 md:p-6 lg:p-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <div className="flex items-center mb-2">
               <Link
                 href="/admin/dashboard"
-                className="text-gray-600 dark:text-gray-400 hover:text-film-red-600 dark:hover:text-film-red-500 mr-2"
+                className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800 mr-2 transition-colors"
+                aria-label="Back to Dashboard"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
                 <BarChart2 className="h-6 w-6 text-film-red-600 mr-2" />
-                Analytics
+                Analytics Dashboard
               </h1>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Insights and performance metrics for your content
+            <p className="text-gray-600 dark:text-gray-400 ml-10 md:ml-0">
+              Insights and performance metrics for your content.
             </p>
           </div>
+          {/* Optional: Add Actions like Export */}
         </div>
 
-        {/* Analytics tab navigation */}
-        <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm mb-6">
+        {/* Enhanced Analytics Tabs */}
+        <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm mb-6 border border-gray-100 dark:border-film-black-800">
           <div className="border-b border-gray-200 dark:border-film-black-800">
-            <nav className="flex -mb-px overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`py-4 px-6 font-medium text-sm inline-flex items-center whitespace-nowrap ${activeTab === 'overview'
-                  ? 'border-b-2 border-film-red-600 text-film-red-600 dark:text-film-red-500'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-              >
-                <TrendingUp className="h-5 w-5 mr-2" />
-                Overview
-              </button>
-
-              <button
-                onClick={() => setActiveTab('films')}
-                className={`py-4 px-6 font-medium text-sm inline-flex items-center whitespace-nowrap ${activeTab === 'films'
-                  ? 'border-b-2 border-film-red-600 text-film-red-600 dark:text-film-red-500'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-              >
-                <Film className="h-5 w-5 mr-2" />
-                Films
-              </button>
-
-              <button
-                onClick={() => setActiveTab('stories')}
-                className={`py-4 px-6 font-medium text-sm inline-flex items-center whitespace-nowrap ${activeTab === 'stories'
-                  ? 'border-b-2 border-film-red-600 text-film-red-600 dark:text-film-red-500'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-              >
-                <FileText className="h-5 w-5 mr-2" />
-                Stories
-              </button>
-
-              <button
-                onClick={() => setActiveTab('productions')}
-                className={`py-4 px-6 font-medium text-sm inline-flex items-center whitespace-nowrap ${activeTab === 'productions'
-                  ? 'border-b-2 border-film-red-600 text-film-red-600 dark:text-film-red-500'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-              >
-                <Video className="h-5 w-5 mr-2" />
-                Productions
-              </button>
+            <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-hide px-4">
+              {[
+                { key: 'overview', label: 'Overview', icon: TrendingUp },
+                { key: 'films', label: 'Films', icon: Film },
+                { key: 'stories', label: 'Stories', icon: FileText },
+                { key: 'productions', label: 'Productions', icon: Video },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as ActiveTab)}
+                  className={`py-4 px-1 font-medium text-sm inline-flex items-center whitespace-nowrap border-b-2 transition-all duration-200 ease-in-out group relative ${activeTab === tab.key
+                    ? 'border-film-red-600 text-film-red-600 dark:text-film-red-500'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                >
+                  <tab.icon className={`h-5 w-5 mr-2 transition-colors ${activeTab === tab.key ? 'text-film-red-500' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`} />
+                  {tab.label}
+                  {/* Underline effect */}
+                  <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 transform transition-transform duration-300 ${activeTab === tab.key ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+                </button>
+              ))}
             </nav>
           </div>
         </div>
 
         {/* Analytics dashboard content */}
-        {activeTab === 'overview' && <ErrorBoundary>
-          <AnalyticsDashboard defaultTimeRange={timeRange} condensed={false} />
-        </ErrorBoundary>}
+        <Suspense fallback={<div className="h-96 flex items-center justify-center"><LoadingSpinner size="large" /></div>}>
+          {activeTab === 'overview' && (
+            <ErrorBoundary fallback={
+              <Alert variant="destructive">
+                <AlertTitle>Error Loading Analytics</AlertTitle>
+                <AlertDescription>Could not load the overview analytics data. Please try again later.</AlertDescription>
+              </Alert>
+            }>
+              <AnalyticsDashboard defaultTimeRange={timeRange} condensed={false} />
+            </ErrorBoundary>
+          )}
+        </Suspense>
 
-        {activeTab === 'films' && (
-          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Film Analytics
+        {activeTab !== 'overview' && (
+          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 capitalize flex items-center">
+              {activeTab === 'films' ? <Film className="h-5 w-5 mr-2 text-film-red-500" /> : activeTab === 'stories' ? <FileText className="h-5 w-5 mr-2 text-film-red-500" /> : <Video className="h-5 w-5 mr-2 text-film-red-500" />}
+              {activeTab} Analytics
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Detailed analytics about your films would be displayed here, including views, engagement, and user demographics.
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Detailed analytics for {activeTab}. This section is currently under development.
             </p>
-            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-film-black-800/50 rounded-lg mt-6">
-              <p className="text-gray-500 dark:text-gray-400">
-                Film-specific analytics visualization
+            {/* Enhanced Placeholder */}
+            <div className="min-h-[300px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-film-black-800/30 dark:to-film-black-800/50 rounded-lg border border-dashed border-gray-300 dark:border-film-black-700 p-8 text-center">
+              <div className="w-16 h-16 bg-gray-200 dark:bg-film-black-700 rounded-full flex items-center justify-center mb-4 ring-4 ring-gray-300/50 dark:ring-film-black-600/50">
+                {activeTab === 'films' ? <Film className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                  : activeTab === 'stories' ? <FileText className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                    : <Video className="h-8 w-8 text-gray-400 dark:text-gray-500" />}
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 font-medium mb-2 text-lg">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Analytics Coming Soon
               </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'stories' && (
-          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Story Analytics
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Track how users engage with your stories, including read time, popularity, and sharing metrics.
-            </p>
-            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-film-black-800/50 rounded-lg mt-6">
-              <p className="text-gray-500 dark:text-gray-400">
-                Story-specific analytics visualization
-              </p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'productions' && (
-          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Production Analytics
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Insights into how users interact with your productions, including interest levels and conversion metrics.
-            </p>
-            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-film-black-800/50 rounded-lg mt-6">
-              <p className="text-gray-500 dark:text-gray-400">
-                Production-specific analytics visualization
+              <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
+                Insights on views, engagement, audience demographics, and performance trends will appear here.
               </p>
             </div>
           </div>

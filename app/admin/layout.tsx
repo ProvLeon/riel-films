@@ -1,7 +1,6 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import AdminHeader from "@/components/admin/AdminHeader";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
@@ -15,13 +14,16 @@ export default function AdminLayout({
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated and not loading
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/admin/login");
     }
+
+
   }, [user, isLoading, router]);
 
+  // Show loading spinner while checking auth status
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-film-black-950 flex items-center justify-center">
@@ -30,22 +32,31 @@ export default function AdminLayout({
     );
   }
 
-  // if (!user) {
-  //   return null; // Let the useEffect handle the redirect
-  // }
+  // Render layout only if the user is authenticated
+  // Handle case where user is null *after* loading finishes (redirect will handle this)
+  const renderAdminSideBar = () => {
+    if (user && !isLoading) {
+      return <AdminSidebar /> // Or a minimal placeholder, useEffect handles the redirect
+    }
+  }
 
+
+  // Render the main admin layout
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-film-black-950">
-      {user && <AdminSidebar />}
+    <div className="flex min-h-screen bg-gray-50 dark:bg-film-black-950">
+      {renderAdminSideBar()}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {user && <AdminHeader />}
+        {/* Optional: Global Admin Header could go here if needed */}
+        {/* <AdminHeader /> */}
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto">
+          {/* Use a consistent container for padding */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }} // Subtle entrance
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="p-4 md:p-6 lg:p-8" // Consistent padding
           >
             {children}
           </motion.div>

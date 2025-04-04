@@ -2,17 +2,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/UI/Button";
-import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, Image as ImageIcon, Type, Quote, Heading, Calendar } from "lucide-react";
+import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, Image as ImageIcon, Type, Quote, Heading, Calendar, Trash2, Eye, Edit, MoveUp, MoveDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import Image from "next/image";
 import { StoryContent } from "@/types/mongodbSchema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert";
 
 const AdminCreateStoryPage = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [isAddingBlock, setIsAddingBlock] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -50,7 +52,8 @@ const AdminCreateStoryPage = () => {
   // Handle content changes
   const handleContentChange = (index: number, field: keyof StoryContent, value: string) => {
     const newContent = [...formData.content];
-    newContent[index] = { ...newContent[index], [field]: value };
+    // Type assertion for safety
+    (newContent[index] as any)[field] = value;
     setFormData({
       ...formData,
       content: newContent
@@ -79,6 +82,7 @@ const AdminCreateStoryPage = () => {
       ...formData,
       content: [...formData.content, newBlock]
     });
+    setIsAddingBlock(false); // Close the add block menu
   };
 
   // Remove content block
@@ -95,26 +99,16 @@ const AdminCreateStoryPage = () => {
   const moveContentBlockUp = (index: number) => {
     if (index === 0) return;
     const newContent = [...formData.content];
-    const temp = newContent[index];
-    newContent[index] = newContent[index - 1];
-    newContent[index - 1] = temp;
-    setFormData({
-      ...formData,
-      content: newContent
-    });
+    [newContent[index - 1], newContent[index]] = [newContent[index], newContent[index - 1]];
+    setFormData({ ...formData, content: newContent });
   };
 
   // Move content block down
   const moveContentBlockDown = (index: number) => {
     if (index === formData.content.length - 1) return;
     const newContent = [...formData.content];
-    const temp = newContent[index];
-    newContent[index] = newContent[index + 1];
-    newContent[index + 1] = temp;
-    setFormData({
-      ...formData,
-      content: newContent
-    });
+    [newContent[index + 1], newContent[index]] = [newContent[index], newContent[index + 1]];
+    setFormData({ ...formData, content: newContent });
   };
 
   // Generate slug from title
@@ -133,21 +127,15 @@ const AdminCreateStoryPage = () => {
 
   // Estimate read time based on content length
   const estimateReadTime = () => {
-    // Count total words in content
     const totalWords = formData.content.reduce((acc, block) => {
       if (block.type === "paragraph" || block.type === "heading" || block.type === "quote") {
-        return acc + (block.content?.split(/\s+/).length || 0);
+        return acc + (block.content?.split(/\s+/).filter(Boolean).length || 0);
       }
       return acc;
     }, 0);
 
-    // Average reading speed: 200 words per minute
     const minutes = Math.max(1, Math.ceil(totalWords / 200));
-
-    setFormData({
-      ...formData,
-      readTime: `${minutes} min read`
-    });
+    setFormData({ ...formData, readTime: `${minutes} min read` });
   };
 
   // Handle form submission
@@ -156,12 +144,17 @@ const AdminCreateStoryPage = () => {
     setIsSubmitting(true);
     setError(null);
 
+    // Simple validation
+    if (!formData.title || !formData.slug || !formData.excerpt || !formData.author || !formData.date || !formData.image || !formData.category) {
+      setError("Please fill in all required fields marked with *");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/stories', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -179,541 +172,276 @@ const AdminCreateStoryPage = () => {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center">
           <button
             onClick={() => router.back()}
-            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-900"
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-800 transition-colors"
+            aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Story</h1>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={() => setPreviewMode(!previewMode)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md ${previewMode
-                ? "bg-film-red-100 text-film-red-700 dark:bg-film-red-900/30 dark:text-film-red-300"
-                : "bg-gray-100 text-gray-700 dark:bg-film-black-800 dark:text-gray-300"
-                }`}
-            >
-              {previewMode ? "Edit Mode" : "Preview"}
-            </button>
-          </div>
-
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+          <Button
+            variant={previewMode ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setPreviewMode(!previewMode)}
+            icon={previewMode ? <Edit size={16} /> : <Eye size={16} />}
+          >
+            {previewMode ? "Edit Mode" : "Preview"}
+          </Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
+            isLoading={isSubmitting}
             disabled={isSubmitting}
+            icon={<Save size={16} />}
           >
-            {isSubmitting ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Publish Story
-              </>
-            )}
+            Publish Story
           </Button>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 p-4 rounded-lg">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Main editor */}
-        <div className={`lg:col-span-${previewMode ? "3" : "5"} bg-white dark:bg-film-black-900 rounded-xl shadow-sm overflow-hidden`}>
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-4 mb-6 border-b border-gray-200 dark:border-film-black-800">
+      {/* Main editor layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Editor Form */}
+        <motion.div
+          className={`lg:col-span-2 space-y-6`}
+          initial={false}
+          animate={{ width: previewMode ? "66.66%" : "100%" }} // Adjust width based on preview mode
+        >
+          <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm border border-gray-100 dark:border-film-black-800 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white pb-4 mb-6 border-b border-gray-200 dark:border-film-black-800">
               Story Details
             </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form className="space-y-6">
+              {/* Title, Slug, Category */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Title<span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    onBlur={generateSlug}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
-                </div>
-
                 <div>
-                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Slug<span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="slug"
-                    name="slug"
-                    value={formData.slug}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
+                  <label htmlFor="title" className="input-label">Title<span className="text-red-500">*</span></label>
+                  <input type="text" id="title" name="title" value={formData.title} onChange={handleInputChange} onBlur={generateSlug} className="input-field" required />
                 </div>
-
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category<span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
+                  <label htmlFor="slug" className="input-label">Slug<span className="text-red-500">*</span></label>
+                  <input type="text" id="slug" name="slug" value={formData.slug} onChange={handleInputChange} className="input-field" required />
                 </div>
-
-                <div className="md:col-span-2">
-                  <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Excerpt<span className="text-red-600">*</span>
-                  </label>
-                  <textarea
-                    id="excerpt"
-                    name="excerpt"
-                    value={formData.excerpt}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
-                </div>
-
                 <div>
-                  <label htmlFor="author" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Author<span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="author"
-                    name="author"
-                    value={formData.author}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
+                  <label htmlFor="category" className="input-label">Category<span className="text-red-500">*</span></label>
+                  <input type="text" id="category" name="category" value={formData.category} onChange={handleInputChange} className="input-field" required />
                 </div>
-
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Publication Date<span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Featured Image URL<span className="text-red-600">*</span>
-                  </label>
+                  <label htmlFor="image" className="input-label">Featured Image URL<span className="text-red-500">*</span></label>
                   <div className="flex">
-                    <input
-                      type="text"
-                      id="image"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleInputChange}
-                      placeholder="https://..."
-                      className="flex-1 px-4 py-2 rounded-l-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-gray-100 dark:bg-film-black-700 border-y border-r border-gray-300 dark:border-film-black-600 rounded-r-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-600"
-                    >
-                      <Upload className="h-5 w-5" />
+                    <input type="text" id="image" name="image" value={formData.image} onChange={handleInputChange} placeholder="https://..." className="input-field rounded-r-none" required />
+                    <button type="button" className="button-icon rounded-l-none">
+                      <Upload size={18} />
                     </button>
                   </div>
-                </div>
-
-                <div>
-                  <label htmlFor="readTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Read Time
-                  </label>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      id="readTime"
-                      name="readTime"
-                      value={formData.readTime}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 5 min read"
-                      className="flex-1 px-4 py-2 rounded-l-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={estimateReadTime}
-                      className="px-4 py-2 bg-gray-100 dark:bg-film-black-700 border-y border-r border-gray-300 dark:border-film-black-600 rounded-r-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-600"
-                    >
-                      Estimate
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Featured Story
-                  </label>
-                  <button
-                    type="button"
-                    onClick={toggleFeatured}
-                    className={`w-full px-4 py-2 rounded-md border ${formData.featured
-                      ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300"
-                      : "bg-gray-50 dark:bg-film-black-800 border-gray-300 dark:border-film-black-700 text-gray-700 dark:text-gray-300"
-                      } flex items-center justify-center`}
-                  >
-                    {formData.featured ? (
-                      <>
-                        <Star className="h-5 w-5 mr-2 fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400" />
-                        Featured
-                      </>
-                    ) : (
-                      <>
-                        <StarOff className="h-5 w-5 mr-2 text-gray-400 dark:text-gray-500" />
-                        Not Featured
-                      </>
-                    )}
-                  </button>
                 </div>
               </div>
-
+              {/* Excerpt */}
               <div>
-                <div className="flex items-center justify-between mb-4 pt-4 border-t border-gray-200 dark:border-film-black-800">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Content</h3>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => addContentBlock("paragraph")}
-                      className="p-1.5 bg-gray-100 dark:bg-film-black-800 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-film-black-700 flex items-center"
-                      title="Add Paragraph"
-                    >
-                      <Type className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Text</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addContentBlock("heading")}
-                      className="p-1.5 bg-gray-100 dark:bg-film-black-800 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-film-black-700 flex items-center"
-                      title="Add Heading"
-                    >
-                      <Heading className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Heading</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addContentBlock("image")}
-                      className="p-1.5 bg-gray-100 dark:bg-film-black-800 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-film-black-700 flex items-center"
-                      title="Add Image"
-                    >
-                      <ImageIcon className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Image</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addContentBlock("quote")}
-                      className="p-1.5 bg-gray-100 dark:bg-film-black-800 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-film-black-700 flex items-center"
-                      title="Add Quote"
-                    >
-                      <Quote className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Quote</span>
-                    </button>
+                <label htmlFor="excerpt" className="input-label">Excerpt<span className="text-red-500">*</span></label>
+                <textarea id="excerpt" name="excerpt" value={formData.excerpt} onChange={handleInputChange} rows={3} className="input-field" required />
+              </div>
+              {/* Author, Date, Read Time */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label htmlFor="author" className="input-label">Author<span className="text-red-500">*</span></label>
+                  <input type="text" id="author" name="author" value={formData.author} onChange={handleInputChange} className="input-field" required />
+                </div>
+                <div>
+                  <label htmlFor="date" className="input-label">Date<span className="text-red-500">*</span></label>
+                  <input type="date" id="date" name="date" value={formData.date} onChange={handleInputChange} className="input-field" required />
+                </div>
+                <div>
+                  <label htmlFor="readTime" className="input-label">Read Time</label>
+                  <div className="flex">
+                    <input type="text" id="readTime" name="readTime" value={formData.readTime} onChange={handleInputChange} placeholder="e.g., 5 min read" className="input-field rounded-r-none" />
+                    <button type="button" onClick={estimateReadTime} className="button-icon rounded-l-none">Est.</button>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  <AnimatePresence>
-                    {formData.content.map((block, index) => (
-                      <motion.div
-                        key={`block-${index}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative border border-gray-200 dark:border-film-black-700 rounded-lg p-4 pt-10"
-                      >
-                        <div className="absolute top-2 left-2 right-2 flex justify-between">
-                          <div className="flex gap-1">
-                            <span className={`text-xs px-2 py-1 rounded ${block.type === "paragraph" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" :
-                              block.type === "heading" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" :
-                                block.type === "image" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
-                                  "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                              }`}>
-                              {block.type.charAt(0).toUpperCase() + block.type.slice(1)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => moveContentBlockUp(index)}
-                              disabled={index === 0}
-                              className={`p-1 rounded ${index === 0
-                                ? "text-gray-300 dark:text-gray-700"
-                                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                                }`}
-                              title="Move Up"
-                            >
-                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => moveContentBlockDown(index)}
-                              disabled={index === formData.content.length - 1}
-                              className={`p-1 rounded ${index === formData.content.length - 1
-                                ? "text-gray-300 dark:text-gray-700"
-                                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                                }`}
-                              title="Move Down"
-                            >
-                              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeContentBlock(index)}
-                            className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                            title="Remove"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        {block.type === "paragraph" && (
-                          <div className="mt-2">
-                            <textarea
-                              value={block.content || ""}
-                              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                              placeholder="Enter paragraph text..."
-                              rows={4}
-                              className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                            />
-                          </div>
-                        )}
-
-                        {block.type === "heading" && (
-                          <div className="mt-2">
-                            <input
-                              type="text"
-                              value={block.content || ""}
-                              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                              placeholder="Enter heading text..."
-                              className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white font-bold text-lg"
-                            />
-                          </div>
-                        )}
-
-                        {block.type === "image" && (
-                          <div className="mt-2 space-y-3">
-                            <div className="flex">
-                              <input
-                                type="text"
-                                value={block.url || ""}
-                                onChange={(e) => handleContentChange(index, 'url', e.target.value)}
-                                placeholder="Enter image URL..."
-                                className="flex-1 px-4 py-2 rounded-l-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                              />
-                              <button
-                                type="button"
-                                className="px-4 py-2 bg-gray-100 dark:bg-film-black-700 border-y border-r border-gray-300 dark:border-film-black-600 rounded-r-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-600"
-                              >
-                                <Upload className="h-5 w-5" />
-                              </button>
-                            </div>
-                            <input
-                              type="text"
-                              value={block.caption || ""}
-                              onChange={(e) => handleContentChange(index, 'caption', e.target.value)}
-                              placeholder="Image caption (optional)..."
-                              className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                            />
-                            {block.url && (
-                              <div className="relative h-48 w-full rounded-md overflow-hidden">
-                                <Image
-                                  src={block.url}
-                                  alt={block.caption || "Story image"}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {block.type === "quote" && (
-                          <div className="mt-2 space-y-3">
-                            <textarea
-                              value={block.content || ""}
-                              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                              placeholder="Enter quote text..."
-                              rows={3}
-                              className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white italic"
-                            />
-                            <input
-                              type="text"
-                              value={block.attribution || ""}
-                              onChange={(e) => handleContentChange(index, 'attribution', e.target.value)}
-                              placeholder="Attribution (optional)..."
-                              className="w-full px-4 py-2 rounded-md bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white"
-                            />
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
+              </div>
+              {/* Featured Toggle */}
+              <div>
+                <label className="input-label">Featured Story</label>
+                <Button
+                  type="button"
+                  variant={formData.featured ? "secondary" : "outline"}
+                  onClick={toggleFeatured}
+                  className={`w-full justify-center ${formData.featured ? 'border-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-700' : ''}`}
+                  icon={formData.featured ? <Star size={16} className="fill-current" /> : <StarOff size={16} />}
+                >
+                  {formData.featured ? "Featured" : "Mark as Featured"}
+                </Button>
               </div>
             </form>
           </div>
-        </div>
 
-        {/* Preview panel */}
-        {previewMode && (
-          <div className="lg:col-span-2 bg-white dark:bg-film-black-900 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-4 mb-6 border-b border-gray-200 dark:border-film-black-800">
-                Preview
-              </h2>
-
-              <div className="prose prose-lg dark:prose-invert max-w-none">
-                {/* Hero image */}
-                {formData.image && (
-                  <div className="relative w-full h-60 mb-6 rounded-lg overflow-hidden">
-                    <Image
-                      src={formData.image}
-                      alt={formData.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-
-                {/* Title and metadata */}
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{formData.title || "Story Title"}</h1>
-
-                  <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 gap-4">
-                    {formData.author && (
-                      <div className="flex items-center">
-                        <span className="font-medium">{formData.author}</span>
-                      </div>
-                    )}
-                    {formData.date && (
-                      <div className="flex items-center">
-                        <Calendar className="mr-1 h-3.5 w-3.5" />
-                        <span>{new Date(formData.date).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {formData.readTime && (
-                      <span>{formData.readTime}</span>
-                    )}
-                    {formData.category && (
-                      <span className="bg-gray-100 dark:bg-film-black-800 px-2 py-0.5 rounded-full text-xs">
-                        {formData.category}
-                      </span>
-                    )}
-                    {formData.featured && (
-                      <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-full text-xs flex items-center">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        Featured
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Content blocks preview */}
-                {formData.content.map((block, index) => {
-                  if (block.type === "paragraph") {
-                    return <p key={index} className="mb-6">{block.content || "Paragraph content will appear here..."}</p>;
-                  } else if (block.type === "heading") {
-                    return <h2 key={index} className="text-2xl font-bold mt-8 mb-4">{block.content || "Heading will appear here..."}</h2>;
-                  } else if (block.type === "image" && block.url) {
-                    return (
-                      <figure key={index} className="my-8">
-                        <div className="relative h-80 w-full rounded-xl overflow-hidden">
-                          <Image
-                            src={block.url}
-                            alt={block.caption || ""}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        {block.caption && (
-                          <figcaption className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400 italic">
-                            {block.caption}
-                          </figcaption>
-                        )}
-                      </figure>
-                    );
-                  } else if (block.type === "quote") {
-                    return (
-                      <blockquote key={index} className="border-l-4 border-film-red-500 pl-4 py-2 my-6 italic">
-                        <p className="text-xl">{block.content || "Quote text will appear here..."}</p>
-                        {block.attribution && (
-                          <footer className="text-right mt-2 text-gray-600 dark:text-gray-400 not-italic">
-                            — {block.attribution}
-                          </footer>
-                        )}
-                      </blockquote>
-                    );
-                  }
-                  return null;
-                })}
+          {/* Content Editor */}
+          <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm border border-gray-100 dark:border-film-black-800 p-6">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-film-black-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Story Content</h2>
+              {/* Add Block Button */}
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsAddingBlock(!isAddingBlock)}
+                  icon={<Plus size={16} />}
+                >
+                  Add Block
+                </Button>
+                <AnimatePresence>
+                  {isAddingBlock && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-40 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-10 p-2"
+                    >
+                      <button onClick={() => addContentBlock("paragraph")} className="button-menu-item"> <Type size={16} /> Paragraph </button>
+                      <button onClick={() => addContentBlock("heading")} className="button-menu-item"> <Heading size={16} /> Heading </button>
+                      <button onClick={() => addContentBlock("image")} className="button-menu-item"> <ImageIcon size={16} /> Image </button>
+                      <button onClick={() => addContentBlock("quote")} className="button-menu-item"> <Quote size={16} /> Quote </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
+
+            {/* Content Blocks */}
+            <div className="space-y-6">
+              <AnimatePresence initial={false}>
+                {formData.content.map((block, index) => (
+                  <motion.div
+                    key={`block-${index}`} // Consider using a more stable key if possible
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative border border-gray-200 dark:border-film-black-700 rounded-lg p-4 pt-12 bg-gray-50/50 dark:bg-film-black-800/30 group"
+                  >
+                    {/* Block controls */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => moveContentBlockUp(index)} disabled={index === 0} className="button-control" title="Move Up"><MoveUp size={14} /></button>
+                      <button onClick={() => moveContentBlockDown(index)} disabled={index === formData.content.length - 1} className="button-control" title="Move Down"><MoveDown size={14} /></button>
+                      <button onClick={() => removeContentBlock(index)} className="button-control text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30" title="Remove"><Trash2 size={14} /></button>
+                    </div>
+                    <span className="absolute top-3 left-3 text-xs font-medium px-2 py-1 rounded bg-gray-200 dark:bg-film-black-700 text-gray-600 dark:text-gray-300 capitalize">
+                      {block.type}
+                    </span>
+
+                    {/* Block content based on type */}
+                    {block.type === "paragraph" && (
+                      <textarea value={block.content || ""} onChange={(e) => handleContentChange(index, 'content', e.target.value)} placeholder="Enter paragraph..." rows={5} className="input-field mt-2" />
+                    )}
+                    {block.type === "heading" && (
+                      <input type="text" value={block.content || ""} onChange={(e) => handleContentChange(index, 'content', e.target.value)} placeholder="Enter heading..." className="input-field mt-2 text-xl font-semibold" />
+                    )}
+                    {block.type === "image" && (
+                      <div className="mt-2 space-y-3">
+                        <div className="flex">
+                          <input type="text" value={block.url || ""} onChange={(e) => handleContentChange(index, 'url', e.target.value)} placeholder="Image URL..." className="input-field rounded-r-none" />
+                          <button type="button" className="button-icon rounded-l-none"><Upload size={18} /></button>
+                        </div>
+                        <input type="text" value={block.caption || ""} onChange={(e) => handleContentChange(index, 'caption', e.target.value)} placeholder="Caption (optional)..." className="input-field" />
+                        {block.url && (
+                          <div className="relative h-48 w-full rounded-md overflow-hidden border border-gray-200 dark:border-film-black-700">
+                            <Image src={block.url} alt={block.caption || "Story image"} fill className="object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {block.type === "quote" && (
+                      <div className="mt-2 space-y-3">
+                        <textarea value={block.content || ""} onChange={(e) => handleContentChange(index, 'content', e.target.value)} placeholder="Quote text..." rows={3} className="input-field italic" />
+                        <input type="text" value={block.attribution || ""} onChange={(e) => handleContentChange(index, 'attribution', e.target.value)} placeholder="Attribution (optional)..." className="input-field" />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
-        )}
+        </motion.div>
+
+        {/* Preview Panel */}
+        <AnimatePresence>
+          {previewMode && (
+            <motion.div
+              className="lg:col-span-1"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "33.33%" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm border border-gray-100 dark:border-film-black-800 h-[calc(100vh-12rem)] overflow-y-auto sticky top-24">
+                <div className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white pb-4 mb-6 border-b border-gray-200 dark:border-film-black-800">
+                    Live Preview
+                  </h2>
+                  <div className="prose dark:prose-invert max-w-none">
+                    {formData.image && (
+                      <div className="relative aspect-video mb-6 rounded-lg overflow-hidden">
+                        <Image src={formData.image} alt={formData.title || "Preview"} fill className="object-cover" />
+                      </div>
+                    )}
+                    <h1 className="text-2xl font-bold mb-3">{formData.title || "Story Title"}</h1>
+                    <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 gap-x-4 gap-y-1 mb-6">
+                      <span>By {formData.author || "Author"}</span>
+                      <span>{formData.date ? new Date(formData.date).toLocaleDateString() : "Date"}</span>
+                      <span>{formData.readTime || "Read Time"}</span>
+                    </div>
+                    {formData.content.map((block, index) => {
+                      if (block.type === "paragraph") return <p key={index}>{block.content || "..."}</p>;
+                      if (block.type === "heading") return <h2 key={index}>{block.content || "Heading"}</h2>;
+                      if (block.type === "image" && block.url) return (
+                        <figure key={index} className="my-6">
+                          <Image src={block.url} alt={block.caption || ""} width={800} height={450} className="rounded-lg object-cover" />
+                          {block.caption && <figcaption className="text-center italic text-sm mt-2">{block.caption}</figcaption>}
+                        </figure>
+                      );
+                      if (block.type === "quote") return (
+                        <blockquote key={index} className="border-l-4 border-film-red-500 pl-4 italic my-6">
+                          <p>{block.content || "Quote text..."}</p>
+                          {block.attribution && <footer className="text-right not-italic">— {block.attribution}</footer>}
+                        </blockquote>
+                      );
+                      return null;
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
+      {/* Final Actions */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-film-black-800 flex justify-end">
         <div className="flex gap-4">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => router.back()}
-          >
-            Cancel
-          </Button>
+          <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
+            isLoading={isSubmitting}
             disabled={isSubmitting}
+            icon={<Save size={16} />}
           >
-            {isSubmitting ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Publish Story
-              </>
-            )}
+            Publish Story
           </Button>
         </div>
       </div>
