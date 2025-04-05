@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Search, Filter, Mail, ExternalLink, Trash2, MoreHorizontal,
-  RefreshCw, Download, CheckCircle, XCircle, ArrowDown, ArrowUp, AlertTriangle, ChevronDown, ArrowLeft
+  RefreshCw, Download, CheckCircle, XCircle, ArrowDown, ArrowUp, AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/UI/Button';
 import LoadingSpinner from '@/components/UI/LoadingSpinner';
