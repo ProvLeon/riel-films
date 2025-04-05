@@ -7,7 +7,7 @@ import PageTransition from "@/components/UI/PageTransition";
 import SectionReveal from "@/components/UI/SectionReveal";
 import { Button } from "@/components/UI/Button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Play, Calendar, Clock, User, MessageCircle, ChevronRight, ChevronDown, ChevronUp, Check, Milestone, Activity, Users as UsersIcon, HelpCircle, DollarSign, FileText } from "lucide-react"; // Added more icons
+import { ArrowLeft, Play, Calendar, Clock, User, MessageCircle, ChevronRight, ChevronDown, ChevronUp, Check, Milestone, Activity, Users as UsersIcon, HelpCircle, DollarSign, FileText, X } from "lucide-react"; // Added more icons
 import { Production } from '@/types/mongodbSchema';
 import { useProduction } from '@/hooks/useProduction';
 import { ProductionDetailSkeleton } from "@/components/skeletons/ProductionDetailSkeleton"; // Import skeleton

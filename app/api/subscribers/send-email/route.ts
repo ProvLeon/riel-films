@@ -42,9 +42,17 @@ async function enqueueCampaignSendJob(campaignId: string) {
 
       // Fetch recipients *inside the worker*
       const where: any = { subscribed: true };
-      if (campaign.filter?.interests && Array.isArray(campaign.filter.interests) && campaign.filter.interests.length > 0) {
-        where.interests = { hasSome: campaign.filter.interests };
+      const campaignFilter = campaign.filter as any; // Use 'as any' or a defined type
+      if (
+        campaignFilter &&
+        typeof campaignFilter === 'object' &&
+        'interests' in campaignFilter &&
+        Array.isArray(campaignFilter.interests) &&
+        campaignFilter.interests.length > 0
+      ) {
+        where.interests = { hasSome: campaignFilter.interests };
       }
+
       const subscribersToSend = await prisma.subscriber.findMany({
         where,
         select: { email: true },

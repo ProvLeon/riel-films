@@ -10,15 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Button } from '../UI/Button';
-
-interface SidebarItem {
-  href: string;
-  icon: React.ReactNode;
-  text: string;
-  access: string[]; // Roles that can see this
-  basePath?: string; // For matching parent active state
-  subItems?: { href: string; text: string; access?: string[] }[];
-}
+import { SidebarItem } from '@/types';
 
 const sidebarItems: SidebarItem[] = [
   { href: '/admin/dashboard', icon: <Home size={18} />, text: 'Dashboard', access: ['admin', 'editor'] },

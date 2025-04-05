@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '../UI/Button';
 import { ThemeSwitcher } from '../UI/ThemeSwitcher';
 import Image from 'next/image';
+import { SidebarItem } from '@/types';
 
 interface MobileNavOverlayProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ interface MobileNavOverlayProps {
 }
 
 // Use the same sidebarItems definition or import it if extracted
-const sidebarItems = [
+const sidebarItems: SidebarItem = [
   { href: '/admin/dashboard', icon: <Home size={18} />, text: 'Dashboard', access: ['admin', 'editor'] },
   { href: '/admin/films', icon: <Film size={18} />, text: 'Films', access: ['admin', 'editor'] },
   { href: '/admin/productions', icon: <Video size={18} />, text: 'Productions', access: ['admin', 'editor'] },

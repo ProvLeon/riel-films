@@ -64,11 +64,8 @@ export const createUser = async (userData: {
 };
 
 // Update a user (admin only) - **Ensure this uses PATCH**
-export const updateUser = async (
-  userId: string,
-  // Only allow specific fields to be updated via this function
-  userData: Partial<Pick<User, 'name' | 'role' | 'image'>>
-): Promise<UserWithoutPassword> => {
+export const updateUser = async (userId: string, userData: Partial<Pick<User, 'name' | 'image' | 'role'>>): Promise<UserWithoutPassword> => {
+
   try {
     const response = await fetch(`/api/users/${userId}`, {
       method: "PATCH", // Use PATCH

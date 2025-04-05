@@ -4,16 +4,17 @@ import { useCallback, useEffect, useState } from 'react';
 // Define ActivityItem interface directly here or import if defined elsewhere
 export interface ActivityItem {
   id: string;
-  action: string; // e.g., "created", "updated", "logged in"
-  item: string; // e.g., Film title, "Settings", "User: John Doe"
-  time: string; // Formatted relative time string (e.g., "5 min ago")
-  user: string; // User name or "Anonymous Visitor"
-  userImage: string; // URL to user avatar or placeholder
-  isNew?: boolean; // Flag for recent activity
-  type: 'film' | 'production' | 'story' | 'user' | 'settings' | 'auth' | 'other'; // Added 'auth' and 'other'
-  itemId?: string; // ID of the related item (film, user, etc.)
-  contentUrlPath?: string; // Optional URL to view the related content
-  timestamp: Date; // Add the raw timestamp
+  action: string;
+  item: string;
+  time: string;
+  user: string;
+  userImage: string;
+  isNew?: boolean;
+  type: 'film' | 'production' | 'story' | 'user' | 'settings' | 'auth' | 'other' | 'email_campaign'; // Added email_campaign
+  itemId?: string;
+  contentUrlPath?: string;
+  timestamp: Date;
+  event: string; // <<< MAKE SURE THIS IS PRESENT AND CORRECT
 }
 
 // Helper function for relative time formatting (Exported)

@@ -20,9 +20,9 @@ const EditUserModal = ({
   isOpen: boolean;
   onClose: () => void;
   user: UserWithoutPassword | null;
-  onSave: (userId: string, data: { role: string }) => Promise<boolean>; // Returns true on success
+  onSave: (userId: string, data: { role: 'admin' | 'editor' }) => Promise<boolean>; // Make role specific
 }) => {
-  const [selectedRole, setSelectedRole] = useState(user?.role || 'editor');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'editor'>(user?.role || 'editor');
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
@@ -33,6 +33,12 @@ const EditUserModal = ({
       setModalError(null); // Clear previous errors
     }
   }, [user]);
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as 'admin' | 'editor'; // Assert the type
+    setSelectedRole(value);
+    setModalError(null); // Clear error on change if needed
+  };
 
   const handleSave = async () => {
     if (!user || !selectedRole) return;
@@ -80,7 +86,7 @@ const EditUserModal = ({
           <select
             id="edit-role"
             value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
+            onChange={handleRoleChange}
             className="w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white shadow-sm"
           >
             <option value="editor">Editor</option>
@@ -128,17 +134,18 @@ const AdminUsersPage = () => {
   }, []);
 
   // Handle Saving Edit (called from modal)
-  const handleSaveEdit = useCallback(async (userId: string, data: { role: string }): Promise<boolean> => {
+  const handleSaveEdit = useCallback(async (userId: string, data: { role: 'admin' | 'editor' }): Promise<boolean> => { // Make role specific
     try {
-      await updateUser(userId, data); // Use the function from lib/users
-      refetch(); // Refresh the user list
-      return true; // Indicate success
+      await updateUser(userId, data); // Now types should match
+      refetch();
+      return true;
     } catch (err: any) {
       console.error("Error updating user role:", err);
-      setActionError(err.message || "Failed to update user role."); // Show error on main page if needed, or let modal handle it
-      return false; // Indicate failure
+      setActionError(err.message || "Failed to update user role.");
+      return false;
     }
-  }, [refetch]); // Include refetch in dependencies
+  }, [refetch]);
+
 
   // Handle delete confirmation click
   const handleDeleteClick = useCallback((user: UserWithoutPassword) => {

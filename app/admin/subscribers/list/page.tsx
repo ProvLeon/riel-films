@@ -132,9 +132,28 @@ const SubscribersListPage = () => {
         if (failedDeletes.length > 0) {
           console.error(`${failedDeletes.length} subscribers failed to delete.`);
           let errorMsg = `${failedDeletes.length} subscriber(s) could not be deleted.`;
-          try { const firstError = await failedDeletes[0].json(); errorMsg += ` First error: ${firstError.error || 'Unknown reason'}`; } catch { }
+          try {
+            const firstFailedResult = failedDeletes[0];
+            if (firstFailedResult instanceof Response) { // Check if it's a Response object
+              // Attempt to parse JSON, but handle cases where it might not be valid JSON
+              try {
+                const errorJson = await firstFailedResult.json();
+                errorMsg += ` First error: ${errorJson?.error || `Status ${firstFailedResult.status}` || 'Unknown reason'}`;
+              } catch (parseError) {
+                errorMsg += ` First error: Status ${firstFailedResult.status} (Could not parse error details)`;
+              }
+            } else if (typeof firstFailedResult === 'object' && firstFailedResult !== null && 'error' in firstFailedResult) { // Check if it's our custom error object
+              errorMsg += ` First error: ${firstFailedResult.error}`;
+            } else {
+              errorMsg += ` First error: Unknown structure.`; // Fallback
+            }
+          } catch (e) {
+            console.error("Could not process error response:", e);
+            errorMsg += ` (Error processing details)`;
+          }
           setActionError(errorMsg);
         }
+
 
         // Remove successfully deleted items from local state
         if (successfulIds.length > 0) {
@@ -225,7 +244,13 @@ const SubscribersListPage = () => {
           {isFiltersOpen && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-film-black-700 overflow-hidden">
               <div><label className="label-style">Status</label><select value={filters.subscribed} onChange={e => setFilters(prev => ({ ...prev, subscribed: e.target.value }))} className="input-style w-full"><option value="all">All Subscribers</option><option value="active">Active Only</option><option value="inactive">Unsubscribed Only</option></select></div>
-              <div><label className="label-style">Source</label><select value={filters.source} onChange={e => setFilters(prev => ({ ...prev, source: e.target.value }))} className="input-style w-full">{uniqueSources.map(source => (<option key={source} value={source}>{source === 'all' ? 'All Sources' : source.charAt(0).toUpperCase() + source.slice(1)}</option>))}</select></div>
+              <div><label className="label-style">Source</label><select value={filters.source} onChange={e => setFilters(prev => ({ ...prev, source: e.target.value }))} className="input-style w-full">
+                {uniqueSources.map(source => (
+                  <option key={source} value={source}>
+                    {source === 'all' ? 'All Sources' : (source ? source.charAt(0).toUpperCase() + source.slice(1) : 'Unknown')} {/* Added check/fallback */}
+                  </option>
+                ))}
+              </select></div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -286,17 +311,32 @@ const SubscribersListPage = () => {
                 ) : (
                   filteredSubscribers.map((subscriber) => (
                     <tr key={subscriber.id} className={`hover:bg-gray-50 dark:hover:bg-film-black-800/50 transition-colors ${selectedSubscribers.includes(subscriber.id) ? 'bg-blue-50 dark:bg-blue-900/10' : ''}`}>
-                      <td className="px-6 py-4 whitespace-nowrap"><input type="checkbox" checked={selectedSubscribers.includes(subscriber.id)} onChange={() => toggleSelection(subscriber.id)} className="checkbox-style" /></td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" checked={selectedSubscribers.includes(subscriber.id)} onChange={() => toggleSelection(subscriber.id)} className="checkbox-style" />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-film-black-700 flex items-center justify-center mr-3 text-gray-600 dark:text-gray-400 text-sm font-medium flex-shrink-0">{subscriber.name ? subscriber.name.charAt(0).toUpperCase() : subscriber.email.charAt(0).toUpperCase()}</div>
                           <div><div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">{subscriber.email}</div>{subscriber.name && (<div className="text-xs text-gray-500 dark:text-gray-400">{subscriber.name}</div>)}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap table-cell-text">{formatDate(subscriber.subscribedAt)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{subscriber.subscribed ? (<span className="status-badge bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"><CheckCircle className="h-3 w-3 mr-1" />Active</span>) : (<span className="status-badge bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"><XCircle className="h-3 w-3 mr-1" />Inactive</span>)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap table-cell-text">
+                        {formatDate(subscriber.subscribedAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{subscriber.subscribed ? (
+                        <span className="status-badge bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active</span>
+                      ) : (
+                        <span className="status-badge bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Inactive
+                        </span>
+                      )}</td>
                       {/* <td className="px-6 py-4 whitespace-nowrap table-cell-text">{formatDate(subscriber.lastEmailSent)}</td> */}
-                      <td className="px-6 py-4 whitespace-nowrap"><span className="status-badge bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 capitalize">{subscriber.source || 'Unknown'}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="status-badge bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 capitalize">{subscriber.source || 'Unknown'}</span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-1">
                           {/* View Profile (Conceptual) */}

@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, BookOpen, User } from 'lucide-react';
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
-import { Story } from '@/types/story';
+import { Story as StoryType } from '@/types/mongodbSchema';
+import { formatDate } from '@/lib/utils';
 
 interface FeaturedStoryProps {
-  story: Story;
+  story: StoryType;
   onClick: () => void;
 }
 
@@ -44,7 +45,7 @@ const FeaturedStory: React.FC<FeaturedStoryProps> = ({ story, onClick }) => {
           <CardContent className="p-8 lg:p-12 flex flex-col justify-center lg:col-span-5">
             <div className="flex items-center space-x-4 mb-4">
               <span className="inline-flex items-center text-sm text-film-red-600 dark:text-film-red-500 font-medium">
-                <Calendar size={16} className="mr-1" /> {story.date}
+                <Calendar size={16} className="mr-1" /> {formatDate(story.date)}
               </span>
               <span className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
                 <BookOpen size={16} className="mr-1" /> {story.readTime}

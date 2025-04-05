@@ -64,10 +64,14 @@ export async function GET(req: NextRequest) {
     const eventFilter = searchParams.get("event");
 
     const whereClause: any = {
-      event: eventFilter ? { equals: eventFilter } : { in: ['create', 'update', 'delete', 'publish', 'view', 'login', 'logout', 'send'] }, // Added 'send'
-      pageType: { notIn: ['system', 'metrics_calculation'] }, // Exclude system noise
-      event: { not: 'heartbeat' },
+      // First event condition
+      event: eventFilter ? { equals: eventFilter } : { in: ['create', 'update', 'delete', 'publish', 'view', 'login', 'logout', 'send'] },
+      // Second condition on event (applied alongside the first)
+      NOT: { event: 'heartbeat' }, // Use NOT for exclusion
+      // Other conditions
+      pageType: { notIn: ['system', 'metrics_calculation'] },
     };
+
     if (type) {
       whereClause.pageType = type;
     }
@@ -106,33 +110,36 @@ export async function GET(req: NextRequest) {
         userName = user.name || 'Admin User';
         userImage = user.image || userImage;
       } else if (event.event === 'login' || event.event === 'logout') {
-        userName = event.extraData?.userName || 'System User'; // Extract from extraData for auth events
+        // Type guard for extraData
+        const extra = event.extraData as any; // Use 'as any' carefully or define a stricter type if possible
+        userName = (typeof extra === 'object' && extra !== null && extra.userName) ? extra.userName : 'System User';
       }
 
       // Determine Content Title and Path
       let contentTitle = "content";
       let contentUrlPath = '#';
       const details = event.itemId && event.pageType ? await getContentDetails(event.itemId, event.pageType) : null;
+      const extra = event.extraData as any; // Use 'as any' or define a stricter type
 
       if (details) {
         contentTitle = details.title;
         contentUrlPath = details.path;
-      } else if (event.extraData?.contentTitle) {
-        contentTitle = event.extraData.contentTitle; // Use title from log (e.g., for deleted items)
-      } else if (event.extraData?.subject) {
-        contentTitle = event.extraData.subject; // For email campaigns
+      } else if (typeof extra === 'object' && extra !== null && extra.contentTitle) {
+        contentTitle = extra.contentTitle;
+      } else if (typeof extra === 'object' && extra !== null && extra.subject) {
+        contentTitle = extra.subject;
       } else if (event.pageType && !['other', 'system', 'auth'].includes(event.pageType)) {
-        contentTitle = `${event.pageType} item`; // Fallback for non-linkable items without title
+        contentTitle = `${event.pageType} item`;
       }
 
-      if (event.pageType === 'email_campaign') {
+      // Update content title formatting
+      if (event.pageType === 'email_campaign' && contentTitle !== 'content') { // Check if title was found
         contentTitle = `Email Campaign: ${contentTitle}`;
       } else if (event.pageType === 'settings') {
         contentTitle = 'Site Settings';
-      } else if (event.pageType === 'user' && event.extraData?.userName) {
-        contentTitle = `User: ${event.extraData.userName}`;
+      } else if (event.pageType === 'user' && typeof extra === 'object' && extra !== null && extra.userName) {
+        contentTitle = `User: ${extra.userName}`;
       }
-
 
       // Format Action Text
       let actionText = 'interacted with';

@@ -19,7 +19,6 @@ import SectionReveal from "@/components/UI/SectionReveal"; // Import SectionReve
 import { useFilmsList } from "@/hooks/useFilmsList";
 import { useProductionsList } from "@/hooks/useProductionsList";
 import { useStoriesList } from "@/hooks/useStoriesList";
-import { FilmDetailSkeleton, FilmsPageSkeleton } from "../skeletons"; // Import appropriate skeletons
 import { getStatusColor } from "@/lib/utils";
 import { CardSkeleton } from "../UI/SkeletonLoaders";
 import Skeleton from "../UI/Skeleton";

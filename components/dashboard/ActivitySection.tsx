@@ -83,7 +83,7 @@ export function ActivitySection({ limit = 2 }: { limit?: number }) {
         {/* Optionally show refetch button if there's an error */}
         {error && (
           <button
-            onClick={refetchActivities}
+            onClick={() => refetchActivities}
             className="text-xs text-blue-600 hover:underline"
             title="Retry loading activity"
           >

@@ -32,7 +32,7 @@ const UpdateFilmSchema = z.object({
   category: z.string().min(1).optional(),
   year: z.string().regex(/^\d{4}$/, "Invalid year format").optional(),
   description: z.string().min(10).optional(),
-  longDescription: z.string().optional(),
+  longDescription: z.string().optional(), // Optional is fine for update
   image: z.string().url().optional(),
   director: z.string().min(1).optional(),
   producer: z.string().min(1).optional(),
@@ -43,7 +43,7 @@ const UpdateFilmSchema = z.object({
   awards: z.array(z.string()).optional(),
   castCrew: z.array(z.any()).optional(), // Keep Json[] / z.any() or define stricter schema
   gallery: z.array(z.string().url()).optional(),
-  trailer: z.string().url().optional().nullable(),
+  trailer: z.string().url().nullish(), // Allow null or undefined for update
   synopsis: z.string().min(10).optional(),
   quotes: z.array(z.any()).optional(), // Keep Json[] / z.any() or define stricter schema
   rating: z.number().min(0).max(5).optional(),
@@ -86,7 +86,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const updatedFilm = await prisma.film.update({
       where: { id },
-      data: filmData,
+      data: {
+        ...filmData,
+        // Prisma update handles undefined fields correctly (doesn't update them)
+        // Explicitly set null if needed based on filmData.trailer
+        trailer: filmData.trailer === null ? '' : filmData.trailer,
+      },
     });
 
     // Log update action

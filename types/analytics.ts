@@ -1,4 +1,4 @@
-import { Film, Production, Settings, Story } from '@/types/mongodbSchema';
+import { Film, Production, Settings, Story, UserWithoutPassword } from '@/types/mongodbSchema';
 
 
 export type AnalyticsEventType = 'view' | 'click' | 'engagement' | 'share' | 'play' | 'pause' | 'complete' | 'session_start' | 'heartbeat';
@@ -68,4 +68,10 @@ export interface DataContextType {
   fetchAnalytics: (days?: number, type?: string) => Promise<void>;
   trackPageView: (pageType: ContentType, itemId?: string) => void;
   trackEvent: (pageType: ContentType, event: AnalyticsEventType, itemId?: string, extraData?: Record<string, any>) => void;
+
+  // Add User related properties
+  users: UserWithoutPassword[]; // Use UserWithoutPassword for client-side context
+  isLoadingUsers: boolean;
+  errorUsers: string | null;
+  fetchUsersData: () => Promise<void>; // Ensure the function name matches what's provided
 }

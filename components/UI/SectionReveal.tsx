@@ -8,9 +8,11 @@ interface SectionRevealProps {
   direction?: "up" | "down" | "left" | "right";
   className?: string;
   duration?: number;
+  id?: string; // Add optional id prop
 }
 
 const SectionReveal: React.FC<SectionRevealProps> = ({
+  id,
   children,
   delay = 0,
   direction = "up",
@@ -47,6 +49,7 @@ const SectionReveal: React.FC<SectionRevealProps> = ({
 
   return (
     <motion.div
+      id={id}
       initial="initial"
       whileInView="animate"
       viewport={{ once: true, margin: "-100px" }}

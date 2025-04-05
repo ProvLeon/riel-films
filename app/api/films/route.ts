@@ -44,7 +44,7 @@ const CreateFilmSchema = z.object({
   category: z.string().min(1, "Category is required"),
   year: z.string().regex(/^\d{4}$/, "Invalid year format"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  longDescription: z.string().optional(),
+  longDescription: z.string().optional().default(''), // Provide default for create
   image: z.string().url("Invalid image URL"),
   director: z.string().min(1, "Director is required"),
   producer: z.string().min(1, "Producer is required"),
@@ -55,7 +55,7 @@ const CreateFilmSchema = z.object({
   awards: z.array(z.string()).optional().default([]),
   castCrew: z.array(z.any()).optional().default([]), // Consider stricter schema if possible
   gallery: z.array(z.string().url("Invalid gallery URL")).optional().default([]),
-  trailer: z.string().url("Invalid trailer URL").optional().nullable(),
+  trailer: z.string().url("Invalid trailer URL").nullish(), // Allow null or undefined
   synopsis: z.string().min(10, "Synopsis must be at least 10 characters"),
   quotes: z.array(z.any()).optional().default([]), // Consider stricter schema if possible
   rating: z.number().min(0).max(5).optional().default(0),
@@ -90,8 +90,9 @@ export async function POST(req: NextRequest) {
     const film = await prisma.film.create({
       data: {
         ...filmData,
-        // Ensure date conversion if necessary (though schema expects string now)
-        // releaseDate: new Date(filmData.releaseDate),
+        longDescription: filmData.longDescription || '', // Ensure string for create
+        trailer: filmData.trailer ?? '', // Pass null if nullish
+        // releaseDate: new Date(filmData.releaseDate), // Convert date if needed
       },
     });
 

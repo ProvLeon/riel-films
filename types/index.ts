@@ -91,3 +91,13 @@ export interface PageData {
     };
   };
 }
+
+
+export interface SidebarItem {
+  href: string;
+  icon: React.ReactNode;
+  text: string;
+  access: string[];
+  basePath?: string; // <<< Mark as optional
+  subItems?: { href: string; text: string; access?: string[] }[]; // <<< Mark as optional
+}
