@@ -111,12 +111,16 @@ function startHeartbeat(): void {
       initializeAnalytics();
     } else {
       localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, currentTime.toString());
+      // --- FIX: Add visitorId and sessionId to the heartbeat payload ---
       sendAnalyticsEvent({
         pageUrl: window.location.href,
         pageType: getPageTypeFromUrl(window.location.pathname),
         event: 'heartbeat',
+        visitorId: visitorId,   // <<< ADDED
+        sessionId: sessionId,   // <<< ADDED
         timeOnPage: Math.round((currentTime - sessionStartTime) / 1000)
       });
+      // --- End Fix ---
     }
   }, HEARTBEAT_INTERVAL);
 }
@@ -248,6 +252,8 @@ async function sendAnalyticsEvent(payload: any): Promise<void> {
   // *Crucial Check:* Ensure IDs are present before sending
   if (!payload.visitorId || !payload.sessionId) {
     console.error('Attempted to send analytics event without visitorId or sessionId:', payload);
+    // Optionally add more debug info here:
+    // console.log('Current state:', { initialized, visitorId, sessionId });
     return; // Do not send incomplete data
   }
 
@@ -258,7 +264,7 @@ async function sendAnalyticsEvent(payload: any): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      keepalive: true
+      keepalive: true // Keep true for potential use in other places like beforeunload
     });
   } catch (error) {
     console.error('Failed to send analytics event:', error);

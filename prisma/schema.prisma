@@ -99,15 +99,16 @@ model Story {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String   @unique // Already indexed as unique
-  password  String?
-  image     String?
-  googleId  String?  @unique // Already indexed as unique
-  role      String   @default("editor")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String         @unique // Already indexed as unique
+  password     String?
+  image        String?
+  googleId     String?        @unique // Already indexed as unique
+  role         String         @default("editor")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Notification Notification[]
 
   // Add index for role-based queries
   @@index([role])
@@ -190,16 +191,56 @@ model Visitor {
 }
 
 model Subscriber {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  email         String    @unique
-  name          String?
-  subscribed    Boolean   @default(true)
-  subscribedAt  DateTime  @default(now())
-  lastEmailSent DateTime?
-  interests     String[]  @default([])
-  source        String? // Where they subscribed from
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  email          String    @unique
+  name           String?
+  subscribed     Boolean   @default(true)
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime? // Add this field
+  lastEmailSent  DateTime?
+  interests      String[]  @default([])
+  source         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([subscribed])
+}
+
+model Campaign {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  subject           String
+  content           String? // Store HTML content or a template reference
+  filter            Json? // Audience filter used { interests: [...] }
+  status            String // e.g., draft, sending, sent, failed, partial_failure
+  sentAt            DateTime?
+  scheduledAt       DateTime? // If scheduling is implemented later
+  recipientCount    Int // Total targeted count
+  deliveredCount    Int?      @default(0) // Requires webhook integration
+  openedCount       Int?      @default(0) // Requires webhook integration
+  clickedCount      Int?      @default(0) // Requires webhook integration
+  bouncedCount      Int?      @default(0) // Requires webhook integration
+  complaintCount    Int?      @default(0) // Requires webhook integration
+  unsubscribedCount Int?      @default(0) // Requires webhook integration
+  createdAt         DateTime  @default(now())
+  createdBy         String // User ID of admin/editor
+
+  @@index([status, createdAt])
+  @@index([createdBy])
+}
+
+model Notification {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId // To whom the notification belongs
+  message         String // The notification text
+  type            String // e.g., 'activity', 'system_update', 'new_content'
+  read            Boolean  @default(false) // Read status
+  timestamp       DateTime @default(now())
+  relatedItemId   String? // Optional link to Film, Story, Production, User ID
+  relatedItemType String? // 'film', 'story', 'production', 'user' etc.
+  link            String? // Optional direct link if needed
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // Relation to User
+
+  @@index([userId, read, timestamp])
+  @@index([timestamp])
 }

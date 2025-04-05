@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { prismaAccelerate as prisma } from "@/lib/db"; // Use accelerated client
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from 'zod'; // Import Zod
 
 // GET all films (Public access, with optional filters)
 export async function GET(req: NextRequest) {
@@ -37,6 +38,30 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const CreateFilmSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format"), // Enforce slug format
+  category: z.string().min(1, "Category is required"),
+  year: z.string().regex(/^\d{4}$/, "Invalid year format"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  longDescription: z.string().optional(),
+  image: z.string().url("Invalid image URL"),
+  director: z.string().min(1, "Director is required"),
+  producer: z.string().min(1, "Producer is required"),
+  duration: z.string().min(1, "Duration is required"),
+  languages: z.array(z.string()).optional().default([]),
+  subtitles: z.array(z.string()).optional().default([]),
+  releaseDate: z.string().min(1, "Release date is required"), // Use string for date from form
+  awards: z.array(z.string()).optional().default([]),
+  castCrew: z.array(z.any()).optional().default([]), // Consider stricter schema if possible
+  gallery: z.array(z.string().url("Invalid gallery URL")).optional().default([]),
+  trailer: z.string().url("Invalid trailer URL").optional().nullable(),
+  synopsis: z.string().min(10, "Synopsis must be at least 10 characters"),
+  quotes: z.array(z.any()).optional().default([]), // Consider stricter schema if possible
+  rating: z.number().min(0).max(5).optional().default(0),
+  featured: z.boolean().optional().default(false),
+}).strict(); // Prevent extra fields
+
 // POST new film (Admin/Editor only)
 export async function POST(req: NextRequest) {
   try {
@@ -45,13 +70,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const filmData = await req.json();
+    const rawData = await req.json();
 
-    // Optional: Add validation for filmData structure here
+    // Validate data using Zod
+    const validationResult = CreateFilmSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      console.error("Film validation failed:", validationResult.error.errors);
+      return NextResponse.json({ error: "Invalid film data", issues: validationResult.error.flatten().fieldErrors }, { status: 400 });
+    }
+    const filmData = validationResult.data;
+
+    // Check if slug already exists
+    const existingSlug = await prisma.film.findUnique({ where: { slug: filmData.slug } });
+    if (existingSlug) {
+      return NextResponse.json({ error: "Slug already exists. Please choose a unique slug." }, { status: 409 }); // 409 Conflict
+    }
 
     // Create a new film
     const film = await prisma.film.create({
-      data: filmData,
+      data: {
+        ...filmData,
+        // Ensure date conversion if necessary (though schema expects string now)
+        // releaseDate: new Date(filmData.releaseDate),
+      },
     });
 
     // Log creation action
@@ -65,11 +106,14 @@ export async function POST(req: NextRequest) {
       });
     } catch (logError) { console.error("Failed to log film creation:", logError); }
 
-    return NextResponse.json(film, { status: 201 });
+    return NextResponse.json(film, { status: 201 }); // 201 Created
+
   } catch (error: any) {
-    console.error("Error creating film:", error.message);
-    // Provide more details in non-production environments
-    const errorMessage = process.env.NODE_ENV === 'production' ? "Failed to create film" : error.message;
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("Error creating film:", error);
+    if (error.code === 'P2002' && error.meta?.target?.includes('slug')) { // Prisma unique constraint violation
+      return NextResponse.json({ error: "Slug already exists. Please choose a unique slug." }, { status: 409 });
+    }
+    const message = process.env.NODE_ENV === 'production' ? "Failed to create film" : error.message;
+    return NextResponse.json({ error: "Failed to create film", details: message }, { status: 500 });
   }
 }

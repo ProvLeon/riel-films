@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { prismaAccelerate as prisma } from "@/lib/db"; // Use accelerated client
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from 'zod';
 
 // GET subscribers list (Admin only)
 export async function GET(req: NextRequest) {
@@ -34,20 +35,33 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const SubscribeSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  name: z.string().optional(),
+  source: z.string().optional().default('website'),
+  interests: z.array(z.string()).optional().default([]),
+});
+
+
 // POST to add a new subscriber (Public)
 export async function POST(req: NextRequest) {
   try {
-    const { email, name, source = 'website', interests = [] } = await req.json();
+    const rawData = await req.json();
+    const validationResult = SubscribeSchema.safeParse(rawData);
 
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    if (!validationResult.success) {
+      return NextResponse.json({ error: "Invalid data provided", issues: validationResult.error.flatten().fieldErrors }, { status: 400 });
     }
+    const { email, name, source, interests } = validationResult.data;
+
 
     const lowerCaseEmail = email.toLowerCase(); // Normalize email
 
     const existingSubscriber = await prisma.subscriber.findUnique({
       where: { email: lowerCaseEmail },
     });
+
+    const now = new Date();
 
     if (existingSubscriber) {
       if (!existingSubscriber.subscribed) {
@@ -56,19 +70,30 @@ export async function POST(req: NextRequest) {
           where: { email: lowerCaseEmail },
           data: {
             subscribed: true,
-            subscribedAt: new Date(), // Update subscription date
+            subscribedAt: now, // Update subscription date
+            unsubscribedAt: null, // Clear unsubscribe date
             name: name || existingSubscriber.name, // Update name if provided
-            interests: Array.isArray(interests) ? interests : existingSubscriber.interests,
-            source: source || existingSubscriber.source,
-            updatedAt: new Date(),
+            interests: interests, // Use new interests
+            source: source || existingSubscriber.source, // Update source if provided
+            updatedAt: now,
           },
         });
         console.log(`Resubscribed user: ${lowerCaseEmail}`);
-        return NextResponse.json({ message: "Subscription reactivated successfully" });
+        // Optionally: Log resubscribe event to analytics
+        return NextResponse.json({ message: "Subscription reactivated successfully" }, { status: 200 });
       } else {
-        // Already actively subscribed
-        console.log(`User already subscribed: ${lowerCaseEmail}`);
-        return NextResponse.json({ message: "Email is already subscribed" }, { status: 200 }); // Not an error
+        // Already actively subscribed - maybe update details?
+        await prisma.subscriber.update({
+          where: { email: lowerCaseEmail },
+          data: {
+            name: name || existingSubscriber.name,
+            interests: interests,
+            source: source || existingSubscriber.source,
+            updatedAt: now,
+          }
+        });
+        console.log(`User already subscribed, updated details: ${lowerCaseEmail}`);
+        return NextResponse.json({ message: "You are already subscribed. Details updated." }, { status: 200 });
       }
     }
 
@@ -77,20 +102,25 @@ export async function POST(req: NextRequest) {
       data: {
         email: lowerCaseEmail,
         name: name || "",
-        interests: Array.isArray(interests) ? interests : [],
+        interests: interests,
         source: source,
         subscribed: true, // Explicitly set to true
-        subscribedAt: new Date(),
+        subscribedAt: now,
+        createdAt: now, // Set explicitly for clarity
+        updatedAt: now, // Set explicitly for clarity
       },
     });
 
     console.log(`New subscriber added: ${lowerCaseEmail}`);
-    return NextResponse.json({ message: "Subscribed successfully" }, { status: 201 });
+    // Optionally: Log subscribe event to analytics
+    return NextResponse.json({ message: "Subscribed successfully" }, { status: 201 }); // 201 Created
 
   } catch (error: any) {
-    console.error("Error adding subscriber:", error.message);
-    // Avoid exposing internal errors in production
-    const errorMessage = process.env.NODE_ENV === 'production' ? "Failed to subscribe. Please try again later." : error.message;
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("Error adding subscriber:", error);
+    if (error.code === 'P2002') { // Handle potential race condition for unique email
+      return NextResponse.json({ message: "Email is already subscribed." }, { status: 409 }); // Conflict
+    }
+    const message = process.env.NODE_ENV === 'production' ? "Failed to subscribe. Please try again later." : error.message;
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

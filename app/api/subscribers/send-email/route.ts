@@ -1,74 +1,177 @@
+import { Resend } from 'resend';
 import { authOptions } from "@/lib/auth";
-import { prismaAccelerate as prisma } from "@/lib/db"; // Use accelerated client
+import { prismaAccelerate as prisma } from "@/lib/db";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from 'zod';
 
-// POST to send email to subscribers (Admin only)
+// --- Zod Schema for Validation ---
+const SendEmailSchema = z.object({
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  // Content validation might need adjustment depending on editor output (e.g., allow empty for template-based)
+  content: z.string().min(20, "Content must be at least 20 characters"),
+  filter: z.object({
+    interests: z.array(z.string()).optional(),
+  }).optional(),
+});
+
+// --- Initialize Resend (Keep as before) ---
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Riel Films <noreply@yourdomain.com>';
+
+// --- !! IMPORTANT !! ---
+// Placeholder function: Represents a background job trigger.
+// In a real app, this would enqueue a task (e.g., using BullMQ, QStash, Vercel Cron + Serverless Function, etc.)
+// The actual email sending logic would live in that background worker.
+async function enqueueCampaignSendJob(campaignId: string) {
+  console.log(`[DEMO] Enqueuing job to send campaign ${campaignId}. A background worker should pick this up.`);
+  // Simulate background processing delay and update status
+  // THIS IS NOT PRODUCTION-READY - IT WILL STILL BLOCK IF AWAITED HERE
+  // A real queue system is needed.
+  setTimeout(async () => {
+    try {
+      console.log(`[WORKER SIM] Processing campaign ${campaignId}...`);
+      const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+      if (!campaign || campaign.status !== 'queued') {
+        console.log(`[WORKER SIM] Campaign ${campaignId} not found or not in queued state.`);
+        return;
+      }
+
+      // Update status to 'sending'
+      await prisma.campaign.update({ where: { id: campaignId }, data: { status: 'sending' } });
+
+      // Fetch recipients *inside the worker*
+      const where: any = { subscribed: true };
+      if (campaign.filter?.interests && Array.isArray(campaign.filter.interests) && campaign.filter.interests.length > 0) {
+        where.interests = { hasSome: campaign.filter.interests };
+      }
+      const subscribersToSend = await prisma.subscriber.findMany({
+        where,
+        select: { email: true },
+        // Implement batching/pagination in a real worker for large lists
+        take: 10000,
+      });
+      const subscriberEmails = subscribersToSend.map(s => s.email);
+
+      if (!resend || subscriberEmails.length === 0) {
+        const status = subscriberEmails.length === 0 ? 'sent_empty' : 'failed_configuration';
+        await prisma.campaign.update({ where: { id: campaignId }, data: { status, sentAt: new Date() } });
+        console.log(`[WORKER SIM] Campaign ${campaignId} finished with status: ${status}`);
+        return;
+      }
+
+      // Simulate sending emails in batches (Resend Batch API is better)
+      console.log(`[WORKER SIM] Sending ${subscriberEmails.length} emails for campaign ${campaignId}...`);
+      // *** Replace with actual resend.emails.send or resend.batch.send logic ***
+      // Example sending one by one (Inefficient! Use Batch!)
+      let successfulSends = 0;
+      for (const email of subscriberEmails) {
+        try {
+          // Add unsubscribe link/logic here if not in content
+          await resend.emails.send({
+            from: FROM_EMAIL,
+            to: email,
+            subject: campaign.subject,
+            html: campaign.content || '', // Use stored content
+            // Add headers for unsubscribe etc.
+          });
+          successfulSends++;
+          await new Promise(resolve => setTimeout(resolve, 50)); // Simulate small delay between sends
+        } catch (sendError) {
+          console.error(`[WORKER SIM] Failed to send to ${email}:`, sendError);
+          // Log individual failures if needed
+        }
+      }
+
+      // Update campaign status based on results
+      const finalStatus = successfulSends === subscriberEmails.length ? 'sent' : successfulSends > 0 ? 'partial_failure' : 'failed';
+      await prisma.campaign.update({
+        where: { id: campaignId },
+        data: {
+          status: finalStatus,
+          sentAt: new Date(),
+          deliveredCount: successfulSends // Approximation, use webhooks for accuracy
+        }
+      });
+      console.log(`[WORKER SIM] Campaign ${campaignId} sending finished. Status: ${finalStatus}`);
+
+    } catch (workerError) {
+      console.error(`[WORKER SIM] Error processing campaign ${campaignId}:`, workerError);
+      try { await prisma.campaign.update({ where: { id: campaignId }, data: { status: 'failed' } }); } catch { /* Ignore update error */ }
+    }
+  }, 500); // Simulate a short delay before "background" processing starts
+}
+// --- End Placeholder ---
+
+// --- API Route Handler ---
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any)?.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
     }
+    const userId = (session.user as any).id;
 
-    const { subject, content, filter } = await req.json();
+    const rawData = await req.json();
+    const validationResult = SendEmailSchema.safeParse(rawData);
 
-    if (!subject || !content) {
-      return NextResponse.json({ error: "Subject and content are required" }, { status: 400 });
+    if (!validationResult.success) {
+      console.log("Campaign validation failed:", validationResult.error.flatten());
+      return NextResponse.json({ error: "Invalid input", issues: validationResult.error.flatten().fieldErrors }, { status: 400 });
     }
+    const { subject, content, filter } = validationResult.data;
 
-    // Build query for subscribers
+    // 1. Build Subscriber Query (for count estimate)
     const where: any = { subscribed: true };
-    if (filter?.interests?.length) {
-      // Ensure interests filter is applied correctly for array field
+    if (filter?.interests && filter.interests.length > 0) {
       where.interests = { hasSome: filter.interests };
     }
 
-    const subscribers = await prisma.subscriber.findMany({
-      where,
-      select: { id: true, email: true }, // Only select necessary fields
-    });
+    // 2. Get Estimated Recipient Count
+    const recipientCount = await prisma.subscriber.count({ where });
 
-    if (subscribers.length === 0) {
-      return NextResponse.json({ message: "No subscribers match the specified criteria. No emails sent." }, { status: 200 });
+    // Don't create a campaign if no one would receive it
+    if (recipientCount === 0) {
+      return NextResponse.json({ message: "No subscribers match the specified criteria. Campaign not created." }, { status: 200 }); // OK status, just info
     }
 
-    // --- Email Sending Logic (Placeholder) ---
-    // In a real app, integrate with an email service like SendGrid, Mailgun, AWS SES, etc.
-    // Loop through subscribers and send personalized emails (e.g., using a queue system for large lists)
-    console.log(`Simulating sending email with subject: "${subject}"`);
-    console.log(`Targeting ${subscribers.length} subscribers based on filter:`, filter);
-    // Example: const emailServiceResponse = await emailService.sendBulk(subscribers.map(s => s.email), subject, content);
-    // --- End Placeholder ---
-
-    const currentDate = new Date();
-    // Update lastEmailSent for the targeted subscribers
-    // Consider doing this *after* successful sending confirmation from email service
-    const subscriberIds = subscribers.map(s => s.id);
-    await prisma.subscriber.updateMany({
-      where: { id: { in: subscriberIds } },
-      data: { lastEmailSent: currentDate }
+    // 3. Create Campaign Record in DB (Status: 'queued')
+    const campaign = await prisma.campaign.create({
+      data: {
+        subject,
+        content, // Store full content (or template reference)
+        filter: filter || {},
+        status: 'queued', // Set initial status
+        recipientCount: recipientCount,
+        createdBy: userId,
+        // Initialize counts to 0
+        deliveredCount: 0, openedCount: 0, clickedCount: 0, bouncedCount: 0, complaintCount: 0, unsubscribedCount: 0,
+      }
     });
 
-    // Log the campaign event
+    // 4. Trigger the background job (Simulated Here)
+    await enqueueCampaignSendJob(campaign.id);
+
+    // 5. Log Analytics Event
     try {
       await prisma.analytics.create({
         data: {
-          pageUrl: '/admin/subscribers/campaigns', pageType: 'email_campaign', event: 'send',
-          visitorId: (session.user as any).id,
-          extraData: { subject, recipientCount: subscribers.length, filters: filter || {} }
+          pageUrl: '/admin/subscribers/campaigns', pageType: 'email_campaign', event: 'create',
+          visitorId: userId, itemId: campaign.id,
+          extraData: { subject, estimatedRecipients: recipientCount, filters: filter || {} }
         }
       });
-    } catch (logError) { console.error("Failed to log email campaign event:", logError); }
+    } catch (logError) { console.error("Failed to log email campaign creation event:", logError); }
 
-
+    // 6. Respond Immediately (Accepted)
     return NextResponse.json({
-      message: `Email campaign initiated for ${subscribers.length} subscribers.`,
-      recipients: subscribers.map(s => s.email) // Optional: return list of recipients
-    });
+      message: `Campaign '${subject}' created and queued for sending to ~${recipientCount} recipients.`,
+      campaignId: campaign.id,
+    }, { status: 202 }); // 202 Accepted
 
   } catch (error: any) {
-    console.error("Error sending email campaign:", error.message);
-    return NextResponse.json({ error: "Failed to initiate email campaign" }, { status: 500 });
+    console.error("Error creating email campaign:", error);
+    const message = process.env.NODE_ENV === 'production' ? "Failed to create campaign" : error.message;
+    return NextResponse.json({ error: "Failed to create campaign", details: message }, { status: 500 });
   }
 }

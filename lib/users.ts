@@ -1,5 +1,6 @@
-import { User } from '@/types/mongodbSchema';
+import { User } from '@/types/mongodbSchema'; // Assuming this type definition exists
 
+// Interface for user data excluding password
 export interface UserWithoutPassword extends Omit<User, 'password'> {
   password?: never;
 }
@@ -9,39 +10,31 @@ export const fetchUsers = async (): Promise<UserWithoutPassword[]> => {
   try {
     const response = await fetch("/api/users", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store"
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store" // Ensure fresh data
     });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch users: ${response.status}`);
     }
-
     return await response.json();
   } catch (error: any) {
     console.error("Error fetching users:", error);
-    throw error;
+    throw error; // Re-throw to be caught by the hook
   }
 };
 
-// Fetch a single user by ID
+// Fetch a single user by ID (Admin only)
 export const fetchUserById = async (userId: string): Promise<UserWithoutPassword> => {
   try {
     const response = await fetch(`/api/users/${userId}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to fetch user: ${response.status}`);
     }
-
     return await response.json();
   } catch (error: any) {
     console.error(`Error fetching user ${userId}:`, error);
@@ -49,27 +42,20 @@ export const fetchUserById = async (userId: string): Promise<UserWithoutPassword
   }
 };
 
-// Create a new user (admin only)
+// Create a new user (admin only - using register endpoint)
 export const createUser = async (userData: {
-  name: string;
-  email: string;
-  password: string;
-  role: string;
+  name: string; email: string; password: string; role: string;
 }): Promise<UserWithoutPassword> => {
   try {
     const response = await fetch("/api/auth/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to create user: ${response.status}`);
     }
-
     return await response.json();
   } catch (error: any) {
     console.error("Error creating user:", error);
@@ -77,25 +63,22 @@ export const createUser = async (userData: {
   }
 };
 
-// Update a user (admin only)
+// Update a user (admin only) - **Ensure this uses PATCH**
 export const updateUser = async (
   userId: string,
-  userData: Partial<Omit<User, 'id' | 'password'>>
+  // Only allow specific fields to be updated via this function
+  userData: Partial<Pick<User, 'name' | 'role' | 'image'>>
 ): Promise<UserWithoutPassword> => {
   try {
     const response = await fetch(`/api/users/${userId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      method: "PATCH", // Use PATCH
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to update user: ${response.status}`);
     }
-
     return await response.json();
   } catch (error: any) {
     console.error(`Error updating user ${userId}:`, error);
@@ -108,17 +91,13 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
   try {
     const response = await fetch(`/api/users/${userId}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `Failed to delete user: ${response.status}`);
     }
-
-    return { success: true };
+    return { success: true }; // Indicate success
   } catch (error: any) {
     console.error(`Error deleting user ${userId}:`, error);
     throw error;

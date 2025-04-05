@@ -33,90 +33,15 @@ export async function GET(
 }
 
 // PATCH update a film (Admin only)
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || !["admin", "editor"].includes((session.user as any).role)) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const filmData = await req.json();
-
-    // First find the film by slug
-    const film = await prisma.film.findUnique({
-      where: { slug: params.slug },
-      select: { id: true }
-    });
-
-    if (!film) {
-      return NextResponse.json(
-        { error: "Film not found" },
-        { status: 404 }
-      );
-    }
-
-    // Update film by ID
-    const updatedFilm = await prisma.film.update({
-      where: { id: film.id },
-      data: filmData,
-    });
-
-    return NextResponse.json(updatedFilm);
-  } catch (error: any) {
-    console.error("Error updating film:", error.message);
-    return NextResponse.json(
-      { error: "Failed to update film" },
-      { status: 500 }
-    );
-  }
+export async function PATCH(req: NextRequest, { params }: { params: { slug: string } }) {
+  console.warn("DEPRECATED: PATCH by slug. Use PATCH /api/films/id/[id] instead.");
+  // ... (keep existing logic but maybe return a 405 Method Not Allowed instead?)
+  return NextResponse.json({ error: "Method Not Allowed - Use ID-based endpoint for updates" }, { status: 405 });
 }
 
 // DELETE a film (Admin only)
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized - Admin access required" },
-        { status: 401 }
-      );
-    }
-
-    // First find the film by slug
-    const film = await prisma.film.findUnique({
-      where: { slug: params.slug },
-      select: { id: true }
-    });
-
-    if (!film) {
-      return NextResponse.json(
-        { error: "Film not found" },
-        { status: 404 }
-      );
-    }
-
-    await prisma.film.delete({
-      where: { id: film.id },
-    });
-
-    return NextResponse.json(
-      { message: "Film deleted successfully" },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error("Error deleting film:", error.message);
-    return NextResponse.json(
-      { error: "Failed to delete film" },
-      { status: 500 }
-    );
-  }
+export async function DELETE(req: NextRequest, { params }: { params: { slug: string } }) {
+  console.warn("DEPRECATED: DELETE by slug. Use DELETE /api/films/id/[id] instead.");
+  // ... (keep existing logic but maybe return a 405 Method Not Allowed instead?)
+  return NextResponse.json({ error: "Method Not Allowed - Use ID-based endpoint for deletes" }, { status: 405 });
 }

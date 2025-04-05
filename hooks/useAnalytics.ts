@@ -1,9 +1,10 @@
 import { initializeAnalytics, trackEvent, trackPageView } from '@/lib/analytics-client';
+import { AnalyticsDataType } from '@/types/analytics'; // Import the specific type
 import { useCallback, useEffect, useState } from 'react';
 
 export function useAnalytics() {
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsDataType | null>(null); // Use specific type
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Start false, set true on fetch
   const [error, setError] = useState<string | null>(null);
 
   // Initialize analytics on component mount
@@ -13,7 +14,7 @@ export function useAnalytics() {
 
   // Fetch analytics data
   const fetchAnalyticsData = useCallback(async (days: number = 30, type?: string) => {
-    setIsLoading(true);
+    setIsLoading(true); // Set loading true when fetching starts
     setError(null);
 
     try {
@@ -21,19 +22,24 @@ export function useAnalytics() {
       queryParams.append('days', days.toString());
       if (type) queryParams.append('type', type);
 
+      console.log(`Fetching analytics for ${days} days...`); // Debug log
       const response = await fetch(`/api/analytics?${queryParams.toString()}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics data');
+        const errorBody = await response.text(); // Get error body for more details
+        console.error(`Analytics fetch failed: ${response.status}`, errorBody);
+        throw new Error(`Failed to fetch analytics data (Status: ${response.status})`);
       }
 
-      const data = await response.json();
+      const data: AnalyticsDataType = await response.json(); // Type the response
+      console.log('Analytics data received:', data); // Debug log
       setAnalyticsData(data);
     } catch (error: any) {
+      console.error('Error in fetchAnalyticsData:', error); // Debug log
       setError(error.message);
-      setAnalyticsData(null);
+      setAnalyticsData(null); // Clear data on error
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading false when fetching ends
     }
   }, []);
 

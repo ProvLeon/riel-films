@@ -1,449 +1,178 @@
-import { useState, useEffect, useCallback } from "react";
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAuth } from "@/context/AuthContext";
 import {
-  Search, Bell, Sun, Moon, Monitor, Film,
-  User, Settings, LogOut, Plus, Menu,
-  LayoutDashboard, ChevronDown
+  Search, Bell, Film, User, Settings, LogOut, Plus, Menu, X,
+  LayoutDashboard, ChevronDown, Video, BookOpen, Mail, BarChart2, Activity as ActivityIcon, CheckCheck // Added CheckCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ThemeSwitcher } from "../UI/ThemeSwitcher";
+import MobileNavOverlay from "./MobileNavOverlay";
+import { useNotifications } from "@/hooks/useNotifications"; // Import useNotifications hook
+import LoadingSpinner from "../UI/LoadingSpinner";
 
 const AdminHeader = () => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const { user, logout } = useAuth();
-  const pathname = usePathname();
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const { notifications, unreadCount, isLoading: isLoadingNotifications, markAsRead } = useNotifications(); // Use the hook
+
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: "New film added: River's Edge", time: "10 minutes ago", read: false },
-    { id: 2, message: "Production updated: Mountain Echoes", time: "2 hours ago", read: false },
-    { id: 3, message: "New user registered", time: "Yesterday", read: true },
-  ]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  // Handle scrolling to add shadow effect
+  // Handle scrolling for shadow effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const getThemeIcon = () => {
-    switch (theme) {
-      case "light":
-        return <Sun className="h-5 w-5" />;
-      case "dark":
-        return <Moon className="h-5 w-5" />;
-      default:
-        return <Monitor className="h-5 w-5" />;
-    }
-  };
-
-  const isActive = useCallback((path: string) => {
-    if (path === "/admin" && pathname === "/admin/dashboard") return true;
-    return pathname === path || pathname.startsWith(`${path}/`);
-  }, [pathname]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implement search functionality
-    console.log("Searching for:", searchQuery);
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
+  // Close dropdowns and mobile menu on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (isThemeDropdownOpen || isUserDropdownOpen || isNotificationsOpen || isCreateMenuOpen) {
-        // Check if the click was outside the dropdowns
-        const target = e.target as HTMLElement;
-        if (!target.closest('.dropdown-container')) {
-          setIsThemeDropdownOpen(false);
-          setIsUserDropdownOpen(false);
-          setIsNotificationsOpen(false);
-          setIsCreateMenuOpen(false);
-        }
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dropdown-container') && !target.closest('.mobile-menu-button') && !target.closest('.mobile-nav-panel')) {
+        setIsUserDropdownOpen(false);
+        setIsNotificationsOpen(false);
+        setIsCreateMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isThemeDropdownOpen, isUserDropdownOpen, isNotificationsOpen, isCreateMenuOpen]);
+  }, []);
+
+
+  const handleSearchSubmit = (e: React.FormEvent) => { /* ... (keep existing logic) ... */ };
+
+  const handleNotificationClick = (id: string) => {
+    markAsRead(id);
+    // Optional: Navigate to related item if link exists
+    setIsNotificationsOpen(false); // Close dropdown after click
+  }
+
+  const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent closing dropdown immediately
+    markAsRead('all');
+  };
 
   return (
-    <header className={`h-16 border-b border-gray-200 dark:border-film-black-800 bg-white dark:bg-film-black-900 flex items-center px-4 md:px-6 sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : ''}`}>
-      <div className="flex items-center w-full justify-between">
-        {/* Logo and site title */}
-        <div className="flex items-center">
-          <Link href="/admin/dashboard" className="flex items-center">
-            <div className="relative h-8 w-8 mr-3">
-              <Image
-                src="/logo_foot.png"
-                alt="Riel Films"
-                fill
-                className="object-contain"
-              />
+    <>
+      <header className={`h-16 border-b border-gray-200 dark:border-film-black-800 bg-white/95 dark:bg-film-black-900/95 backdrop-blur-sm flex items-center px-4 md:px-6 sticky top-0 z-30 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : ''} `}>
+        <div className="flex items-center w-full justify-between">
+          {/* Left Side: Logo/Title */}
+          <div className="flex items-center flex-shrink-0">
+            <Link href="/admin/dashboard" className="flex items-center gap-2">
+              <div className="relative h-8 w-8"> {/* Logo image */}
+                <Image src="/logo_foot.png" alt="Riel Films" fill className="object-contain" />
+              </div>
+              <span className="text-lg font-semibold text-gray-800 dark:text-white hidden sm:inline">Admin</span>
+            </Link>
+          </div>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Quick Create Button */}
+            <div className="dropdown-container relative">
+              <button onClick={() => setIsCreateMenuOpen(prev => !prev)} className="btn-icon bg-film-red-600 text-white hover:bg-film-red-700 shadow-sm"> <Plus size={18} /> </button>
+              <AnimatePresence> {isCreateMenuOpen && (<motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden" className="dropdown-panel w-48 right-0"> <Link href="/admin/films/create" className="button-menu-item" onClick={() => setIsCreateMenuOpen(false)}><Film size={16} />New Film</Link> <Link href="/admin/productions/create" className="button-menu-item" onClick={() => setIsCreateMenuOpen(false)}><Video size={16} />New Production</Link> <Link href="/admin/stories/create" className="button-menu-item" onClick={() => setIsCreateMenuOpen(false)}><BookOpen size={16} />New Story</Link> </motion.div>)} </AnimatePresence>
             </div>
-            <h1 className="text-xl font-bold text-film-black-900 dark:text-white hidden md:block">
-              Admin
-            </h1>
-          </Link>
 
-          <div className="hidden md:flex items-center ml-8 space-x-1">
-            <Link
-              href="/admin/dashboard"
-              className={`px-3 py-2 text-sm font-medium rounded-md flex items-center ${isActive("/admin/dashboard")
-                ? "text-film-red-600 dark:text-film-red-500 bg-film-red-50 dark:bg-film-red-900/20"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                }`}
-            >
-              <LayoutDashboard className="h-4 w-4 mr-1.5" />
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/films"
-              className={`px-3 py-2 text-sm font-medium rounded-md flex items-center ${isActive("/admin/films")
-                ? "text-film-red-600 dark:text-film-red-500 bg-film-red-50 dark:bg-film-red-900/20"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                }`}
-            >
-              <Film className="h-4 w-4 mr-1.5" />
-              Films
-            </Link>
-            <Link
-              href="/admin/productions"
-              className={`px-3 py-2 text-sm font-medium rounded-md flex items-center ${isActive("/admin/productions")
-                ? "text-film-red-600 dark:text-film-red-500 bg-film-red-50 dark:bg-film-red-900/20"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                }`}
-            >
-              <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              Productions
-            </Link>
-            <Link
-              href="/admin/stories"
-              className={`px-3 py-2 text-sm font-medium rounded-md flex items-center ${isActive("/admin/stories")
-                ? "text-film-red-600 dark:text-film-red-500 bg-film-red-50 dark:bg-film-red-900/20"
-                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800"
-                }`}
-            >
-              <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M19 8l-7 5-7-5M5 19h14a2 2 0 002-2V9a2 2 0 00-2-2h-1" />
-              </svg>
-              Stories
-            </Link>
-          </div>
-        </div>
+            {/* View Site Link */}
+            <Link href="/" target="_blank" className="btn-icon hidden sm:flex" title="View Live Site"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h4a.75.75 0 010 1.5h-4a.75.75 0 00-.75.75z" clipRule="evenodd" /><path fillRule="evenodd" d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.19a.75.75 0 00-.053 1.06z" clipRule="evenodd" /></svg> </Link>
 
-        <div className="flex items-center space-x-3">
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300">
-            <Menu className="h-5 w-5" />
-          </button>
-
-          {/* Search */}
-          <div className="hidden md:flex items-center relative">
-            <form onSubmit={handleSearchSubmit}>
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="py-1.5 px-3 pl-9 rounded-lg bg-gray-100 dark:bg-film-black-800 border border-transparent focus:border-gray-300 dark:focus:border-film-black-700 focus:outline-none text-gray-800 dark:text-white w-64"
-              />
-              <Search className="h-4 w-4 text-gray-500 dark:text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </form>
-          </div>
-
-          {/* Quick Create Button */}
-          <div className="dropdown-container relative">
-            <button
-              onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
-              className="p-2 rounded-lg bg-film-red-600 hover:bg-film-red-700 text-white relative flex items-center shadow-sm"
-            >
-              <Plus className="h-5 w-5" />
-              <span className="ml-1 hidden sm:inline">Create</span>
-            </button>
-
-            <AnimatePresence>
-              {isCreateMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-10"
-                >
-                  <div className="p-2">
-                    <Link
-                      href="/admin/films/create"
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <Film className="h-4 w-4 text-film-red-600" />
-                      New Film
-                    </Link>
-                    <Link
-                      href="/admin/productions/create"
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      New Production
-                    </Link>
-                    <Link
-                      href="/admin/stories/create"
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M19 8l-7 5-7-5M5 19h14a2 2 0 002-2V9a2 2 0 00-2-2h-1" />
-                      </svg>
-                      New Story
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* View Site */}
-          <Link
-            href="/"
-            target="_blank"
-            className="hidden sm:flex items-center text-gray-600 dark:text-gray-400 hover:text-film-red-600 dark:hover:text-film-red-500 text-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            View Site
-          </Link>
-
-          {/* Theme switcher */}
-          <div className="dropdown-container relative">
-            {/* <button
-              onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-film-black-800 text-gray-600 dark:text-gray-300"
-            >
-              {getThemeIcon()}
-            </button> */}
+            {/* Theme Switcher */}
             <ThemeSwitcher />
 
-            <AnimatePresence>
-              {isThemeDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-40 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-10"
-                >
-                  <button
-                    onClick={() => {
-                      setTheme("light");
-                      setIsThemeDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-t-lg"
-                  >
-                    <Sun className="h-4 w-4" />
-                    Light
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTheme("dark");
-                      setIsThemeDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700"
-                  >
-                    <Moon className="h-4 w-4" />
-                    Dark
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTheme("system");
-                      setIsThemeDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-b-lg"
-                  >
-                    <Monitor className="h-4 w-4" />
-                    System
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Notifications */}
-          <div className="dropdown-container relative">
-            <button
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-film-black-800 text-gray-600 dark:text-gray-300 relative"
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-film-red-600 rounded-full text-white text-xs flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            <AnimatePresence>
-              {isNotificationsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-80 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-10"
-                >
-                  <div className="p-4 border-b border-gray-100 dark:border-film-black-700 flex justify-between items-center">
-                    <h3 className="font-medium text-gray-900 dark:text-white">Notifications</h3>
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-sm text-film-red-600 hover:text-film-red-700 dark:text-film-red-500 dark:hover:text-film-red-400"
-                    >
-                      Mark all as read
-                    </button>
+            {/* Notifications */}
+            <div className="dropdown-container relative">
+              <button onClick={() => setIsNotificationsOpen(prev => !prev)} className="btn-icon relative">
+                <Bell size={18} />
+                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-film-red-600 rounded-full text-white text-[10px] flex items-center justify-center border-2 border-white dark:border-film-black-900">{unreadCount}</span>}
+              </button>
+              <AnimatePresence> {isNotificationsOpen && (
+                <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden" className="dropdown-panel w-80 right-0">
+                  <div className="p-3 border-b border-gray-100 dark:border-film-black-700 flex justify-between items-center">
+                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Notifications</h3>
+                    {unreadCount > 0 && <button onClick={handleMarkAllRead} className="text-xs text-film-red-600 hover:underline flex items-center gap-1"><CheckCheck size={14} />Mark all read</button>}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-3 border-b border-gray-100 dark:border-film-black-700 last:border-0 ${!notification.read
-                            ? "bg-blue-50 dark:bg-blue-900/10"
-                            : ""
-                            }`}
-                        >
-                          <div className="flex items-start">
-                            <div className="flex-shrink-0 mt-0.5">
-                              <div className="w-8 h-8 bg-film-red-100 dark:bg-film-red-900/20 rounded-full flex items-center justify-center text-film-red-600 dark:text-film-red-500">
-                                <Bell className="h-4 w-4" />
-                              </div>
-                            </div>
-                            <div className="ml-3 flex-1">
-                              <p className="text-sm text-gray-800 dark:text-gray-200">
-                                {notification.message}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {notification.time}
-                              </p>
-                            </div>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-film-red-600 rounded-full"></div>
-                            )}
+                    {isLoadingNotifications ? (<div className="p-8 flex justify-center"><LoadingSpinner /></div>)
+                      : notifications.length === 0 ? (<div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">No new notifications</div>)
+                        : (notifications.map((n) => (
+                          <div key={n.id} className={`p-3 border-b border-gray-100 dark:border-film-black-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-film-black-700/50 cursor-pointer ${!n.read ? 'font-medium' : 'opacity-70'}`} onClick={() => handleNotificationClick(n.id)} role="button">
+                            {/* Add Icon based on type? */}
+                            <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{n.message}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{n.timeAgo}</p>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                        No notifications
-                      </div>
-                    )}
+                        ))
+                        )}
                   </div>
                   <div className="p-2 border-t border-gray-100 dark:border-film-black-700">
-                    <Link
-                      href="/admin/notifications"
-                      className="block w-full text-center py-2 text-sm text-film-red-600 dark:text-film-red-500 hover:underline"
-                    >
-                      View all notifications
-                    </Link>
+                    <Link href="/admin/activity" onClick={() => setIsNotificationsOpen(false)} className="block w-full text-center py-1.5 text-sm text-film-red-600 dark:text-film-red-500 hover:underline">View all activity</Link>
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              )}</AnimatePresence>
+            </div>
 
-          {/* User profile */}
-          <div className="dropdown-container relative">
-            <button
-              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-              className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-film-black-800"
-            >
-              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-film-black-800 flex items-center justify-center overflow-hidden">
-                {user?.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name || "User"}
-                    width={32}
-                    height={32}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {user?.name?.charAt(0) || "U"}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium text-gray-800 dark:text-white hidden md:block">
-                {user?.name?.split(' ')[0]}
-              </span>
-              <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400 hidden md:block" />
+            {/* User profile */}
+            <div className="dropdown-container relative">
+              <button onClick={() => setIsUserDropdownOpen(prev => !prev)} className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-film-black-800">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-film-black-700 flex items-center justify-center overflow-hidden border border-gray-300 dark:border-film-black-600">
+                  {user?.image ? <Image src={user.image} alt={user.name || "User"} width={32} height={32} className="object-cover w-full h-full" /> : <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{user?.name?.charAt(0) || "U"}</span>}
+                </div>
+                <ChevronDown size={16} className="text-gray-500 dark:text-gray-400 hidden sm:block" />
+              </button>
+              <AnimatePresence> {isUserDropdownOpen && (
+                <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden" className="dropdown-panel w-56 right-0">
+                  <div className="p-3 border-b border-gray-100 dark:border-film-black-700">
+                    <div className="font-medium text-sm text-gray-900 dark:text-white truncate">{user?.name || 'User'}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</div>
+                  </div>
+                  <div className="p-1">
+                    {/* <Link href="/admin/profile" onClick={() => setIsUserDropdownOpen(false)} className="button-menu-item"><User size={16} />Your Profile</Link> */}
+                    <Link href="/admin/settings" onClick={() => setIsUserDropdownOpen(false)} className="button-menu-item"><Settings size={16} />Settings</Link>
+                    <button onClick={() => { logout(); setIsUserDropdownOpen(false); }} className="button-menu-item text-red-600 dark:text-red-400 w-full"><LogOut size={16} />Logout</button>
+                  </div>
+                </motion.div>
+              )} </AnimatePresence>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button className="p-2 rounded-lg text-gray-600 dark:text-gray-300 md:hidden mobile-menu-button" onClick={() => setIsMobileMenuOpen(true)} aria-label="Open Menu">
+              <Menu size={20} />
             </button>
 
-            <AnimatePresence>
-              {isUserDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-10"
-                >
-                  <div className="p-3 border-b border-gray-100 dark:border-film-black-700">
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {user?.name}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                      {user?.email}
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    <Link
-                      href="/admin/profile"
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <User className="h-4 w-4" />
-                      Your Profile
-                    </Link>
-                    <Link
-                      href="/admin/settings"
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Settings
-                    </Link>
-                    <button
-                      onClick={() => logout()}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile Navigation Overlay */}
+      <MobileNavOverlay isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+    </>
   );
 };
+
+// Define dropdown variants for animation
+const dropdownVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: -5 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.95, y: -5, transition: { duration: 0.1 } }
+};
+
+
+// Add button style helper
+const styles = `
+  .btn-icon { @apply p-2 rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800 focus:outline-none focus:ring-2 focus:ring-film-red-500 focus:ring-offset-1 dark:focus:ring-offset-film-black-900; }
+    .button-menu-item { @apply flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-film-black-700 rounded-md transition-colors; }
+    .dropdown-panel { @apply absolute mt-2 bg-white dark:bg-film-black-800 rounded-lg shadow-lg border border-gray-100 dark:border-film-black-700 z-20; }
+`;
+if (typeof window !== 'undefined') { const styleSheet = document.createElement("style"); styleSheet.innerText = styles; document.head.appendChild(styleSheet); }
+
 
 export default AdminHeader;

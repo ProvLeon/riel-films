@@ -1,400 +1,170 @@
-import React, { useState } from 'react';
+"use client"; // Keep client-side
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
-  Home,
-  Film,
-  Video,
-  BookOpen,
-  Settings,
-  Users,
-  Menu,
-  X,
-  LogOut,
-  Mail,
-  ChevronDown,
-  ChevronRight
+  Home, Film, Video, BookOpen, Settings, Users,
+  LogOut, Mail, ChevronDown, ChevronRight, BarChart2, Activity as ActivityIcon // Added more icons
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { Button } from '../UI/Button';
 
-interface SidebarLinkProps {
+interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   text: string;
-  active: boolean;
-  onClick?: () => void;
-  hasChildren?: boolean;
-  isOpen?: boolean;
+  access: string[]; // Roles that can see this
+  basePath?: string; // For matching parent active state
+  subItems?: { href: string; text: string; access?: string[] }[];
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({
-  href,
-  icon,
-  text,
-  active,
-  onClick,
-  hasChildren,
-  isOpen
-}) => {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
-        ? 'bg-film-red-600 text-white'
-        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-800'
-        }`}
-    >
-      {icon}
-      <span className="flex-1">{text}</span>
-      {hasChildren && (
-        isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
-      )}
-    </Link>
-  );
-};
+const sidebarItems: SidebarItem[] = [
+  { href: '/admin/dashboard', icon: <Home size={18} />, text: 'Dashboard', access: ['admin', 'editor'] },
+  { href: '/admin/films', basePath: '/admin/films', icon: <Film size={18} />, text: 'Films', access: ['admin', 'editor'] },
+  { href: '/admin/productions', basePath: '/admin/productions', icon: <Video size={18} />, text: 'Productions', access: ['admin', 'editor'] },
+  { href: '/admin/stories', basePath: '/admin/stories', icon: <BookOpen size={18} />, text: 'Stories', access: ['admin', 'editor'] },
+  {
+    href: '/admin/subscribers',
+    basePath: '/admin/subscribers',
+    icon: <Mail size={18} />,
+    text: 'Subscribers',
+    access: ['admin', 'editor'],
+    subItems: [
+      { href: '/admin/subscribers', text: 'Overview' },
+      { href: '/admin/subscribers/list', text: 'Subscriber List' },
+      { href: '/admin/subscribers/campaigns', text: 'Campaigns' },
+      { href: '/admin/subscribers/analytics', text: 'Analytics' },
+    ]
+  },
+  { href: '/admin/analytics', icon: <BarChart2 size={18} />, text: 'Site Analytics', access: ['admin', 'editor'] },
+  { href: '/admin/activity', icon: <ActivityIcon size={18} />, text: 'Activity Log', access: ['admin', 'editor'] },
+  { href: '/admin/users', basePath: '/admin/users', icon: <Users size={18} />, text: 'Users', access: ['admin'] },
+  { href: '/admin/settings', icon: <Settings size={18} />, text: 'Settings', access: ['admin'] },
+];
 
+// SubLink Component
+const SubLink = ({ href, text, active }: { href: string; text: string; active: boolean }) => (
+  <Link href={href} className={`block pl-11 pr-4 py-2 text-sm rounded-md transition-colors ${active
+    ? 'text-film-red-600 dark:text-film-red-400 font-medium bg-film-red-50 dark:bg-film-red-900/20'
+    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-film-black-800'
+    }`}
+  >
+    {text}
+  </Link>
+);
+
+// Main Sidebar Component
 const AdminSidebar = () => {
   const pathname = usePathname();
-  const { logout, user, isAdmin } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const { logout, user } = useAuth();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
+  // Determine initial expanded menu based on current path
+  useEffect(() => {
+    const currentItem = sidebarItems.find(item =>
+      item.basePath && pathname.startsWith(item.basePath) && item.subItems
+    );
+    if (currentItem) {
+      setExpandedMenu(currentItem.text);
+    }
+  }, [pathname]);
+
   const toggleMenu = (menu: string) => {
-    setExpandedMenu(expandedMenu === menu ? null : menu);
+    setExpandedMenu(prev => (prev === menu ? null : menu));
   };
 
-  const sidebarItems = [
-    {
-      href: '/admin/dashboard',
-      icon: <Home className="h-5 w-5" />,
-      text: 'Dashboard',
-      access: ['admin', 'editor']
-    },
-    {
-      href: '/admin/films',
-      icon: <Film className="h-5 w-5" />,
-      text: 'Films',
-      access: ['admin', 'editor'],
-      subItems: [
-        { href: '/admin/films', text: 'All Films' },
-        { href: '/admin/films/create', text: 'Add New Film' },
-        { href: '/admin/films/categories', text: 'Categories' },
-      ]
-    },
-    {
-      href: '/admin/productions',
-      icon: <Video className="h-5 w-5" />,
-      text: 'Productions',
-      access: ['admin', 'editor'],
-      subItems: [
-        { href: '/admin/productions', text: 'All Productions' },
-        { href: '/admin/productions/create', text: 'Add New Production' },
-      ]
-    },
-    {
-      href: '/admin/stories',
-      icon: <BookOpen className="h-5 w-5" />,
-      text: 'Stories',
-      access: ['admin', 'editor'],
-      subItems: [
-        { href: '/admin/stories', text: 'All Stories' },
-        { href: '/admin/stories/create', text: 'Add New Story' },
-      ]
-    },
-    {
-      href: '/admin/subscribers',
-      icon: <Mail className="h-5 w-5" />,
-      text: 'Subscribers',
-      access: ['admin', 'editor'],
-      subItems: [
-        { href: '/admin/subscribers', text: 'Overview' },
-        { href: '/admin/subscribers/list', text: 'Subscriber List' },
-        { href: '/admin/subscribers/campaigns', text: 'Email Campaigns' },
-      ]
-    },
-    {
-      href: '/admin/users',
-      icon: <Users className="h-5 w-5" />,
-      text: 'Users',
-      access: ['admin'],
-    },
-    {
-      href: '/admin/settings',
-      icon: <Settings className="h-5 w-5" />,
-      text: 'Settings',
-      access: ['admin'],
-    },
-  ];
-
   return (
-    <>
-      {/* Mobile menu toggle */}
-      <button
-        className="fixed top-4 right-4 z-50 md:hidden bg-white dark:bg-film-black-900 rounded-full p-2 shadow-md"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
-
-      {/* Sidebar for desktop */}
-      <div className="hidden md:block w-64 bg-white dark:bg-film-black-900 border-r border-gray-200 dark:border-film-black-800 shrink-0">
-        <div className="h-full flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-film-black-800">
-            <div className="flex justify-center">
-              <div className="relative h-12 w-36">
-                <Image
-                  src="/logo_foot.png"
-                  alt="Riel Films"
-                  fill
-                  className="object-contain dark:hidden"
-                />
-                <Image
-                  src="/logo_dark_bg.png"
-                  alt="Riel Films"
-                  fill
-                  className="object-contain hidden dark:block"
-                />
-              </div>
-            </div>
+    <div className="hidden md:flex md:flex-col md:w-64 bg-white dark:bg-film-black-900 border-r border-gray-200 dark:border-film-black-800 shrink-0 h-screen sticky top-0">
+      {/* Logo Header */}
+      <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-film-black-800 px-4 flex-shrink-0">
+        <Link href="/admin/dashboard">
+          <div className="relative h-10 w-32"> {/* Adjusted size */}
+            <Image src="/logo_light_bg.png" alt="Riel Films" fill className="object-contain dark:hidden" />
+            <Image src="/logo_dark_bg.png" alt="Riel Films" fill className="object-contain hidden dark:block" />
           </div>
-
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-            {sidebarItems.map((item) => {
-              const hasAccess = item.access.includes(user?.role || '');
-              if (!hasAccess) return null;
-
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const hasSubItems = item.subItems && item.subItems.length > 0;
-              const isMenuOpen = expandedMenu === item.text;
-
-              return (
-                <div key={item.href}>
-                  {hasSubItems ? (
-                    <>
-                      <div
-                        onClick={() => toggleMenu(item.text)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${isActive
-                          ? 'bg-film-red-600 text-white'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-800'
-                          }`}
-                      >
-                        {item.icon}
-                        <span className="flex-1">{item.text}</span>
-                        {isMenuOpen ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </div>
-                      <AnimatePresence>
-                        {isMenuOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden ml-4 pl-2 border-l border-gray-200 dark:border-film-black-800"
-                          >
-                            {item.subItems.map((subItem) => (
-                              <Link
-                                key={subItem.href}
-                                href={subItem.href}
-                                className={`flex items-center gap-2 px-4 py-2 mt-1 rounded-md transition-colors ${pathname === subItem.href
-                                  ? 'bg-film-red-100 dark:bg-film-red-900/20 text-film-red-600 dark:text-film-red-400'
-                                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800'
-                                  }`}
-                              >
-                                <span className="w-1 h-1 rounded-full bg-current" />
-                                {subItem.text}
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </>
-                  ) : (
-                    <SidebarLink
-                      href={item.href}
-                      icon={item.icon}
-                      text={item.text}
-                      active={isActive}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-
-          <div className="p-4 border-t border-gray-200 dark:border-film-black-800">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-film-black-800 flex items-center justify-center">
-                <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                  {user?.name?.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white truncate">
-                  {user?.name}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                  {user?.role || "User"}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => logout()}
-              className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
+        </Link>
       </div>
 
-      {/* Mobile sidebar */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              onClick={() => setIsOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-film-black-900 md:hidden overflow-y-auto"
-            >
-              <div className="h-full flex flex-col">
-                <div className="p-4 border-b border-gray-200 dark:border-film-black-800">
-                  <div className="flex justify-center">
-                    <div className="relative h-12 w-36">
-                      <Image
-                        src="/images/logo.png"
-                        alt="Riel Films"
-                        fill
-                        className="object-contain dark:hidden"
-                      />
-                      <Image
-                        src="/images/logo-dark.png"
-                        alt="Riel Films"
-                        fill
-                        className="object-contain hidden dark:block"
-                      />
-                    </div>
-                  </div>
-                </div>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
+        {sidebarItems.map((item) => {
+          const hasAccess = item.access.includes(user?.role || '');
+          if (!hasAccess) return null;
 
-                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-                  {sidebarItems.map((item) => {
-                    const hasAccess = item.access.includes(user?.role || '');
-                    if (!hasAccess) return null;
+          const basePath = item.basePath || item.href;
+          const isActiveParent = pathname === basePath || pathname.startsWith(`${basePath}/`);
+          const hasSubItems = item.subItems && item.subItems.length > 0;
+          const isMenuOpen = expandedMenu === item.text;
 
-                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                    const hasSubItems = item.subItems && item.subItems.length > 0;
-                    const isMenuOpen = expandedMenu === item.text;
-
-                    return (
-                      <div key={item.href}>
-                        {hasSubItems ? (
-                          <>
-                            <div
-                              onClick={() => toggleMenu(item.text)}
-                              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${isActive
-                                ? 'bg-film-red-600 text-white'
-                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-800'
-                                }`}
-                            >
-                              {item.icon}
-                              <span className="flex-1">{item.text}</span>
-                              {isMenuOpen ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                            </div>
-                            <AnimatePresence>
-                              {isMenuOpen && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="overflow-hidden ml-4 pl-2 border-l border-gray-200 dark:border-film-black-800"
-                                >
-                                  {item.subItems.map((subItem) => (
-                                    <Link
-                                      key={subItem.href}
-                                      href={subItem.href}
-                                      onClick={() => setIsOpen(false)}
-                                      className={`flex items-center gap-2 px-4 py-2 mt-1 rounded-md transition-colors ${pathname === subItem.href
-                                        ? 'bg-film-red-100 dark:bg-film-red-900/20 text-film-red-600 dark:text-film-red-400'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800'
-                                        }`}
-                                    >
-                                      <span className="w-1 h-1 rounded-full bg-current" />
-                                      {subItem.text}
-                                    </Link>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </>
-                        ) : (
-                          <SidebarLink
-                            href={item.href}
-                            icon={item.icon}
-                            text={item.text}
-                            active={isActive}
-                            onClick={() => setIsOpen(false)}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </nav>
-
-                <div className="p-4 border-t border-gray-200 dark:border-film-black-800">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-film-black-800 flex items-center justify-center">
-                      <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                        {user?.name?.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white truncate">
-                        {user?.name}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                        {user?.role || "User"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => logout()}
-                    className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800 transition-colors"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span>Logout</span>
-                  </button>
-                </div>
+          return (
+            <div key={item.href}>
+              <div
+                onClick={hasSubItems ? () => toggleMenu(item.text) : undefined}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${hasSubItems ? 'cursor-pointer' : ''} ${isActiveParent
+                  ? 'bg-film-red-50 dark:bg-film-red-900/30 text-film-red-600 dark:text-film-red-400 font-medium'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-film-black-800 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+              >
+                {item.icon}
+                {hasSubItems ? (
+                  <span className="flex-1">{item.text}</span>
+                ) : (
+                  <Link href={item.href} className="flex-1 block">{item.text}</Link>
+                )}
+                {hasSubItems && (
+                  isMenuOpen ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />
+                )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+
+              <AnimatePresence initial={false}>
+                {hasSubItems && isMenuOpen && (
+                  <motion.div
+                    initial="collapsed" animate="open" exit="collapsed"
+                    variants={{
+                      open: { opacity: 1, height: 'auto' },
+                      collapsed: { opacity: 0, height: 0 },
+                    }}
+                    transition={{ duration: 0.2, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    className="overflow-hidden mt-1 space-y-1"
+                  >
+                    {item.subItems.map((subItem) => (
+                      <SubLink
+                        key={subItem.href}
+                        href={subItem.href}
+                        text={subItem.text}
+                        active={pathname === subItem.href}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Footer - User Info & Logout */}
+      <div className="p-4 border-t border-gray-200 dark:border-film-black-800 mt-auto flex-shrink-0">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-film-black-700 flex items-center justify-center overflow-hidden">
+            {user?.image ? (
+              <Image src={user.image} alt={user.name || ''} width={40} height={40} className="object-cover" />
+            ) : (
+              <span className="text-lg font-medium text-gray-700 dark:text-gray-300">{user?.name?.charAt(0) || 'U'}</span>
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name || 'User'}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role || 'Role'}</p>
+          </div>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => logout()} className="w-full justify-start">
+          <LogOut className="h-4 w-4 mr-2" /> Logout
+        </Button>
+      </div>
+    </div>
   );
 };
 

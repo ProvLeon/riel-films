@@ -32,43 +32,55 @@ export async function PATCH(req: NextRequest, { params }: { params: { email: str
     const { email } = params;
     const decodedEmail = decodeURIComponent(email);
     const updatePayload = await req.json();
-    let dataToUpdate = { ...updatePayload };
+    let dataToUpdate: Partial<typeof updatePayload> = { ...updatePayload };
 
     // Security: Prevent unauthorized updates
     if (!isAdmin) {
       const { token, subscribed, ...rest } = updatePayload;
 
-      // 1. Only allow setting 'subscribed' to false
-      // 2. Require a valid token (implement token verification logic)
-      // Example: Assume token matches a generated unsubscribe token
-      const isValidToken = token === `unsubscribe-${decodedEmail}`; // Replace with real token validation
+      // --- !!! Implement Real Token Verification Here !!! ---
+      // 1. Generate a secure, unique, time-limited token when sending emails with unsubscribe links.
+      // 2. Store this token (hashed) alongside the subscriber's record or in a separate token table.
+      // 3. When PATCH is called, compare the provided token with the stored (hashed) token.
+      // Example (Conceptual - Replace with actual logic):
+      // const storedTokenHash = await getUnsubscribeTokenForEmail(decodedEmail);
+      // const isValidToken = storedTokenHash && await bcrypt.compare(token, storedTokenHash);
+      const isValidToken = token === `placeholder-token-for-${decodedEmail}`; // Replace with real validation!
+      // --- End Token Verification ---
 
       if (subscribed === false && isValidToken) {
-        dataToUpdate = { subscribed: false }; // Only allow unsubscribe
+        dataToUpdate = { subscribed: false, unsubscribedAt: new Date() }; // Add unsubscribed timestamp
         console.log(`Unsubscribing ${decodedEmail} via token.`);
       } else {
         // If not admin and not a valid unsubscribe request, deny
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        console.warn(`Forbidden PATCH attempt for ${decodedEmail}. Valid token: ${isValidToken}, Subscribed: ${subscribed}`);
+        return NextResponse.json({ error: "Forbidden or Invalid Token" }, { status: 403 });
       }
     } else {
-      // Admin can update anything except potentially the email itself (handled by unique constraint)
-      delete dataToUpdate.email; // Don't allow changing the email via PATCH
-      delete dataToUpdate.id; // Don't allow changing the ID
+      // Admin can update allowed fields (e.g., name, interests, but not email/id)
+      delete dataToUpdate.email;
+      delete dataToUpdate.id;
+      // Ensure boolean values are correct
+      if (dataToUpdate.subscribed !== undefined) dataToUpdate.subscribed = Boolean(dataToUpdate.subscribed);
+      // If admin resubscribes, clear unsubscribedAt? Or keep it? Decide policy.
+      // if (dataToUpdate.subscribed === true) dataToUpdate.unsubscribedAt = null;
     }
 
-    // Ensure boolean values are correct
-    if (dataToUpdate.subscribed !== undefined) dataToUpdate.subscribed = Boolean(dataToUpdate.subscribed);
 
     const subscriber = await prisma.subscriber.update({
       where: { email: decodedEmail },
-      data: dataToUpdate,
+      data: { ...dataToUpdate, updatedAt: new Date() }, // Always update updatedAt
     });
 
-    return NextResponse.json({ message: "Subscriber updated successfully", subscriber });
+    return NextResponse.json({ message: "Subscriber updated successfully", subscriber }, { status: 200 });
+
   } catch (error: any) {
-    console.error("Error updating subscriber:", error.message);
-    if (error.code === 'P2025') return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
-    return NextResponse.json({ error: "Failed to update subscriber" }, { status: 500 });
+    console.error("Error updating subscriber:", error);
+    if (error.code === 'P2025') { // Record to update not found
+      return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
+    }
+    const message = process.env.NODE_ENV === 'production' ? "Failed to update subscriber" : error.message;
+    return NextResponse.json({ error: "Failed to update subscriber", details: message }, { status: 500 });
   }
 }
 

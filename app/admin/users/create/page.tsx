@@ -125,7 +125,7 @@ const CreateUserPage = () => {
 const styles = `
   .label-style { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
   .input-style { @apply w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border border-gray-300 dark:border-film-black-700 focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white shadow-sm; }
-`;
+  `;
 if (typeof window !== 'undefined') { const styleSheet = document.createElement("style"); styleSheet.innerText = styles; document.head.appendChild(styleSheet); }
 
 export default CreateUserPage;

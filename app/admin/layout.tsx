@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminSidebar from "@/components/admin/AdminSidebar"; // For Desktop
+import AdminHeader from "@/components/admin/AdminHeader"; // Add Header
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
@@ -19,8 +20,6 @@ export default function AdminLayout({
     if (!isLoading && !user) {
       router.push("/admin/login");
     }
-
-
   }, [user, isLoading, router]);
 
   // Show loading spinner while checking auth status
@@ -33,22 +32,26 @@ export default function AdminLayout({
   }
 
   // Render layout only if the user is authenticated
-  // Handle case where user is null *after* loading finishes (redirect will handle this)
-  const renderAdminSideBar = () => {
-    if (user && !isLoading) {
-      return <AdminSidebar /> // Or a minimal placeholder, useEffect handles the redirect
-    }
+  if (!user) {
+    return null; // Return null or a minimal placeholder while redirecting
   }
 
+
+  // const renderAdminSideBar = () => {
+  //   if (user && !isLoading) {
+  //     return <AdminSidebar /> // Or a minimal placeholder, useEffect handles the redirect
+  //   }
+  // }
 
   // Render the main admin layout
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-film-black-950">
-      {renderAdminSideBar()}
+      {/* {renderAdminSideBar()} */}
+      <AdminSidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Optional: Global Admin Header could go here if needed */}
-        {/* <AdminHeader /> */}
+        <AdminHeader />
 
         <main className="flex-1 overflow-y-auto">
           {/* Use a consistent container for padding */}

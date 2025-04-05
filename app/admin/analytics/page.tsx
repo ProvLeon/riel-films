@@ -1,7 +1,7 @@
 "use client";
 import { useState, Suspense } from "react";
 import { TrendingUp, Film, FileText, Video, BarChart2, ArrowLeft } from 'lucide-react';
-import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard"; // Correct import path assumed
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
@@ -11,19 +11,16 @@ type ActiveTab = 'overview' | 'films' | 'stories' | 'productions';
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
-  const [timeRange, setTimeRange] = useState<number>(30); // Keep track of selected time range
+  const [timeRange, setTimeRange] = useState<number>(30); // Can be controlled by AnalyticsDashboard now
 
   return (
     <div className="bg-gray-50 dark:bg-film-black-950 min-h-screen">
       <div className="p-4 md:p-6 lg:p-8">
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <div className="flex items-center mb-2">
-              <Link
-                href="/admin/dashboard"
-                className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800 mr-2 transition-colors"
-                aria-label="Back to Dashboard"
-              >
+              <Link href="/admin/dashboard" className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-film-black-800 mr-2 transition-colors" aria-label="Back to Dashboard">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center">
@@ -35,12 +32,11 @@ export default function AnalyticsPage() {
               Insights and performance metrics for your content.
             </p>
           </div>
-          {/* Optional: Add Actions like Export */}
         </div>
 
-        {/* Enhanced Analytics Tabs */}
-        <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm mb-6 border border-gray-100 dark:border-film-black-800">
-          <div className="border-b border-gray-200 dark:border-film-black-800">
+        {/* Tabs */}
+        <div className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm mb-6 border border-border-light dark:border-border-dark">
+          <div className="border-b border-border-light dark:border-border-dark">
             <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-hide px-4">
               {[
                 { key: 'overview', label: 'Overview', icon: TrendingUp },
@@ -58,7 +54,6 @@ export default function AnalyticsPage() {
                 >
                   <tab.icon className={`h-5 w-5 mr-2 transition-colors ${activeTab === tab.key ? 'text-film-red-500' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}`} />
                   {tab.label}
-                  {/* Underline effect */}
                   <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-film-red-600 transform transition-transform duration-300 ${activeTab === tab.key ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
                 </button>
               ))}
@@ -66,7 +61,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Analytics dashboard content */}
+        {/* Analytics Content */}
         <Suspense fallback={<div className="h-96 flex items-center justify-center"><LoadingSpinner size="large" /></div>}>
           {activeTab === 'overview' && (
             <ErrorBoundary fallback={
@@ -75,21 +70,26 @@ export default function AnalyticsPage() {
                 <AlertDescription>Could not load the overview analytics data. Please try again later.</AlertDescription>
               </Alert>
             }>
+              {/* Pass defaultTimeRange if you want the dashboard to control it initially */}
               <AnalyticsDashboard defaultTimeRange={timeRange} condensed={false} />
             </ErrorBoundary>
           )}
         </Suspense>
 
+        {/* Placeholder for other tabs */}
         {activeTab !== 'overview' && (
-          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-film-black-800">
+          <div className="bg-white dark:bg-film-black-900 rounded-xl p-6 shadow-sm border border-border-light dark:border-border-dark">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 capitalize flex items-center">
-              {activeTab === 'films' ? <Film className="h-5 w-5 mr-2 text-film-red-500" /> : activeTab === 'stories' ? <FileText className="h-5 w-5 mr-2 text-film-red-500" /> : <Video className="h-5 w-5 mr-2 text-film-red-500" />}
+              {/* Icons based on activeTab */}
+              {activeTab === 'films' && <Film className="h-5 w-5 mr-2 text-film-red-500" />}
+              {activeTab === 'stories' && <FileText className="h-5 w-5 mr-2 text-film-red-500" />}
+              {activeTab === 'productions' && <Video className="h-5 w-5 mr-2 text-film-red-500" />}
               {activeTab} Analytics
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Detailed analytics for {activeTab}. This section is currently under development.
             </p>
-            {/* Enhanced Placeholder */}
+            {/* Placeholder Visual */}
             <div className="min-h-[300px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-film-black-800/30 dark:to-film-black-800/50 rounded-lg border border-dashed border-gray-300 dark:border-film-black-700 p-8 text-center">
               <div className="w-16 h-16 bg-gray-200 dark:bg-film-black-700 rounded-full flex items-center justify-center mb-4 ring-4 ring-gray-300/50 dark:ring-film-black-600/50">
                 {activeTab === 'films' ? <Film className="h-8 w-8 text-gray-400 dark:text-gray-500" />
