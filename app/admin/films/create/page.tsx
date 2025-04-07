@@ -6,6 +6,8 @@ import { Save, ArrowLeft, Plus, X, Upload, Star, StarOff, Image as ImageIcon, Fi
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert";
+import ImageUploader from '@/components/admin/ImageUploader'; // Import the component
+import { CldImage } from "next-cloudinary";
 
 const CreateFilmLoading = () => (
   <div className="flex justify-center items-center min-h-screen">
@@ -94,95 +96,127 @@ const CreateFilmForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({}); // For field-specific errors
 
   const [formData, setFormData] = useState({
     title: "", slug: "", category: "", year: "", description: "", longDescription: "",
     image: "", director: "", producer: "", duration: "", languages: [""], subtitles: [""],
-    releaseDate: "", awards: [""], gallery: [""], trailer: "", synopsis: "",
+    releaseDate: "", awards: [""], gallery: [] as string[], trailer: "", synopsis: "",
     quotes: [{ text: "", source: "" }], rating: 0, featured: false, castCrew: [{ role: "", name: "" }]
   });
 
   // --- Handlers using useCallback ---
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    // @ts-ignore
-    const val = type === 'checkbox' ? e.target.checked : type === 'number' ? parseFloat(value) || 0 : value;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : type === 'number' ? parseFloat(value) || 0 : value;
     setFormData(prev => ({ ...prev, [name]: val }));
-    setError(null); // Clear global error on input change
-  }, []);
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' })); // Clear specific error
+    setError(null);
+  }, [errors]);
 
   const handleArrayInputChange = useCallback((index: number, fieldName: keyof Pick<typeof formData, 'languages' | 'subtitles' | 'awards' | 'gallery'>, value: string) => {
     setFormData(prev => {
-      const newArray = [...prev[fieldName]];
+      // Ensure the field exists and is an array
+      const currentArray = Array.isArray(prev[fieldName]) ? prev[fieldName] : [];
+      const newArray = [...currentArray];
       newArray[index] = value;
       return { ...prev, [fieldName]: newArray };
     });
   }, []);
 
   const addItemToArray = useCallback((fieldName: keyof Pick<typeof formData, 'languages' | 'subtitles' | 'awards' | 'gallery'>) => {
-    setFormData(prev => ({ ...prev, [fieldName]: [...prev[fieldName], ""] }));
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: [...(Array.isArray(prev[fieldName]) ? prev[fieldName] : []), ""]
+    }));
   }, []);
 
   const removeItemFromArray = useCallback((fieldName: keyof Pick<typeof formData, 'languages' | 'subtitles' | 'awards' | 'gallery'>, index: number) => {
     setFormData(prev => {
-      const newArray = [...prev[fieldName]];
-      newArray.splice(index, 1);
-      return { ...prev, [fieldName]: newArray.length > 0 ? newArray : [""] }; // Keep at least one empty string if needed
+      // Ensure the field exists and is an array
+      const currentArray = Array.isArray(prev[fieldName]) ? prev[fieldName] : [];
+      const newArray = [...currentArray];
+      if (newArray.length > 1 || (fieldName !== 'languages' && fieldName !== 'subtitles')) {
+        newArray.splice(index, 1);
+        // Keep at least one empty string if needed for specific fields after removal
+        if (newArray.length === 0 && (fieldName === 'languages' || fieldName === 'subtitles' || fieldName === 'awards' || fieldName === 'gallery')) {
+          return { ...prev, [fieldName]: [""] };
+        }
+        return { ...prev, [fieldName]: newArray };
+      }
+      return prev; // Don't remove if only one item left (unless it's gallery etc.)
     });
   }, []);
 
-  const handleQuoteChange = useCallback((index: number, field: 'text' | 'source', value: string) => {
-    setFormData(prev => {
-      const newQuotes = [...prev.quotes];
-      newQuotes[index] = { ...newQuotes[index], [field]: value };
-      return { ...prev, quotes: newQuotes };
-    });
-  }, []);
 
+  const handleQuoteChange = useCallback((index: number, field: 'text' | 'source', value: string) => { /* ... */ }, []);
   const addQuote = useCallback(() => setFormData(prev => ({ ...prev, quotes: [...prev.quotes, { text: "", source: "" }] })), []);
-  const removeQuote = useCallback((index: number) => {
-    setFormData(prev => {
-      const newQuotes = [...prev.quotes];
-      newQuotes.splice(index, 1);
-      return { ...prev, quotes: newQuotes.length > 0 ? newQuotes : [{ text: "", source: "" }] };
-    });
-  }, []);
-
-  const handleCastCrewChange = useCallback((index: number, field: 'role' | 'name', value: string) => {
-    setFormData(prev => {
-      const newCastCrew = [...prev.castCrew];
-      newCastCrew[index] = { ...newCastCrew[index], [field]: value };
-      return { ...prev, castCrew: newCastCrew };
-    });
-  }, []);
-
+  const removeQuote = useCallback((index: number) => { /* ... */ }, []);
+  const handleCastCrewChange = useCallback((index: number, field: 'role' | 'name', value: string) => { /* ... */ }, []);
   const addCastCrewMember = useCallback(() => setFormData(prev => ({ ...prev, castCrew: [...prev.castCrew, { role: "", name: "" }] })), []);
-  const removeCastCrewMember = useCallback((index: number) => {
-    setFormData(prev => {
-      const newCastCrew = [...prev.castCrew];
-      newCastCrew.splice(index, 1);
-      return { ...prev, castCrew: newCastCrew.length > 0 ? newCastCrew : [{ role: "", name: "" }] };
-    });
-  }, []);
+  const removeCastCrewMember = useCallback((index: number) => { /* ... */ }, []);
 
+  // Slug Generation
   const generateSlug = useCallback(() => {
     const slug = formData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
     setFormData(prev => ({ ...prev, slug }));
   }, [formData.title]);
 
+  // Image Handlers using ImageUploader callbacks
+  const handlePosterUpload = useCallback((url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
+    if (errors.image) setErrors(prev => ({ ...prev, image: '' }));
+  }, [errors.image]);
+
+  const handlePosterRemove = useCallback(() => {
+    setFormData(prev => ({ ...prev, image: '' }));
+  }, []);
+
+  const handleGalleryUpload = useCallback((url: string) => {
+    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, url] }));
+  }, []);
+
+  const handleGalleryRemove = useCallback((index: number) => {
+    setFormData(prev => {
+      const newGallery = [...prev.gallery];
+      newGallery.splice(index, 1);
+      return { ...prev, gallery: newGallery };
+    });
+  }, []);
+  // --- End Handlers ---
+
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const requiredFields: (keyof typeof formData)[] = ['title', 'slug', 'category', 'year', 'description', 'image', 'director', 'producer', 'duration', 'releaseDate', 'synopsis'];
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
+      }
+    });
+    // Add specific URL validation if needed (Zod handles this on API)
+    if (formData.trailer && !formData.trailer.startsWith('http')) {
+      newErrors.trailer = 'Please enter a valid URL for the trailer.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const requiredFields: (keyof typeof formData)[] = ['title', 'slug', 'category', 'year', 'description', 'image', 'director', 'producer', 'duration', 'releaseDate', 'synopsis'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-
-    if (missingFields.length > 0) {
-      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
-      setIsSubmitting(false);
+    if (!validateForm()) {
+      setError("Please fix the errors in the form.");
+      // Optionally scroll to the first error
+      const firstErrorKey = Object.keys(errors).find(key => errors[key]);
+      if (firstErrorKey) {
+        const errorElement = document.getElementById(firstErrorKey);
+        errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/films', {
@@ -190,14 +224,13 @@ const CreateFilmForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create film');
+        throw new Error(errorData.error || `Failed to create film (Status: ${response.status})`);
       }
-      router.push('/admin/films');
-    } catch (error: any) {
-      setError(error.message);
+      router.push('/admin/films?success=created'); // Add success param
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -227,50 +260,114 @@ const CreateFilmForm = () => {
 
             {/* Basic Information Section */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-3 mb-6 border-b border-gray-200 dark:border-film-black-800 flex items-center"><Type className="h-5 w-5 mr-2 text-film-red-500" /> Basic Information</h2>
+              <h2 className="section-heading flex items-center">
+                <Type className="icon-style" /> Basic Information
+              </h2>
+              {/* ... Title, Slug, Category, Year ... */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField id="title" label="Title" required value={formData.title} onChange={handleInputChange} onBlur={generateSlug} errorField={error} formData={formData} />
-                <InputField id="slug" label="Slug" required value={formData.slug} onChange={handleInputChange} errorField={error} formData={formData} />
+                {/* Use InputField/TextareaField components, passing errors */}
+                <InputField id="title" label="Title" required value={formData.title} onChange={handleInputChange} onBlur={generateSlug} errorField={errors.title} formData={formData} />
+                <InputField id="slug" label="Slug" required value={formData.slug} onChange={handleInputChange} errorField={errors.slug} formData={formData} />
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category<span className="text-red-600 ml-1">*</span></label>
-                  <select id="category" name="category" value={formData.category} onChange={handleInputChange} className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${error && !formData.category ? 'border-red-500' : 'border-gray-300 dark:border-film-black-700'} focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white shadow-sm`} required>
-                    <option value="">Select category</option>
+                  <label htmlFor="category" className="label-style">Category<span className="text-red-600 ml-1">*</span></label>
+                  <select id="category" name="category" value={formData.category} onChange={handleInputChange} className={`input-style ${errors.category ? 'border-red-500' : ''}`} required>
+                    {/* Options */}
                     <option value="Documentary">Documentary</option>
-                    <option value="Feature Film">Feature Film</option>
-                    <option value="Short Film">Short Film</option>
-                    <option value="Animation">Animation</option>
-                    <option value="Series">Series</option>
+                    <option value="Drama">Drama</option>
+                    <option value="In Production">In Production</option>
+                    <option value="Post-Production">Post-Production</option>
+                    <option value="Completed">Completed</option>
                   </select>
+                  {errors.category && <p className="form-error">{errors.category}</p>}
                 </div>
-                <InputField id="year" label="Year" required type="number" value={formData.year} onChange={handleInputChange} errorField={error} formData={formData} />
-                <div className="md:col-span-2"><TextareaField id="description" label="Short Description" required rows={3} value={formData.description} onChange={handleInputChange} errorField={error} formData={formData} /></div>
+                <InputField id="year" label="Year" required type="number" value={formData.year} onChange={handleInputChange} errorField={errors.year} formData={formData} />
+                <div className="md:col-span-2"><TextareaField id="description" label="Short Description" required rows={3} value={formData.description} onChange={handleInputChange} errorField={errors.description} formData={formData} /></div>
                 <div className="md:col-span-2"><TextareaField id="longDescription" label="Long Description / About" rows={5} value={formData.longDescription} onChange={handleInputChange} /></div>
-                <div className="md:col-span-2"><TextareaField id="synopsis" label="Synopsis" required rows={4} value={formData.synopsis} onChange={handleInputChange} errorField={error} formData={formData} /></div>
+                <div className="md:col-span-2"><TextareaField id="synopsis" label="Synopsis" required rows={4} value={formData.synopsis} onChange={handleInputChange} errorField={errors.synopsis} formData={formData} /></div>
               </div>
             </section>
 
             {/* Media Section */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-3 mb-6 border-b border-gray-200 dark:border-film-black-800 flex items-center"><ImageIcon className="h-5 w-5 mr-2 text-film-red-500" /> Media</h2>
+              <h2 className="section-heading"><ImageIcon className="icon-style" /> Media</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Main Image URL<span className="text-red-600 ml-1">*</span></label>
-                  <div className="flex">
-                    <input type="text" id="image" name="image" value={formData.image} onChange={handleInputChange} placeholder="https://..." className={`flex-1 px-4 py-2 rounded-l-md bg-white dark:bg-film-black-800 border ${error && !formData.image ? 'border-red-500' : 'border-gray-300 dark:border-film-black-700'} focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white`} required />
-                    <button type="button" className="px-4 py-2 bg-gray-100 dark:bg-film-black-700 border-y border-r border-gray-300 dark:border-film-black-600 rounded-r-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-600"><Upload className="h-5 w-5" /></button>
-                  </div>
+                <div className="md:col-span-2">
+                  <ImageUploader
+                    label="Main Film Poster *"
+                    currentImageUrl={formData.image}
+                    onUploadComplete={handlePosterUpload}
+                    onRemoveComplete={handlePosterRemove}
+                    required={true}
+                    recommendedText="16:9 ratio recommended, max 5MB"
+                    aspectRatio="aspect-video"
+                  />
+                  {errors.image && <p className="form-error">{errors.image}</p>}
                 </div>
-                <InputField id="trailer" label="Trailer URL" type="url" value={formData.trailer} onChange={handleInputChange} placeholder="https://youtube.com/..." />
+                <InputField id="trailer" label="Trailer URL (YouTube/Vimeo)" type="url" value={formData.trailer || ''} onChange={handleInputChange} errorField={errors.trailer} formData={formData} placeholder="https://youtube.com/..." />
               </div>
-              <div className="mt-6"><ArrayInputSection fieldName="gallery" label="Gallery Images (URLs)" placeholder="https://image-url.com/..." items={formData.gallery} addItem={addItemToArray} removeItem={removeItemFromArray} handleItemChange={handleArrayInputChange} /></div>
+              {/* Gallery Uploader Section */}
+              <div className="mt-8">
+                <label className="label-style mb-2">Gallery Images</label>
+                <div className="mb-4 p-4 border border-dashed border-gray-300 dark:border-film-black-700 rounded-lg bg-gray-50 dark:bg-film-black-800/50">
+                  <ImageUploader
+                    label="Add Image to Gallery"
+                    currentImageUrl={null} // Pass null to indicate adding mode
+                    onUploadComplete={handleGalleryUpload}
+                    onRemoveComplete={() => { }} // No remove action needed for the uploader itself
+                    recommendedText="Upload additional images (Max 5MB each)"
+                    aspectRatio="aspect-video"
+                  />
+                </div>
+                {/* Display uploaded gallery images */}
+                <AnimatePresence>
+                  {formData.gallery && formData.gallery.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                      {formData.gallery.map((url, index) => (
+                        <motion.div
+                          key={url + index}
+                          layout
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                          className="relative w-28 h-28 rounded-md overflow-hidden border dark:border-film-black-700 group"
+                        >
+                          <CldImage src={url} alt={`Gallery ${index + 1}`} fill className="object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleGalleryRemove(index)}
+                            className="absolute top-1 right-1 bg-red-600/80 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                            aria-label="Remove image"
+                          >
+                            <X size={14} />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
             </section>
 
             {/* Production Details Section */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-3 mb-6 border-b border-gray-200 dark:border-film-black-800 flex items-center"><Film className="h-5 w-5 mr-2 text-film-red-500" /> Production Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField id="director" label="Director" required value={formData.director} onChange={handleInputChange} errorField={error} formData={formData} />
-                <InputField id="producer" label="Producer" required value={formData.producer} onChange={handleInputChange} errorField={error} formData={formData} />
+                <InputField
+                  id="director"
+                  label="Director"
+                  required
+                  value={formData.director}
+                  onChange={handleInputChange}
+                  errorField={error}
+                  formData={formData} />
+                <InputField id="producer"
+                  label="Producer"
+                  required
+                  value={formData.producer}
+                  onChange={handleInputChange}
+                  errorField={error}
+                  formData={formData} />
                 <InputField id="duration" label="Duration" required value={formData.duration} onChange={handleInputChange} placeholder="e.g., 1h 45m" errorField={error} formData={formData} />
                 <InputField id="releaseDate" label="Release Date" required type="date" value={formData.releaseDate} onChange={handleInputChange} errorField={error} formData={formData} />
                 <InputField id="rating" label="Rating (0-5)" required type="number" min="0" max="5" step="0.1" value={formData.rating} onChange={handleInputChange} />

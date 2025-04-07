@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/UI/Button";
-import Image from "next/image";
+import { CldImage } from 'next-cloudinary';
 import { Play, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFilmsList } from "@/hooks/useFilmsList";
@@ -52,13 +52,16 @@ const HeroSection = () => {
           transition={{ duration: 0.7 }}
         >
           <div className="relative w-full h-full">
-            <Image
-              src={featuredFilm.image || "/images/hero/hero1.jpg"}
+            <CldImage
+              src={featuredFilm.image || "riel-films/hero_placeholder"} // Use public ID if URL fails
               alt={featuredFilm.title}
               fill
               priority
               className="object-cover object-center"
               sizes="100vw"
+              // Add transformations for optimization
+              format="auto"
+              quality="auto"
             />
 
             {/* Netflix-style gradient overlay that's stronger at bottom */}

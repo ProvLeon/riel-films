@@ -4,6 +4,7 @@ import { Film, X, Upload, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import ImageUploader from './ImageUploader';
 
 interface FilmFormData {
   title: string;
@@ -204,8 +205,8 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
                 value={formData.title}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${errors.title
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
                   } focus:outline-none focus:ring-2 dark:text-white`}
                 placeholder="Enter film title"
               />
@@ -226,8 +227,8 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
                 value={formData.slug}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${errors.slug
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
                   } focus:outline-none focus:ring-2 dark:text-white`}
                 placeholder="film-title-slug"
               />
@@ -251,8 +252,8 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
                   value={formData.category}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${errors.category
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
                     } focus:outline-none focus:ring-2 dark:text-white`}
                 >
                   <option value="">Select category</option>
@@ -278,8 +279,8 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
                   value={formData.year}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${errors.year
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
                     } focus:outline-none focus:ring-2 dark:text-white`}
                   placeholder="2023"
                 />
@@ -301,8 +302,8 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
                 onChange={handleChange}
                 rows={3}
                 className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${errors.description
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-film-black-700 focus:ring-film-red-500'
                   } focus:outline-none focus:ring-2 dark:text-white`}
                 placeholder="Brief description of the film"
               />
@@ -378,11 +379,13 @@ const FilmEditor: React.FC<FilmEditorProps> = ({
               <div className="relative border-2 border-dashed border-gray-300 dark:border-film-black-700 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50 dark:bg-film-black-800/50 h-64">
                 {previewImage ? (
                   <div className="relative w-full h-full">
-                    <Image
-                      src={previewImage}
-                      alt="Film poster preview"
-                      fill
-                      className="object-contain rounded"
+                    <ImageUploader
+                      label="Film Poster Image *"
+                      currentImageUrl={formData.image}
+                      onUploadComplete={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                      onRemoveComplete={() => setFormData(prev => ({ ...prev, image: '' }))}
+                      recommendedText="Recommended: 16:9 aspect ratio, max 5MB"
+                      aspectRatio="aspect-video" // Or appropriate ratio
                     />
                     <button
                       type="button"

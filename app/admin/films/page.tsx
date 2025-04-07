@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Button } from "@/components/UI/Button";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Film as FilmType } from "@/types/mongodbSchema"; // Renamed to avoid conflict
+import { CldImage } from "next-cloudinary";
 
 type SortKey = "newest" | "oldest" | "title-asc" | "title-desc" | "rating-high" | "rating-low";
 
@@ -243,7 +244,12 @@ export default function FilmsPage() {
                 className="bg-white dark:bg-film-black-900 rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 dark:border-film-black-800 h-full flex flex-col"
               >
                 <div className="relative h-48 group">
-                  <Image src={film.image || "/images/placeholder.jpg"} alt={film.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <CldImage
+                    src={film.image || "riel-films/placeholder"}
+                    alt={film.title} fill className="object-cover ..."
+                    format="auto" quality="auto"
+                    onError={(e: any) => { e.target.style.display = 'none'; }}
+                  />
                   {film.featured && <div className="absolute top-2 left-2 bg-yellow-400 dark:bg-yellow-500 text-black dark:text-black text-xs font-medium px-2 py-1 rounded-md flex items-center"><Star className="h-3 w-3 fill-current mr-1" />Featured</div>}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-3">
                     <h3 className="text-white font-medium text-lg line-clamp-1">{film.title}</h3>
@@ -288,7 +294,13 @@ export default function FilmsPage() {
                     <tr key={film.id} className="hover:bg-gray-50 dark:hover:bg-film-black-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-16 relative rounded overflow-hidden"><Image src={film.image || "/images/placeholder.jpg"} alt={film.title} fill className="object-cover" /></div>
+                          <div className="flex-shrink-0 h-10 w-16 relative rounded overflow-hidden">
+                            <CldImage
+                              src={film.image || "riel-films/placeholder_thumb"}
+                              alt={film.title} fill className="object-cover"
+                              format="auto" quality="auto" width={64} height={40} crop="fill" gravity="center" // Thumbnail transformations
+                              onError={(e: any) => { e.target.style.display = 'none'; }}
+                            /></div>
                           <div className="ml-4"><div className="text-sm font-medium text-gray-900 dark:text-white">{film.title}</div></div>
                         </div>
                       </td>

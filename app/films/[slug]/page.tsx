@@ -15,6 +15,9 @@ import { FilmDetailSkeleton } from "@/components/skeletons/FilmDetailSkeleton";
 import { formatDate } from "@/lib/utils";
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card"; // Use unified Card
 import BackToTop from "@/components/UI/BackToTop"; // Import BackToTop
+import { CldImage } from 'next-cloudinary';
+import YouTubeEmbed from '@/components/UI/YouTubeEmbed';
+
 
 type SharePlatform = "twitter" | "facebook" | "email" | "copy";
 type ActiveTab = 'about' | 'castCrew' | 'gallery' | 'availability';
@@ -58,6 +61,24 @@ const FilmDetailPage = () => {
     return () => { document.body.style.overflow = "auto"; };
   }, [trailerOpen]);
 
+
+  const getYouTubeId = (url: string): string | null => {
+    if (!url) return null;
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      }
+      if (urlObj.hostname.includes('youtu.be')) {
+        return urlObj.pathname.slice(1);
+      }
+    } catch (e) { console.error("Invalid URL for YouTube ID extraction", e); }
+    return null; // Add more parsers for Vimeo etc. if needed
+  };
+
+  const videoId = getYouTubeId(film?.trailer || '');
+
+
   // Toggle share options dropdown
   const toggleShareOptions = useCallback(() => setShowShareOptions(prev => !prev), []);
 
@@ -98,7 +119,12 @@ const FilmDetailPage = () => {
 
         {/* --- Hero Section --- */}
         <div className="relative w-full h-[65vh] md:h-[80vh] overflow-hidden">
-          <Image src={film.image || '/images/hero/hero_placeholder.jpg'} alt={film.title} fill className="object-cover object-center" priority onError={(e) => { e.currentTarget.src = "/images/hero/hero_placeholder.jpg"; }} />
+          <CldImage
+            src={film.image || 'riel-films/hero_placeholder'}
+            alt={film.title} fill className="object-cover object-center" priority
+            format="auto" quality="auto" sizes="100vw"
+            onError={(e: any) => { e.target.style.display = 'none'; }} // Hide broken image icon
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-film-black-950 via-film-black-900/70 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/70 via-transparent to-transparent" />
           <div className="container-custom h-full flex flex-col justify-end pb-12 md:pb-16 relative z-10">
@@ -222,7 +248,13 @@ const FilmDetailPage = () => {
                           <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-lg mb-4 border border-border-light dark:border-border-dark">
                             <AnimatePresence mode="wait">
                               <motion.div key={safeGalleryIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                                <Image src={galleryImages[safeGalleryIndex] || '/images/hero/hero_placeholder.jpg'} alt={`${film.title} - Gallery image ${safeGalleryIndex + 1}`} fill className="object-cover" onError={(e) => { e.currentTarget.src = "/images/hero/hero_placeholder.jpg"; }} />
+                                <CldImage
+                                  src={galleryImages[safeGalleryIndex] || 'riel-films/placeholder'}
+                                  alt={`${film.title} - Gallery image ${safeGalleryIndex + 1}`}
+                                  fill className="object-cover"
+                                  format="auto" quality="auto" sizes="70vw"
+                                  onError={(e: any) => { e.target.style.display = 'none'; }}
+                                />
                               </motion.div>
                             </AnimatePresence>
                           </div>
@@ -230,7 +262,15 @@ const FilmDetailPage = () => {
                             <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                               {galleryImages.map((image, index) => (
                                 <button key={index} onClick={() => setActiveGalleryImageIndex(index)} className={`relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 overflow-hidden rounded-lg transition-all flex-shrink-0 border-2 ${safeGalleryIndex === index ? 'border-film-red-500 opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-100 hover:border-film-red-500/50'}`}>
-                                  <Image src={image || '/images/hero/hero_placeholder.jpg'} alt={`Thumbnail ${index + 1}`} fill className="object-cover" onError={(e) => { e.currentTarget.src = "/images/hero/hero_placeholder.jpg"; }} />
+                                  <CldImage
+                                    src={image || 'riel-films/placeholder'}
+                                    alt={`Thumbnail ${index + 1}`} fill className="object-cover"
+                                    format="auto" quality="auto"
+                                    // width={100}
+                                    // height={100}
+                                    crop="thumb" gravity="center" // Thumbnail transformation
+                                    onError={(e: any) => { e.target.style.display = 'none'; }}
+                                  />
                                 </button>
                               ))}
                             </div>
@@ -290,8 +330,18 @@ const FilmDetailPage = () => {
                       <div className="space-y-4">
                         {otherFilmsByDirector.map((relatedFilm) => (
                           <Link href={`/films/${relatedFilm.slug}`} key={relatedFilm.id} className="flex gap-3 group items-center">
-                            <div className="relative h-14 w-20 rounded-md overflow-hidden flex-shrink-0 border border-border-light dark:border-border-dark"><Image src={relatedFilm.image || '/images/hero/hero_placeholder.jpg'} alt={relatedFilm.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" onError={(e) => { e.currentTarget.src = "/images/hero/hero_placeholder.jpg"; }} /></div>
-                            <div className="flex-1"><h4 className="font-medium text-xs text-film-black-900 dark:text-white group-hover:text-film-red-500 transition-colors line-clamp-2">{relatedFilm.title}</h4><p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{relatedFilm.year}</p></div>
+                            <div className="relative h-14 w-20 rounded-md overflow-hidden flex-shrink-0 border border-border-light dark:border-border-dark">
+                              <CldImage
+                                src={relatedFilm.image || 'riel-films/placeholder'}
+                                alt={relatedFilm.title} fill className="object-cover ..."
+                                format="auto" quality="auto" width={80} height={56} crop="fill" gravity="center"
+                                onError={(e: any) => { e.target.style.display = 'none'; }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-xs text-film-black-900 dark:text-white group-hover:text-film-red-500 transition-colors line-clamp-2">{relatedFilm.title}</h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{relatedFilm.year}</p>
+                            </div>
                           </Link>
                         ))}
                       </div>
@@ -315,7 +365,7 @@ const FilmDetailPage = () => {
                       <Link href={`/films/${relatedFilm.slug}`} className="block h-full">
                         <Card className="h-full flex flex-col group bg-white dark:bg-film-black-950 border border-border-light dark:border-border-dark shadow-sm hover:shadow-lg transition-shadow duration-300">
                           <div className="relative aspect-video overflow-hidden rounded-t-xl">
-                            <CardImage src={relatedFilm.image || '/images/hero/hero_placeholder.jpg'} alt={relatedFilm.title} overlay={true} />
+                            <CardImage src={relatedFilm.image || 'riel-films/placeholder'} alt={relatedFilm.title} overlay={true} />
                             <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 text-white text-xs rounded backdrop-blur-sm">{relatedFilm.category}</div>
                           </div>
                           <CardContent className="p-5 flex-grow flex flex-col">
@@ -337,20 +387,12 @@ const FilmDetailPage = () => {
 
         {/* --- Trailer Modal --- */}
         <AnimatePresence>
-          {trailerOpen && film.trailer && (
+          {trailerOpen && videoId && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm" onClick={toggleTrailer}>
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-black rounded-xl overflow-hidden w-full max-w-4xl shadow-2xl border border-film-black-700" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-3 bg-film-black-900 border-b border-film-black-800"><h3 className="text-base font-medium text-white truncate">{film.title} - Trailer</h3><button onClick={toggleTrailer} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-film-black-700"><X className="h-5 w-5" /></button></div>
                 <div className="relative aspect-video">
-                  {/* Basic Iframe Embed - Needs logic to parse YouTube/Vimeo IDs */}
-                  <iframe
-                    width="100%" height="100%"
-                    src={`https://www.youtube.com/embed/${film.trailer.split('v=')[1]?.split('&')[0] || film.trailer.split('/').pop()}?autoplay=1&rel=0`} // Example YouTube ID extraction
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen>
-                  </iframe>
+                  <YouTubeEmbed videoUrl={film.trailer} title={`${film.title} - Trailer`} />
                 </div>
               </motion.div>
             </motion.div>

@@ -1,22 +1,56 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeSwitcher } from "@/components/UI/ThemeSwitcher";
 import { useTheme } from "@/context/ThemeProvider";
 import { motion } from "framer-motion";
 import { Button } from "@/components/UI/Button";
+import { CldImage } from "next-cloudinary";
+import { useData } from "@/context/DataContext";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const { settings, isLoadingSettings } = useData(); // Get loading state too
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribeMessage, setSubscribeMessage] = useState("");
   const [subscribeError, setSubscribeError] = useState(false);
+  const [mounted, setMounted] = useState(false); // Track mount state
+
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Determine which logo to use based on theme
-  const logoSrc = theme === "dark" ? "/logo_foot.png" : "/logo_foot.png";
+  // Safely handle empty strings and loading state
+  // const getLogoSrc = () => {
+  //   const isDarkMode = mounted && resolvedTheme === "dark";
+  //   const defaultLight = "/logo_light_bg.png";
+  //   const defaultDark = "/logo_dark_bg.png";
+
+  //   if (isLoadingSettings || !settings) {
+  //     // Return a default based on potential theme preference before settings load
+  //     // Or return a specific placeholder if you prefer
+  //     return isDarkMode ? defaultDark : defaultLight;
+  //   }
+
+  //   const lightUrl = settings.logoLight;
+  //   const darkUrl = settings.logoDark;
+
+  //   // Use dark logo if dark mode AND dark logo URL exists, otherwise check light logo, then fallbacks
+  //   if (isDarkMode) {
+  //     console.log(darkUrl)
+  //     return darkUrl || defaultDark; // Use darkUrl if it exists (not empty), else fallback
+  //   } else {
+  //     console.log(lightUrl)
+  //     return lightUrl || defaultLight; // Use lightUrl if it exists (not empty), else fallback
+  //   }
+  // };
+
+  const logoSrc = settings?.metaImage! //getLogoSrc(); // Call the function to get the src
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,12 +103,15 @@ const Footer = () => {
           <div className="lg:col-span-4">
             <Link href="/" className="inline-block mb-6 group">
               <div className="flex items-center gap-2">
-                <Image
-                  src={logoSrc}
-                  width={52}
-                  height={52}
-                  alt="Riel Films Logo"
-                  className="object-contain group-hover:brightness-110 transition-all duration-300"
+                <CldImage
+                  src={logoSrc} // Use the Cloudinary URL or fallback path
+                  width={100} // Specify base width
+                  height={40} // Specify base height to maintain aspect ratio
+                  alt="Riel-Films Logo"
+                  className="object-contain h-10 w-auto hover:brightness-[1.1] transition-all" // Control height, auto width
+                  priority
+                  format="auto"
+                  quality="auto"
                 />
                 <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300 dark:from-white dark:to-gray-400">
                   RIEL FILMS
@@ -214,7 +251,7 @@ const Footer = () => {
                   href="mailto:info@rielfilms.com"
                   className="text-gray-300 hover:text-white hover:underline decoration-film-red-500 decoration-2 underline-offset-4 transition-all"
                 >
-                  info@rielfilms.com
+                  {settings?.contactEmail}
                 </a>
               </motion.li>
               <motion.li
@@ -241,7 +278,7 @@ const Footer = () => {
                   href="tel:+233302123456"
                   className="text-gray-300 hover:text-white hover:underline decoration-film-red-500 decoration-2 underline-offset-4 transition-all"
                 >
-                  +233 (0) 302 123 456
+                  {settings?.contactPhone}
                 </a>
               </motion.li>
             </ul>
@@ -297,7 +334,7 @@ const Footer = () => {
             <h4 className="text-sm uppercase tracking-wider mb-6 text-gray-400">Connect With Us</h4>
             <div className="flex space-x-4">
               <motion.a
-                href="#"
+                href={settings?.socialLinks[1].url}
                 className="w-10 h-10 rounded-full bg-film-black-800 flex items-center justify-center text-gray-400 hover:bg-film-red-600 hover:text-white transition-colors duration-300"
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -312,7 +349,7 @@ const Footer = () => {
                 </svg>
               </motion.a>
               <motion.a
-                href="#"
+                href={settings?.socialLinks[0].url}
                 className="w-10 h-10 rounded-full bg-film-black-800 flex items-center justify-center text-gray-400 hover:bg-film-red-600 hover:text-white transition-colors duration-300"
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -327,7 +364,7 @@ const Footer = () => {
                 </svg>
               </motion.a>
               <motion.a
-                href="#"
+                href={settings?.socialLinks[2].url}
                 className="w-10 h-10 rounded-full bg-film-black-800 flex items-center justify-center text-gray-400 hover:bg-film-red-600 hover:text-white transition-colors duration-300"
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -342,7 +379,7 @@ const Footer = () => {
                 </svg>
               </motion.a>
               <motion.a
-                href="#"
+                href={settings?.socialLinks[3].url}
                 className="w-10 h-10 rounded-full bg-film-black-800 flex items-center justify-center text-gray-400 hover:bg-film-red-600 hover:text-white transition-colors duration-300"
                 whileHover={{ y: -3 }}
                 transition={{ type: "spring", stiffness: 400 }}

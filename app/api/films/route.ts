@@ -45,7 +45,7 @@ const CreateFilmSchema = z.object({
   year: z.string().regex(/^\d{4}$/, "Invalid year format"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   longDescription: z.string().optional().default(''), // Provide default for create
-  image: z.string().url("Invalid image URL"),
+  image: z.string().url("Invalid main image URL"), // Validate as URL
   director: z.string().min(1, "Director is required"),
   producer: z.string().min(1, "Producer is required"),
   duration: z.string().min(1, "Duration is required"),
@@ -54,7 +54,7 @@ const CreateFilmSchema = z.object({
   releaseDate: z.string().min(1, "Release date is required"), // Use string for date from form
   awards: z.array(z.string()).optional().default([]),
   castCrew: z.array(z.any()).optional().default([]), // Consider stricter schema if possible
-  gallery: z.array(z.string().url("Invalid gallery URL")).optional().default([]),
+  gallery: z.array(z.string().url("Invalid gallery image URL")).optional().default([]), // Validate gallery URLs
   trailer: z.string().url("Invalid trailer URL").nullish(), // Allow null or undefined
   synopsis: z.string().min(10, "Synopsis must be at least 10 characters"),
   quotes: z.array(z.any()).optional().default([]), // Consider stricter schema if possible

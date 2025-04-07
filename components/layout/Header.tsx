@@ -8,6 +8,8 @@ import { useTheme } from "@/context/ThemeProvider";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useData } from "@/context/DataContext";
+import { CldImage } from 'next-cloudinary'; // *** Import CldImage ***
 
 // Navigation links data - extracted for easier management
 const navigationLinks = [
@@ -66,10 +68,12 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const { settings, isLoadingSettings, refetchSettings } = useData(); //  Get settings from context
   const pathname = usePathname();
 
   useEffect(() => {
+    refetchSettings()
     setMounted(true);
   }, []);
 
@@ -107,7 +111,9 @@ const Header = () => {
   // Determine which logo to use based on actual theme
   // Use a more reliable way to determine which logo to show
   const isDarkMode = mounted && (resolvedTheme === "dark");
-  const logoSrc = isDarkMode ? "/logo_dark_bg.png" : "/logo_light_bg.png";
+  const logoLightUrl = settings?.logoLight || "/logo_light_bg.png"; // Fallback if settings not loaded
+  const logoDarkUrl = settings?.logoDark || "/logo_dark_bg.png"; // Fallback
+  const logoSrc = isDarkMode ? logoDarkUrl : logoLightUrl;
 
   // Animation variants
   const mobileNavVariants = {
@@ -146,6 +152,7 @@ const Header = () => {
     };
   }, [isMenuOpen]);
 
+
   return (
     <header
       className={`w-full transition-all dark:bg-film-black-950/95 bg-white/95 backdrop-blur-sm sticky top-0 z-40 duration-300 ${isScrolled
@@ -163,16 +170,18 @@ const Header = () => {
           >
             <div className="flex items-center gap-2 h-auto text-film-red-500 group-hover:text-film-red-400 transition-colors">
               {mounted ? (
-                <Image
-                  src={logoSrc}
-                  width={62}
-                  height={62}
+                <CldImage
+                  src={logoSrc} // Use the Cloudinary URL or fallback path
+                  width={100} // Specify base width
+                  height={40} // Specify base height to maintain aspect ratio
                   alt="Riel-Films Logo"
-                  className="object-contain hover:brightness-[1.2] transition-all w-24"
+                  className="object-contain h-10 w-auto hover:brightness-[1.1] transition-all" // Control height, auto width
                   priority
+                  format="auto"
+                  quality="auto"
                 />
               ) : (
-                <div className="w-24 h-16 bg-gray-200 dark:bg-gray-800 animate-pulse rounded" />
+                <div className="w-24 h-10 bg-gray-200 dark:bg-gray-800 animate-pulse rounded" /> // Adjust skeleton size
               )}
             </div>
           </Link>

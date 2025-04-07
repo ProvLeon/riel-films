@@ -7,7 +7,7 @@ import { z } from 'zod'; // Import Zod
 // GET a single film by ID (Can be public or protected based on needs)
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) { // Basic ID validation
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
@@ -33,7 +33,7 @@ const UpdateFilmSchema = z.object({
   year: z.string().regex(/^\d{4}$/, "Invalid year format").optional(),
   description: z.string().min(10).optional(),
   longDescription: z.string().optional(), // Optional is fine for update
-  image: z.string().url().optional(),
+  image: z.string().url("Invalid main image URL").optional(), // Validate as URL (optional for update)
   director: z.string().min(1).optional(),
   producer: z.string().min(1).optional(),
   duration: z.string().min(1).optional(),
@@ -42,7 +42,7 @@ const UpdateFilmSchema = z.object({
   releaseDate: z.string().optional(), // Could use z.date() if pre-processed
   awards: z.array(z.string()).optional(),
   castCrew: z.array(z.any()).optional(), // Keep Json[] / z.any() or define stricter schema
-  gallery: z.array(z.string().url()).optional(),
+  gallery: z.array(z.string().url("Invalid gallery image URL")).optional(), // Validate gallery URLs (optional for update)
   trailer: z.string().url().nullish(), // Allow null or undefined for update
   synopsis: z.string().min(10).optional(),
   quotes: z.array(z.any()).optional(), // Keep Json[] / z.any() or define stricter schema
@@ -59,7 +59,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }

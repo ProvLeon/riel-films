@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { useFilm } from "@/hooks/useFilm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert";
+import ImageUploader from "@/components/admin/ImageUploader";
+import { CldImage } from "next-cloudinary";
 
 const EditFilmLoading = () => (
   <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
@@ -93,14 +95,15 @@ const ArrayInputSection = ({ fieldName, label, placeholder, items, addItem, remo
 
 const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead of slug
   const router = useRouter();
-  const { film, isLoading, error: filmError, refetch } = useFilm(filmId); // Use ID with the hook
+  const { film, isLoading, error: filmError, refetch } = useFilm(filmId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     title: "", slug: "", category: "", year: "", description: "", longDescription: "",
     image: "", director: "", producer: "", duration: "", languages: [""], subtitles: [""],
-    releaseDate: "", awards: [""], gallery: [""], trailer: "", synopsis: "",
+    releaseDate: "", awards: [""], gallery: [] as string[], trailer: "", synopsis: "",
     quotes: [{ text: "", source: "" }], rating: 0, featured: false, castCrew: [{ role: "", name: "" }]
   });
 
@@ -117,7 +120,7 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
         year: film.year || "",
         description: film.description || "",
         longDescription: film.longDescription || "",
-        image: film.image || "",
+        image: film.image || "", // Initial URL from fetched data
         director: film.director || "",
         producer: film.producer || "",
         duration: film.duration || "",
@@ -125,10 +128,9 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
         subtitles: ensureArray(film.subtitles, ""),
         releaseDate: film.releaseDate ? new Date(film.releaseDate).toISOString().split('T')[0] : "",
         awards: ensureArray(film.awards, ""),
-        gallery: ensureArray(film.gallery, ""),
+        gallery: ensureArray(film.gallery, []), // Ensure gallery is array
         trailer: film.trailer || "",
         synopsis: film.synopsis || "",
-        // Ensure quotes and castCrew are arrays of objects
         quotes: ensureObjectArray(film.quotes as any[], { text: "", source: "" }),
         rating: film.rating || 0,
         featured: film.featured || false,
@@ -141,11 +143,12 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
   // --- Handlers (Use useCallback for stability) ---
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    // @ts-ignore
-    const val = type === 'checkbox' ? e.target.checked : type === 'number' ? parseFloat(value) || 0 : value;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : type === 'number' ? parseFloat(value) || 0 : value;
     setFormData(prev => ({ ...prev, [name]: val }));
-    setError(null); // Clear global error on input change
-  }, []);
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' })); // Clear specific error
+    setError(null);
+  }, [errors]);
+
 
   const handleArrayInputChange = useCallback((index: number, fieldName: keyof Pick<typeof formData, 'languages' | 'subtitles' | 'awards' | 'gallery'>, value: string) => {
     setFormData(prev => {
@@ -166,6 +169,13 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
       return { ...prev, [fieldName]: newArray.length > 0 ? newArray : [""] };
     });
   }, []);
+
+
+  const generateSlug = useCallback(() => {
+    const slug = formData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+    setFormData(prev => ({ ...prev, slug }));
+  }, [formData.title]);
+
 
   const handleQuoteChange = useCallback((index: number, field: 'text' | 'source', value: string) => {
     setFormData(prev => {
@@ -200,43 +210,78 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
       return { ...prev, castCrew: newCastCrew.length > 0 ? newCastCrew : [{ role: "", name: "" }] };
     });
   }, []);
+
+
+  const handlePosterUpload = useCallback((url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
+    if (errors.image) setErrors(prev => ({ ...prev, image: '' }));
+  }, [errors.image]);
+
+  const handlePosterRemove = useCallback(() => {
+    setFormData(prev => ({ ...prev, image: '' }));
+  }, []);
+
+  const handleGalleryUpload = useCallback((url: string) => {
+    setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), url] }));
+  }, []);
+
+  const handleGalleryRemove = useCallback((index: number) => {
+    setFormData(prev => {
+      const newGallery = [...(prev.gallery || [])];
+      newGallery.splice(index, 1);
+      return { ...prev, gallery: newGallery };
+    });
+  }, []);
   // --- End Handlers ---
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const requiredFields: (keyof typeof formData)[] = ['title', 'slug', 'category', 'year', 'description', 'image', 'director', 'producer', 'duration', 'releaseDate', 'synopsis'];
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
+      }
+    });
+    // Add specific URL validation if needed (Zod handles this on API)
+    if (formData.trailer && !formData.trailer.startsWith('http')) {
+      newErrors.trailer = 'Please enter a valid URL for the trailer.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) {
+      setError("Please fix the errors in the form.");
+      // Optionally scroll to the first error
+      const firstErrorKey = Object.keys(errors).find(key => errors[key]);
+      if (firstErrorKey) {
+        const errorElement = document.getElementById(firstErrorKey);
+        errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
-    const requiredFields: (keyof typeof formData)[] = ['title', 'slug', 'category', 'year', 'description', 'image', 'director', 'producer', 'duration', 'releaseDate', 'synopsis'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
-
-    if (missingFields.length > 0) {
-      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      if (!filmId) throw new Error("Film ID is missing for update.");
-
-      const response = await fetch(`/api/films/id/${filmId}`, { // Use ID-based endpoint
+      const response = await fetch(`/api/films/id/${film?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update film');
+        throw new Error(errorData.error || `Failed to create film (Status: ${response.status})`);
       }
-      router.push('/admin/films');
-    } catch (error: any) {
-      setError(error.message);
+      router.push('/admin/films?success=created'); // Add success param
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
   // --- Loading and Error States ---
   if (isLoading) return <EditFilmLoading />;
   if (filmError) {
@@ -294,41 +339,94 @@ const EditFilmForm = ({ filmId }: { filmId: string }) => { // Receive ID instead
 
             {/* --- Sections (Copied structure from Create page for consistency) --- */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-3 mb-6 border-b border-gray-200 dark:border-film-black-800 flex items-center"><Edit className="h-5 w-5 mr-2 text-film-red-500" /> Basic Information</h2>
+              <h2 className="section-heading flex items-center">
+                <Type className="icon-style" /> Basic Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField id="title" label="Title" required value={formData.title} onChange={handleInputChange} errorField={error} formData={formData} />
-                <InputField id="slug" label="Slug" required value={formData.slug} onChange={handleInputChange} errorField={error} formData={formData} />
+                {/* Use InputField/TextareaField components, passing errors */}
+                <InputField id="title" label="Title" required value={formData.title} onChange={handleInputChange} onBlur={generateSlug} errorField={errors.title} formData={formData} />
+                <InputField id="slug" label="Slug" required value={formData.slug} onChange={handleInputChange} errorField={errors.slug} formData={formData} />
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category<span className="text-red-600 ml-1">*</span></label>
-                  <select id="category" name="category" value={formData.category} onChange={handleInputChange} className={`w-full px-4 py-2 rounded-lg bg-white dark:bg-film-black-800 border ${error && !formData.category ? 'border-red-500' : 'border-gray-300 dark:border-film-black-700'} focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white shadow-sm`} required>
-                    <option value="">Select category</option>
+                  <label htmlFor="category" className="label-style">Category<span className="text-red-600 ml-1">*</span></label>
+                  <select id="category" name="category" value={formData.category} onChange={handleInputChange} className={`input-style ${errors.category ? 'border-red-500' : ''}`} required>
+                    {/* Options */}
                     <option value="Documentary">Documentary</option>
-                    <option value="Feature Film">Feature Film</option>
-                    <option value="Short Film">Short Film</option>
-                    <option value="Animation">Animation</option>
-                    <option value="Series">Series</option>
+                    <option value="Drama">Drama</option>
+                    <option value="In Production">In Production</option>
+                    <option value="Post-Production">Post-Production</option>
+                    <option value="Completed">Completed</option>
                   </select>
+                  {errors.category && <p className="form-error">{errors.category}</p>}
                 </div>
-                <InputField id="year" label="Year" required type="number" value={formData.year} onChange={handleInputChange} errorField={error} formData={formData} />
-                <div className="md:col-span-2"><TextareaField id="description" label="Short Description" required rows={3} value={formData.description} onChange={handleInputChange} errorField={error} formData={formData} /></div>
+                <InputField id="year" label="Year" required type="number" value={formData.year} onChange={handleInputChange} errorField={errors.year} formData={formData} />
+                <div className="md:col-span-2"><TextareaField id="description" label="Short Description" required rows={3} value={formData.description} onChange={handleInputChange} errorField={errors.description} formData={formData} /></div>
                 <div className="md:col-span-2"><TextareaField id="longDescription" label="Long Description / About" rows={5} value={formData.longDescription} onChange={handleInputChange} /></div>
-                <div className="md:col-span-2"><TextareaField id="synopsis" label="Synopsis" required rows={4} value={formData.synopsis} onChange={handleInputChange} errorField={error} formData={formData} /></div>
+                <div className="md:col-span-2"><TextareaField id="synopsis" label="Synopsis" required rows={4} value={formData.synopsis} onChange={handleInputChange} errorField={errors.synopsis} formData={formData} /></div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pb-3 mb-6 border-b border-gray-200 dark:border-film-black-800 flex items-center"><ImageIcon className="h-5 w-5 mr-2 text-film-red-500" /> Media</h2>
+              <h2 className="section-heading flex items-center">
+                <ImageIcon className="icon-style" /> Media
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Main Image URL<span className="text-red-600 ml-1">*</span></label>
-                  <div className="flex">
-                    <input type="text" id="image" name="image" value={formData.image} onChange={handleInputChange} placeholder="https://..." className={`flex-1 px-4 py-2 rounded-l-md bg-white dark:bg-film-black-800 border ${error && !formData.image ? 'border-red-500' : 'border-gray-300 dark:border-film-black-700'} focus:outline-none focus:ring-2 focus:ring-film-red-500 text-gray-800 dark:text-white`} required />
-                    <button type="button" className="px-4 py-2 bg-gray-100 dark:bg-film-black-700 border-y border-r border-gray-300 dark:border-film-black-600 rounded-r-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-film-black-600"><Upload className="h-5 w-5" /></button>
-                  </div>
+                <div className="md:col-span-2">
+                  <ImageUploader
+                    label="Main Film Poster *"
+                    currentImageUrl={formData.image}
+                    onUploadComplete={handlePosterUpload}
+                    onRemoveComplete={handlePosterRemove}
+                    required={true}
+                    recommendedText="16:9 ratio recommended, max 5MB"
+                    aspectRatio="aspect-video"
+                  />
+                  {errors.image && <p className="form-error">{errors.image}</p>}
                 </div>
-                <InputField id="trailer" label="Trailer URL" type="url" value={formData.trailer} onChange={handleInputChange} placeholder="https://youtube.com/..." />
+                <InputField id="trailer" label="Trailer URL (YouTube/Vimeo)" type="url" value={formData.trailer || ''} onChange={handleInputChange} errorField={errors.trailer} formData={formData} placeholder="https://youtube.com/..." />
               </div>
-              <div className="mt-6"><ArrayInputSection fieldName="gallery" label="Gallery Images" placeholder="https://image-url.com/..." items={formData.gallery} addItem={addItemToArray} removeItem={removeItemFromArray} handleItemChange={handleArrayInputChange} /></div>
+              {/* Gallery Uploader Section */}
+              <div className="mt-8">
+                <label className="label-style mb-2">Gallery Images</label>
+                <div className="mb-4 p-4 border border-dashed border-gray-300 dark:border-film-black-700 rounded-lg bg-gray-50 dark:bg-film-black-800/50">
+                  <ImageUploader
+                    label="Add Image to Gallery"
+                    currentImageUrl={null} // Pass null to indicate adding mode
+                    onUploadComplete={handleGalleryUpload}
+                    onRemoveComplete={() => { }} // No remove action needed for the uploader itself
+                    // enablePreZiew={false}
+                    recommendedText="Upload additional images (Max 5MB each)"
+                    aspectRatio="aspect-video"
+                  />
+                </div>
+                {/* Display uploaded gallery images */}
+                <AnimatePresence>
+                  {formData.gallery && formData.gallery.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                      {formData.gallery.map((url, index) => (
+                        <motion.div
+                          key={url + index}
+                          layout
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                          className="relative w-28 h-28 rounded-md overflow-hidden border dark:border-film-black-700 group"
+                        >
+                          <CldImage src={url} alt={`Gallery ${index + 1}`} fill className="object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleGalleryRemove(index)}
+                            className="absolute top-1 right-1 bg-red-600/80 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                            aria-label="Remove image"
+                          >
+                            <X size={14} />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
             </section>
 
             <section>
@@ -425,15 +523,15 @@ const AdminEditFilmPage = ({ params }: { params: { id: string } }) => {
   // For simplicity here, we assume the 'slug' parameter might actually be the ID.
   // A better approach would be to have the edit route use `[id]` instead of `[slug]`.
   // Let's adjust the page to expect an ID directly.
-  const filmId = params?.id;
+  const { id } = React.use(params);
 
-  if (!filmId) {
+  if (!id) {
     return <div className="p-8 text-center text-red-600">Error: Missing film identifier.</div>;
   }
 
   return (
     <Suspense fallback={<EditFilmLoading />}>
-      <EditFilmForm filmId={filmId} />
+      <EditFilmForm filmId={id} />
     </Suspense>
   );
 };

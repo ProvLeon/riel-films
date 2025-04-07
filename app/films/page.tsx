@@ -9,6 +9,9 @@ import { Film as FilmType } from "@/types/mongodbSchema";
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card"; // Use unified Card
 import { FilmsPageSkeleton } from "@/components/skeletons/FilmsPageSkeleton";
 import { Play, ArrowRight, Star, Filter, ChevronDown, Film } from "lucide-react"; // Added Filter, ChevronDown
+import { CldImage } from 'next-cloudinary';
+
+
 import Image from "next/image";
 import { motion } from 'framer-motion';
 
@@ -81,7 +84,7 @@ const FilmsPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center bg-gray-50 dark:bg-film-black-900 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-film-black-800">
                   {/* Image Side */}
                   <div className="relative aspect-video lg:aspect-auto lg:h-full group">
-                    <Image src={featuredFilm.image} alt={featuredFilm.title} fill className="object-cover" priority />
+                    <CldImage src={featuredFilm.image} alt={featuredFilm.title} fill className="object-cover" overlay={true} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute top-4 left-4 bg-film-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold z-10">Featured Film</div>
                     {/* Play Button Overlay */}

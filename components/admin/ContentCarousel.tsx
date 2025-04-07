@@ -104,11 +104,14 @@ const ContentCarousel: React.FC<ContentCarouselProps> = ({ title, items, type })
               <div className="bg-white dark:bg-film-black-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-film-black-800">
                 {/* Card image */}
                 <div className="relative h-40 overflow-hidden">
-                  <Image
+                  <CldImage
                     src={item.image || '/images/placeholder.jpg'}
                     alt={item.title}
                     fill
                     className="object-cover"
+                    format="auto" quality="auto" // Add optimizations
+                    sizes="300px" // Rough size estimate for carousel item
+                    onError={(e: any) => { e.target.src = '/images/placeholder.jpg'; }}
                   />
 
                   {/* Hover overlay with actions */}
