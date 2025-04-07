@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 // GET a single production by ID
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!session || !["admin", "editor"].includes((session.user as any)?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
@@ -61,7 +61,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (!session || (session.user as any)?.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized - Admin access required" }, { status: 401 });
     }
-    const { id } = params;
+    const { id } = await params;
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }

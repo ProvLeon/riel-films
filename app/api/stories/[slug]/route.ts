@@ -6,10 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 // GET a single story by slug (Public)
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     if (!slug) return NextResponse.json({ error: "Slug is required" }, { status: 400 });
 
-    const story = await prisma.story.findUnique({ where: { slug } });
+    const story = await prisma.story.findUnique({ where: { id: slug } });
 
     if (!story) return NextResponse.json({ error: "Story not found" }, { status: 404 });
 
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
     if (!session || !["admin", "editor"].includes((session.user as any)?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { slug } = params;
+    const { slug } = await params;
     const data = await req.json();
     const existing = await prisma.story.findUnique({ where: { slug } });
     if (!existing) return NextResponse.json({ error: "Story not found" }, { status: 404 });
@@ -50,7 +50,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { slug: str
     if (!session || (session.user as any)?.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const { slug } = params;
+    const { slug } = await params;
     const existing = await prisma.story.findUnique({ where: { slug } });
     if (!existing) return NextResponse.json({ error: "Story not found" }, { status: 404 });
     await prisma.story.delete({ where: { id: existing.id } });

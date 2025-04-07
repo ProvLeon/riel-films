@@ -6,10 +6,10 @@ import { getServerSession } from "next-auth/next"; // Import getServerSession
 // GET a single production by slug (Public)
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    const { slug } = await params;
-    if (!slug) return NextResponse.json({ error: "Slug is required" }, { status: 400 });
+    const { id } = await params;
+    if (!id) return NextResponse.json({ error: "Slug is required" }, { status: 400 });
 
-    const production = await prisma.production.findUnique({ where: { slug } });
+    const production = await prisma.production.findUnique({ where: { id } });
 
     if (!production) {
       return NextResponse.json({ error: "Production not found" }, { status: 404 });

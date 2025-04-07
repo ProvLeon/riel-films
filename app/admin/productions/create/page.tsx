@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/UI/Alert";
 import { InputField, TextareaField } from './formHelpers'; // Assume these are extracted
+import ImageUploader from "@/components/admin/ImageUploader";
 
 const AdminCreateProductionLoading = () => (
   <div className="flex justify-center items-center min-h-screen">
@@ -116,6 +117,14 @@ const AdminCreateProductionForm = () => {
     });
   }, []);
 
+  const handleImageUpload = useCallback((url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
+  }, []);
+
+  const handleImageRemove = useCallback(() => {
+    setFormData(prev => ({ ...prev, image: '' }));
+  }, []);
+
   const generateSlug = useCallback(() => {
     const slug = formData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
     setFormData(prev => ({ ...prev, slug }));
@@ -203,8 +212,16 @@ const AdminCreateProductionForm = () => {
                   <button type="button" onClick={() => handleInputChange({ target: { name: 'featured', type: 'checkbox', checked: !formData.featured } } as any)} className={`w-full px-4 py-2 rounded-md border ${formData.featured ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300" : "bg-gray-50 dark:bg-film-black-800 border-gray-300 dark:border-film-black-700 text-gray-700 dark:text-gray-300"} flex items-center justify-center`}><Star className={`h-5 w-5 mr-2 ${formData.featured ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'}`} /> {formData.featured ? 'Featured' : 'Not Featured'}</button>
                 </div>
                 <div className="md:col-span-2">
-                  <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Featured Image URL<span className="text-red-600 ml-1">*</span></label>
-                  <div className="flex"><input type="text" id="image" name="image" value={formData.image} onChange={handleInputChange} placeholder="https://..." className="input-style rounded-r-none" required /><button type="button" className="button-icon rounded-l-none"><Upload className="h-5 w-5" /></button></div>
+                  <ImageUploader
+                    label="Featured Image *"
+                    currentImageUrl={formData.image}
+                    onUploadComplete={handleImageUpload}
+                    onRemoveComplete={handleImageRemove}
+                    required={true}
+                    recommendedText="16:9 ratio recommended"
+                    aspectRatio="aspect-video"
+                  />
+                  {error && <p className="text-red-500">{error}</p>}
                 </div>
                 <div className="md:col-span-2"><TextareaField id="description" label="Short Description" required rows={3} value={formData.description} onChange={handleInputChange} errorField={error} formData={formData} /></div>
                 <div className="md:col-span-2"><TextareaField id="longDescription" label="Long Description" rows={5} value={formData.longDescription} onChange={handleInputChange} /></div>
