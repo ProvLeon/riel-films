@@ -2,153 +2,217 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/UI/Button";
-import { CldImage } from 'next-cloudinary';
-import { Play, Info } from "lucide-react";
+import SmartImage from "@/components/UI/SmartImage";
+import { GraduationCap, Users, Video, Award, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useFilmsList } from "@/hooks/useFilmsList";
 import EngagementTracker from "@/components/analytics/EngagementTracker";
-import { CardSkeleton, HeroSkeleton } from "../UI/SkeletonLoaders";
-
 
 const HeroSection = () => {
-  const { films, isLoading } = useFilmsList({ limit: 5 });
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
 
-  // Auto-rotate featured content
+  // Hero content focusing on training and production
+  const heroContent = [
+    {
+      id: 1,
+      title: "RIEL FILMS ACADEMY",
+      subtitle: "Where Raw Talent Becomes Real Skill",
+      description: "You don't need a film background — just the passion. Whether you want to direct, act, edit, or write — we'll teach you the craft and walk with you every step of the way.",
+      image: "/images/hero/hero1.jpg",
+      cta: "Join Academy",
+      ctaLink: "/academy",
+      secondaryCta: "Learn More",
+      secondaryLink: "/about"
+    },
+    {
+      id: 2,
+      title: "PROFESSIONAL FILM PRODUCTION",
+      subtitle: "Bringing Ideas to Life",
+      description: "From short films and music videos to corporate events and documentaries. We direct, shoot, edit, and deliver visual content that connects with real people.",
+      image: "/images/hero/hero2.jpg",
+      cta: "Our Services",
+      ctaLink: "/productions",
+      secondaryCta: "View Projects",
+      secondaryLink: "/films"
+    },
+    {
+      id: 3,
+      title: "LEARN BY DOING",
+      subtitle: "Real Sets, Real Experience",
+      description: "Our students work on actual RIEL FILMS productions. This hands-on approach ensures you graduate with industry experience and a portfolio of professional work.",
+      image: "/images/hero/hero3.jpg",
+      cta: "Apply Now",
+      ctaLink: "/academy#apply",
+      secondaryCta: "View Programs",
+      secondaryLink: "/academy#programs"
+    }
+  ];
+
+  // Auto-rotate content
   useEffect(() => {
-    if (films.length === 0) return;
-
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % films.length);
-    }, 10000); // Change slide every 10 seconds
+      setCurrentSlide((prev) => (prev + 1) % heroContent.length);
+    }, 8000); // Change slide every 8 seconds
 
     return () => clearInterval(interval);
-  }, [films.length]);
+  }, [heroContent.length]);
 
-  if (isLoading || films.length === 0) {
-    return (
-      <div className="relative w-full aspect-[16/9] md:aspect-[2.5/1] h-[70vh] bg-gradient-to-r from-film-black-950 to-film-black-900 animate-pulse">
-        <div className="absolute inset-0 flex items-center justify-center">
-          {/* <CardSkeleton hasImage={true} animation="shimmer" className="w-full" hasFooter={false} /> */}
-          <HeroSkeleton withGradient={true} withBadge={false} />
-        </div>
-      </div>
-    );
-  }
+  const currentContent = heroContent[currentSlide];
 
-  const featuredFilm = films[currentSlide];
+  // Statistics to display
+  const stats = [
+    { icon: <GraduationCap className="h-6 w-6" />, value: "100+", label: "Graduates" },
+    { icon: <Users className="h-6 w-6" />, value: "8", label: "Week Program" },
+    { icon: <Video className="h-6 w-6" />, value: "50+", label: "Projects" },
+    { icon: <Award className="h-6 w-6" />, value: "5+", label: "Years Experience" }
+  ];
 
   return (
-    <section className="relative w-full h-[80vh] overflow-hidden">
-      {/* Featured backdrop */}
+    <section className="relative w-full h-[85vh] overflow-hidden">
+      {/* Background with overlay */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={featuredFilm.id}
+          key={currentContent.id}
           className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7 }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
         >
           <div className="relative w-full h-full">
-            <CldImage
-              src={featuredFilm.image || "riel-films/hero_placeholder"} // Use public ID if URL fails
-              alt={featuredFilm.title}
+            <SmartImage
+              src={currentContent.image}
+              alt={currentContent.title}
               fill
               priority
               className="object-cover object-center"
               sizes="100vw"
-              // Add transformations for optimization
-              format="auto"
-              quality="auto"
             />
 
-            {/* Netflix-style gradient overlay that's stronger at bottom */}
-            <div className="absolute inset-0 bg-gradient-to-t dark:from-film-black-950 dark:via-film-black-950/80 from-gray-900/90 via-gray-900/80 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-r dark:from-film-black-950/90 from-gray-700/90 to-transparent"></div>
+            {/* Enhanced gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-film-black-950/95 via-film-black-950/80 to-film-black-950/70"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-film-black-950/90 via-transparent to-film-black-950/30"></div>
           </div>
         </motion.div>
       </AnimatePresence>
 
       {/* Content area */}
       <div className="absolute inset-0 flex flex-col justify-center px-4 sm:px-12 md:px-16 lg:px-24">
-        <div className="max-w-3xl">
+        <div className="max-w-5xl">
           <AnimatePresence mode="wait">
             <motion.div
-              key={featuredFilm.id}
-              initial={{ opacity: 0, y: 20 }}
+              key={currentContent.id}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-white"
             >
-              {/* Netflix-style large title */}
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 text-white leading-none">
-                {featuredFilm.title}
-              </h1>
+              {/* Main title */}
+              <motion.h1
+                className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-none"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                {currentContent.title.split(' ').map((word, index) => (
+                  <span key={index} className={word === 'ACADEMY' || word === 'PRODUCTION' ? 'text-film-red-500' : ''}>
+                    {word}{' '}
+                  </span>
+                ))}
+              </motion.h1>
 
-              {/* Film metadata row */}
-              <div className="flex items-center gap-3 mb-4 text-white/80 text-sm">
-                <span className="text-film-red-500 font-semibold">{featuredFilm.year}</span>
-                <span className="bg-white/20 px-1 rounded">{featuredFilm.rating ? `${featuredFilm.rating.toFixed(1)}/5` : "PG"}</span>
-                <span>{featuredFilm.duration || "1h 45m"}</span>
-                <span>{featuredFilm.category}</span>
-              </div>
+              {/* Subtitle */}
+              <motion.h2
+                className="text-xl md:text-3xl font-medium mb-6 text-film-red-300"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
+                {currentContent.subtitle}
+              </motion.h2>
 
               {/* Description */}
-              <p className="text-white text-lg mb-8 line-clamp-3 md:line-clamp-none">
-                {featuredFilm.description || "Experience authentic African storytelling through our award-winning documentary films that capture the essence of the continent's diverse cultures and rich heritage."}
-              </p>
+              <motion.p
+                className="text-white/90 text-lg md:text-xl mb-8 max-w-3xl leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                {currentContent.description}
+              </motion.p>
 
               {/* Call-to-action buttons */}
-              <div className="flex flex-wrap gap-4">
+              <motion.div
+                className="flex flex-wrap gap-4 mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1 }}
+              >
                 <EngagementTracker
-                  contentType="film"
-                  contentId={featuredFilm.id}
-                  contentTitle={featuredFilm.title}
-                  contentCategory={featuredFilm.category}
+                  contentType="home"
+                  contentId={currentContent.id.toString()}
+                  contentTitle={currentContent.title}
+                  contentCategory="hero-cta"
                   action="click"
                 >
-                  <Button variant="primary" size="lg">
-                    <Link href={`/films/${featuredFilm.slug}`} className="flex items-center">
-                      <Play className="mr-2 h-5 w-5" fill="currentColor" />
-                      Watch Now
+                  <Button variant="primary" size="lg" className="group">
+                    <Link href={currentContent.ctaLink} className="flex items-center">
+                      {currentContent.cta}
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
                 </EngagementTracker>
 
                 <EngagementTracker
-                  contentType="film"
-                  contentId={featuredFilm.id}
-                  contentTitle={featuredFilm.title}
-                  contentCategory={featuredFilm.category}
+                  contentType="home"
+                  contentId={currentContent.id.toString()}
+                  contentTitle={currentContent.title}
+                  contentCategory="hero-secondary"
                   action="click"
-                  details={{ action: "more-info" }}
                 >
                   <Button
                     variant="secondary"
                     size="lg"
-                    className="text-white dark:text-white border-white dark:border-white hover:bg-white/20 dark:hover:bg-white/20 hover:text-white"
+                    className="text-white dark:text-white border-white dark:border-white hover:bg-white/20 dark:hover:bg-white/20 hover:text-white backdrop-blur-sm"
                   >
-                    <Link href={`/films/${featuredFilm.slug}`} className="flex items-center text-white">
-                      <Info className="mr-2 h-5 w-5" />
-                      <span className="text-white">More Info</span>
+                    <Link href={currentContent.secondaryLink} className="text-white">
+                      {currentContent.secondaryCta}
                     </Link>
                   </Button>
                 </EngagementTracker>
-              </div>
+              </motion.div>
+
+              {/* Statistics Row */}
+              <motion.div
+                className="flex flex-wrap gap-8 text-white/80"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.2 }}
+              >
+                {stats.map((stat, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="p-2 bg-film-red-500/20 rounded-lg text-film-red-400">
+                      {stat.icon}
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-white">{stat.value}</div>
+                      <div className="text-sm text-white/70">{stat.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Slide indicators (Netflix style dots) */}
-      <div className="absolute bottom-10 right-10 flex space-x-2">
-        {films.slice(0, 5).map((_, index) => (
+      {/* Slide indicators */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
+        {heroContent.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 rounded-full transition-all ${index === currentSlide
-              ? "bg-white scale-110"
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
+              ? "bg-film-red-500 scale-110"
               : "bg-white/50 hover:bg-white/80"
               }`}
             onClick={() => setCurrentSlide(index)}
@@ -156,6 +220,36 @@ const HeroSection = () => {
           />
         ))}
       </div>
+
+      {/* Navigation arrows for larger screens */}
+      <div className="hidden md:block">
+        <button
+          className="absolute left-8 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-all duration-300 backdrop-blur-sm"
+          onClick={() => setCurrentSlide((prev) => (prev - 1 + heroContent.length) % heroContent.length)}
+          aria-label="Previous slide"
+        >
+          <ArrowRight className="h-6 w-6 rotate-180" />
+        </button>
+        <button
+          className="absolute right-8 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-all duration-300 backdrop-blur-sm"
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % heroContent.length)}
+          aria-label="Next slide"
+        >
+          <ArrowRight className="h-6 w-6" />
+        </button>
+      </div>
+
+      {/* Floating badge */}
+      <motion.div
+        className="absolute top-8 right-8 hidden lg:block"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 1.4 }}
+      >
+        <div className="bg-film-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm">
+          Ghana's Premier Film Academy
+        </div>
+      </motion.div>
     </section>
   );
 };

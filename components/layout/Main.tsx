@@ -1,8 +1,8 @@
 "use client";
-import React, { Suspense } from "react"; // Added Suspense
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, GraduationCap, Video, Camera, Users, Award, CheckCircle } from "lucide-react";
 import Image from "next/image";
 
 // Components
@@ -10,10 +10,11 @@ import BackToTop from "@/components/UI/BackToTop";
 import { Button } from "@/components/UI/Button";
 import { Card, CardContent, CardImage, CardTitle } from "@/components/UI/Card";
 import EngagementTracker from "@/components/analytics/EngagementTracker";
-import LoadingSpinner from "@/components/UI/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "@/components/UI/LoadingSpinner";
 import HeroSection from "@/components/sections/HeroSection";
 import CTASection from "@/components/sections/CTASection";
-import SectionReveal from "@/components/UI/SectionReveal"; // Import SectionReveal
+import SectionReveal from "@/components/UI/SectionReveal";
+import SmartImage from '@/components/UI/SmartImage';
 
 // Hooks and data
 import { useFilmsList } from "@/hooks/useFilmsList";
@@ -23,28 +24,93 @@ import { getStatusColor } from "@/lib/utils";
 import { CardSkeleton } from "../UI/SkeletonLoaders";
 import Skeleton from "../UI/Skeleton";
 
-
 function Main({ className = "" }: { className?: string }) {
   // Fetch data using hooks
-  const { films, isLoading: filmsLoading, error: filmsError } = useFilmsList({ limit: 8, featured: true }); // Fetch featured films first if possible
-  const { productions, isLoading: productionsLoading, error: productionsError } = useProductionsList({ limit: 3, status: "In Production" }); // Fetch current productions
-  const { stories, isLoading: storiesLoading, error: storiesError } = useStoriesList({ limit: 4, featured: true }); // Fetch featured stories
+  const { films, isLoading: filmsLoading, error: filmsError } = useFilmsList({ limit: 8, featured: true });
+  const { productions, isLoading: productionsLoading, error: productionsError } = useProductionsList({ limit: 3, status: "In Production" });
+  const { stories, isLoading: storiesLoading, error: storiesError } = useStoriesList({ limit: 4, featured: true });
 
   // Combined loading state
   const isLoading = filmsLoading || productionsLoading || storiesLoading;
 
   // Derived featured and trending films
   const featuredFilms = films.filter(film => film.featured).slice(0, 2);
-  const trendingFilms = films.slice(0, 6); // Use all fetched films for trending for now
+  const trendingFilms = films.slice(0, 6);
 
-  // Error Handling (Optional: Display a consolidated error message)
+  // Error Handling
   const combinedError = filmsError || productionsError || storiesError;
+
+  // Academy programs data
+  const academyPrograms = [
+    {
+      icon: <Video className="h-6 w-6" />,
+      title: "Directing & Scriptwriting",
+      description: "Master visual storytelling and bring your creative vision to life",
+      duration: "2 weeks"
+    },
+    {
+      icon: <Camera className="h-6 w-6" />,
+      title: "Camera Operation",
+      description: "Learn professional camera techniques and composition",
+      duration: "2 weeks"
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Acting for Screen",
+      description: "Develop acting skills specifically for film and television",
+      duration: "1 week"
+    }
+  ];
+
+  // Production services data
+  const productionServices = [
+    {
+      title: "Music Videos",
+      description: "Creative and professional music video production",
+      image: "/images/hero/hero1.jpg"
+    },
+    {
+      title: "Corporate Events",
+      description: "Professional coverage of corporate functions and events",
+      image: "/images/hero/hero2.jpg"
+    },
+    {
+      title: "Documentaries",
+      description: "Compelling documentary storytelling that captures reality",
+      image: "/images/hero/hero3.jpg"
+    },
+    {
+      title: "Weddings",
+      description: "Beautiful wedding cinematography to capture your special day",
+      image: "/images/hero/hero4.jpg"
+    },
+    {
+      title: "Live Streaming",
+      description: "Professional live streaming services for events",
+      image: "/images/hero/hero5.jpg"
+    },
+    {
+      title: "Photography",
+      description: "Professional photography for all occasions",
+      image: "/images/hero/hero6.jpg"
+    }
+  ];
+
+  // Academy features
+  const academyFeatures = [
+    "Hands-on training with real film sets",
+    "Industry-standard equipment and software",
+    "Mentorship from working professionals",
+    "8-week comprehensive program",
+    "Flexible weekday and weekend options",
+    "Scholarships available for deserving candidates"
+  ];
 
   return (
     <div className="relative bg-white dark:bg-film-black-950 min-h-screen">
       <div className="relative z-10 flex flex-col">
         <main className="flex-grow">
-          {/* Hero Section - This should handle its own loading/data if needed, or pass data */}
+          {/* Hero Section */}
           <HeroSection />
 
           {/* Display consolidated error if any data fetch fails */}
@@ -54,244 +120,279 @@ function Main({ className = "" }: { className?: string }) {
             </div>
           )}
 
-          {/* Featured Content */}
-          <section id="featured" className="scroll-reveal container-custom mt-16 mb-12 md:mb-20">
-            <SectionReveal>
-              <div className="flex justify-between items-center mb-6 md:mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-film-black-900 dark:text-white">Featured Films</h2>
-                <Link href="/films" className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline text-sm font-medium">
-                  View all <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
+          {/* About Section - Brief Overview */}
+          <SectionReveal>
+            <section className="py-16 lg:py-24 bg-gray-50 dark:bg-film-black-900">
+              <div className="container-custom">
+                <div className="max-w-4xl mx-auto text-center">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 dark:text-white text-film-black-900">
+                    About <span className="text-film-red-500">RIEL FILMS</span>
+                  </h2>
+                  <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                    RIEL FILMS is a Ghanaian-based film production company that brings ideas to life — from short films and music videos to corporate events and documentaries. As part of our vision to grow Ghana's creative industry, we founded RIEL FILMS ACADEMY — our official training wing.
+                  </p>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+                    Whether on set or in class, one thing is clear: <strong className="text-film-red-500">We're all about creative impact.</strong>
+                  </p>
+                  <Button variant="primary" size="lg">
+                    <Link href="/about">Learn More About Us</Link>
+                  </Button>
+                </div>
               </div>
-            </SectionReveal>
+            </section>
+          </SectionReveal>
 
-            {filmsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Skeleton variant="rectangular" height={350} className="rounded-lg" />
-                <Skeleton variant="rectangular" height={350} className="rounded-lg" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                {(featuredFilms.length > 0 ? featuredFilms : films.slice(0, 2)).map((film, index) => (
-                  <SectionReveal key={film.id} delay={index * 0.1}>
-                    <EngagementTracker contentType="film" contentId={film.id} contentTitle={film.title}>
-                      <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
-                        <Link href={`/films/${film.slug}`}>
-                          <Card className="group h-full border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 dark:bg-film-black-900">
-                            <div className="relative aspect-video overflow-hidden rounded-t-xl">
-                              <CardImage src={film.image} alt={film.title} overlay={true} />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div className="w-16 h-16 bg-film-red-600/90 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                  <Play className="h-6 w-6 text-white ml-1" />
-                                </div>
-                              </div>
+          {/* Academy Section */}
+          <SectionReveal>
+            <section className="py-16 lg:py-24">
+              <div className="container-custom">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 dark:text-white text-film-black-900">
+                      RIEL FILMS <span className="text-film-red-500">ACADEMY</span>
+                    </h2>
+                    <p className="text-xl text-film-red-500 mb-4 font-medium">
+                      "You don't need a film background — just the passion."
+                    </p>
+                    <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+                      RIEL FILMS ACADEMY is where raw talent becomes real skill. Whether you want to direct, act, edit, or write — we'll teach you the craft and walk with you every step of the way.
+                    </p>
+
+                    <div className="space-y-3 mb-8">
+                      {academyFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-film-red-500 flex-shrink-0" />
+                          <span className="text-gray-600 dark:text-gray-300">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Button variant="primary" size="lg">
+                        <Link href="/academy">Join Academy</Link>
+                      </Button>
+                      <Button variant="secondary" size="lg">
+                        <Link href="/academy#programs">View Programs</Link>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <SmartImage
+                      src="/images/hero/hero8.jpg"
+                      alt="RIEL FILMS Academy classroom session"
+                      width={600}
+                      height={400}
+                      className="rounded-lg shadow-xl"
+                    />
+                  </div>
+                </div>
+
+                {/* Academy Programs Preview */}
+                <div className="mt-16">
+                  <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center dark:text-white text-film-black-900">
+                    What We Teach
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {academyPrograms.map((program, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        viewport={{ once: true }}
+                      >
+                        <Card className="h-full text-center border-l-4 border-l-film-red-500">
+                          <CardContent className="p-6">
+                            <div className="p-3 bg-film-red-100 dark:bg-film-red-900/20 rounded-full w-fit mx-auto mb-4 text-film-red-600 dark:text-film-red-400">
+                              {program.icon}
                             </div>
-                            <CardContent className="p-5">
-                              <div className="flex items-center space-x-2 mb-2 text-xs">
-                                <span className="text-film-red-500 font-medium">{film.category}</span>
-                                <span className="text-gray-400">•</span>
-                                <span className="text-gray-500 dark:text-gray-400">{film.year}</span>
-                              </div>
-                              <CardTitle className="text-lg group-hover:text-film-red-500 transition-colors">{film.title}</CardTitle>
-                            </CardContent>
-                          </Card>
-                        </Link>
+                            <h4 className="font-semibold text-lg mb-2 dark:text-white">{program.title}</h4>
+                            <p className="text-sm text-film-red-500 font-medium mb-3">{program.duration}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{program.description}</p>
+                          </CardContent>
+                        </Card>
                       </motion.div>
-                    </EngagementTracker>
-                  </SectionReveal>
-                ))}
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-          </section>
+            </section>
+          </SectionReveal>
 
-          {/* Trending Films - Horizontal Scroll */}
-          <section id="trending" className="scroll-reveal mt-8 mb-16 md:mb-24">
-            <div className="container-custom mb-6 md:mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-film-black-900 dark:text-white">Trending Now</h2>
-            </div>
-            {filmsLoading ? (
-              <div className="container-custom flex space-x-4 overflow-hidden pb-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} variant="rectangular" height={200} width={250} className="rounded-lg flex-none" />)}
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="flex space-x-4 md:space-x-6 overflow-x-auto pb-8 px-4 sm:px-6 lg:px-8 scrollbar-hide">
-                  {trendingFilms.map((film, index) => (
-                    <SectionReveal key={film.id} delay={index * 0.05}>
-                      <EngagementTracker contentType="film" contentId={film.id} contentTitle={film.title}>
-                        <motion.div className="flex-none w-[260px] md:w-[300px]" whileHover={{ y: -5 }}>
-                          <Link href={`/films/${film.slug}`} className="block group">
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-film-black-900">
-                              <div className="relative aspect-video overflow-hidden rounded-t-xl">
-                                <CardImage src={film.image} alt={film.title} overlay={true} />
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                  <div className="w-12 h-12 bg-film-red-600/90 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                    <Play className="h-5 w-5 text-white ml-1" />
-                                  </div>
-                                </div>
-                              </div>
-                              <CardContent className="p-4">
-                                <CardTitle className="text-base group-hover:text-film-red-500 transition-colors line-clamp-1">{film.title}</CardTitle>
-                                <div className="flex space-x-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  <span>{film.year}</span>
-                                  <span>•</span>
-                                  <span>{film.category}</span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </Link>
-                        </motion.div>
-                      </EngagementTracker>
-                    </SectionReveal>
+          {/* Film Production Services */}
+          <SectionReveal>
+            <section className="py-16 lg:py-24 bg-gray-50 dark:bg-film-black-900">
+              <div className="container-custom">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 dark:text-white text-film-black-900">
+                    Film Production <span className="text-film-red-500">Services</span>
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                    At RIEL FILMS, we direct, shoot, edit, and deliver visual content that connects with real people. Every project is built with care — from script to screen.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {productionServices.map((service, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                    >
+                      <Card className="group h-full hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className="relative aspect-video overflow-hidden">
+                          <SmartImage
+                            src={service.image}
+                            alt={service.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                          <div className="absolute bottom-4 left-4">
+                            <h3 className="text-white font-semibold text-lg">{service.title}</h3>
+                          </div>
+                        </div>
+                        <CardContent className="p-6">
+                          <p className="text-gray-600 dark:text-gray-300">{service.description}</p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
-                {/* Shadow indicators */}
-                <div className="absolute left-0 top-0 bottom-8 w-16 bg-gradient-to-r from-white dark:from-film-black-950 to-transparent pointer-events-none md:hidden"></div>
-                <div className="absolute right-0 top-0 bottom-8 w-16 bg-gradient-to-l from-white dark:from-film-black-950 to-transparent pointer-events-none md:hidden"></div>
-              </div>
-            )}
-          </section>
 
-          {/* About Riel Films Section */}
-          <section className="bg-film-black-900 dark:bg-black py-20 md:py-28">
-            <div className="container-custom">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <SectionReveal direction="left">
+                <div className="text-center mt-12">
+                  <Button variant="primary" size="lg">
+                    <Link href="/productions">View All Services</Link>
+                  </Button>
+                </div>
+              </div>
+            </section>
+          </SectionReveal>
+
+          {/* Film Projects Section */}
+          <SectionReveal>
+            <section id="projects" className="py-16 lg:py-24">
+              <div className="container-custom">
+                <div className="flex justify-between items-center mb-12">
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">The Voice of African Cinema</h2>
-                    <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                      At Riel Films, we create authentic African stories through documentary film. Our mission is to showcase the richness and diversity of African culture, traditions, and contemporary life to global audiences.
+                    <h2 className="text-3xl md:text-5xl font-bold mb-4 dark:text-white text-film-black-900">
+                      Film <span className="text-film-red-500">Projects</span>
+                    </h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-300">
+                      Explore our portfolio of completed and ongoing film projects
                     </p>
-                    <p className="text-gray-300 mb-8 leading-relaxed">
-                      We collaborate with talented filmmakers across the continent to produce compelling narratives that educate, entertain, and inspire viewers worldwide.
-                    </p>
-                    <EngagementTracker contentType="about" contentId="about-section" contentTitle="About Our Studio">
-                      <Button variant="primary" size="lg">
-                        <Link href="/about">Learn About Our Mission</Link>
-                      </Button>
-                    </EngagementTracker>
                   </div>
-                </SectionReveal>
-                <SectionReveal direction="right">
-                  <EngagementTracker contentType="about" contentId="about-video" contentTitle="Studio Showcase Video" action="play">
-                    <motion.div className="relative aspect-video rounded-xl overflow-hidden shadow-2xl cursor-pointer group" whileHover={{ scale: 1.03 }}>
-                      <Image src="/images/hero/hero7.jpg" alt="Our Studio" fill className="object-cover" />
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors duration-300 flex items-center justify-center">
-                        <div className="w-20 h-20 bg-film-red-600/80 group-hover:bg-film-red-600 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors duration-300">
-                          <Play className="h-8 w-8 text-white ml-1" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  </EngagementTracker>
-                </SectionReveal>
-              </div>
-            </div>
-          </section>
-
-          {/* Current Productions Section */}
-          <section id="productions" className="scroll-reveal container-custom py-16 md:py-24">
-            <SectionReveal>
-              <div className="flex justify-between items-center mb-8 md:mb-10">
-                <h2 className="text-2xl md:text-3xl font-bold text-film-black-900 dark:text-white">Current Productions</h2>
-                <Link href="/productions" className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline text-sm font-medium">
-                  All Productions <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </div>
-            </SectionReveal>
-            {productionsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[...Array(3)].map((_, i) => <CardSkeleton key={i} hasImage={true} imageHeight={200} />)}
-              </div>
-            ) : productions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                {productions.slice(0, 3).map((production, index) => (
-                  <SectionReveal key={production.id} delay={index * 0.1}>
-                    <EngagementTracker contentType="production" contentId={production.id} contentTitle={production.title}>
-                      <motion.div whileHover={{ y: -8 }} transition={{ duration: 0.2 }} className="h-full">
-                        <Link href={`/productions/${production.slug}`} className="block h-full group">
-                          <Card className="h-full flex flex-col border border-gray-100 dark:border-film-black-800 shadow-sm hover:shadow-xl transition-shadow duration-300 dark:bg-film-black-900">
-                            <CardImage src={production.image} alt={production.title} overlay={true} />
-                            <CardContent className="p-5 flex-grow flex flex-col">
-                              <span className={`inline-block px-2 py-0.5 rounded text-xs mb-2 w-fit ${getStatusColor(production.status)}`}>{production.status}</span>
-                              <CardTitle className="text-lg group-hover:text-film-red-500 transition-colors line-clamp-1">{production.title}</CardTitle>
-                              <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mt-1 flex-grow">{production.description}</p>
-                              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-film-black-800">
-                                <div className="w-full bg-gray-200 dark:bg-film-black-700 rounded-full h-1.5"><div className="bg-film-red-600 h-1.5 rounded-full" style={{ width: `${production.progress}%` }}></div></div>
-                                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block text-right">{production.progress}% Complete</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      </motion.div>
-                    </EngagementTracker>
-                  </SectionReveal>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-10">No current productions to display.</p>
-            )}
-          </section>
-
-          {/* Latest Stories Section */}
-          <section id="stories" className="scroll-reveal bg-gray-50 dark:bg-film-black-900 py-16 md:py-24">
-            <div className="container-custom">
-              <SectionReveal>
-                <div className="flex justify-between items-center mb-8 md:mb-10">
-                  <h2 className="text-2xl md:text-3xl font-bold text-film-black-900 dark:text-white">Latest Stories</h2>
-                  <Link href="/stories" className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline text-sm font-medium">
-                    All Stories <ArrowRight className="ml-1 h-4 w-4" />
+                  <Link href="/films" className="flex items-center text-film-red-600 dark:text-film-red-500 hover:underline font-medium">
+                    View all <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
                 </div>
-              </SectionReveal>
-              {storiesLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} height={100} className="rounded-lg" />)}
+
+                {filmsLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {[...Array(6)].map((_, i) => (
+                      <CardSkeleton key={i} hasImage={true} animation="shimmer" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {films.slice(0, 6).map((film, index) => (
+                      <SectionReveal key={film.id} delay={index * 0.1}>
+                        <EngagementTracker contentType="film" contentId={film.id} contentTitle={film.title}>
+                          <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.2 }}>
+                            <Link href={`/films/${film.slug}`}>
+                              <Card className="group h-full border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 dark:bg-film-black-900">
+                                <div className="relative aspect-video overflow-hidden rounded-t-xl">
+                                  <CardImage src={film.image} alt={film.title} overlay={true} />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div className="w-16 h-16 bg-film-red-600/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                      <Play className="h-6 w-6 text-white ml-1" />
+                                    </div>
+                                  </div>
+                                </div>
+                                <CardContent className="p-5">
+                                  <div className="flex items-center space-x-2 mb-2 text-xs">
+                                    <span className="text-film-red-500 font-medium">{film.category}</span>
+                                    <span className="text-gray-400">•</span>
+                                    <span className="text-gray-500 dark:text-gray-400">{film.year}</span>
+                                  </div>
+                                  <CardTitle className="text-lg group-hover:text-film-red-500 transition-colors">{film.title}</CardTitle>
+                                </CardContent>
+                              </Card>
+                            </Link>
+                          </motion.div>
+                        </EngagementTracker>
+                      </SectionReveal>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          </SectionReveal>
+
+          {/* Student Projects Section */}
+          <SectionReveal>
+            <section className="py-16 lg:py-24 bg-gray-50 dark:bg-film-black-900">
+              <div className="container-custom">
+                <div className="text-center mb-16">
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 dark:text-white text-film-black-900">
+                    Student <span className="text-film-red-500">Projects</span>
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                    Check out amazing projects completed by our academy students. These showcase the talent and skills developed through our hands-on training program.
+                  </p>
                 </div>
-              ) : stories.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {stories.slice(0, 4).map((story, index) => (
-                    <SectionReveal key={story.id} delay={index * 0.1}>
-                      <EngagementTracker contentType="story" contentId={story.id} contentTitle={story.title}>
-                        <motion.div whileHover={{ x: 6 }} transition={{ duration: 0.2 }}>
-                          <Link href={`/stories/${story.slug}`} className="block p-5 bg-white dark:bg-film-black-800 rounded-xl hover:shadow-md transition-shadow group border border-gray-100 dark:border-film-black-700">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1 mr-4">
-                                <span className="text-xs text-film-red-600 dark:text-film-red-400 font-medium mb-1 block">{story.category}</span>
-                                <h3 className="font-semibold text-film-black-900 dark:text-white group-hover:text-film-red-500 transition-colors line-clamp-1">{story.title}</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">{story.excerpt}</p>
-                              </div>
-                              <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ArrowRight className="h-5 w-5 text-film-red-500" />
-                              </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {/* Placeholder for student projects - these would come from a separate data source */}
+                  {[1, 2, 3].map((project, index) => (
+                    <motion.div
+                      key={project}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                    >
+                      <Card className="group h-full">
+                        <div className="relative aspect-video overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-700">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center">
+                              <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                              <p className="text-gray-500 text-sm">Student Project {project}</p>
                             </div>
-                          </Link>
-                        </motion.div>
-                      </EngagementTracker>
-                    </SectionReveal>
+                          </div>
+                        </div>
+                        <CardContent className="p-5">
+                          <CardTitle className="text-lg mb-2">Student Project {project}</CardTitle>
+                          <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
+                            Amazing work by one of our academy graduates showcasing their newly acquired skills.
+                          </p>
+                          <Button variant="outline" size="sm">
+                            Watch on YouTube
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-10">No stories available yet.</p>
-              )}
-            </div>
-          </section>
 
-          {/* Final CTA Section */}
-          <CTASection
-            title="Join Our Community of African Film Enthusiasts"
-            subtitle="Subscribe to get updates on our latest releases, behind-the-scenes content, and exclusive stories."
-            primaryCta={{
-              text: "Explore Our Films",
-              link: "/films"
-            }}
-            secondaryCta={{
-              text: "About Our Mission",
-              link: "/about"
-            }}
-          />
+                <div className="text-center mt-12">
+                  <Button variant="primary" size="lg">
+                    <Link href="/academy">View All Student Work</Link>
+                  </Button>
+                </div>
+              </div>
+            </section>
+          </SectionReveal>
+
+          {/* CTA Section */}
+          <CTASection />
+
+          {/* Back to Top */}
+          <BackToTop />
         </main>
-
-        <BackToTop />
       </div>
     </div>
   );

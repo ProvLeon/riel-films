@@ -9,14 +9,14 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useData } from "@/context/DataContext";
-import { CldImage } from 'next-cloudinary'; // *** Import CldImage ***
+import SmartImage from "@/components/UI/SmartImage";
 
 // Navigation links data - extracted for easier management
 const navigationLinks = [
-  { href: "/films", label: "Films" },
   { href: "/about", label: "About" },
-  { href: "/productions", label: "Productions" },
-  { href: "/stories", label: "Stories" },
+  { href: "/productions", label: "Production" },
+  { href: "/films", label: "Projects" },
+  { href: "/academy", label: "Training" },
 ];
 
 // NavLink component extracted for reusability
@@ -170,7 +170,7 @@ const Header = () => {
           >
             <div className="flex items-center gap-2 h-auto text-film-red-500 group-hover:text-film-red-400 transition-colors">
               {mounted ? (
-                <CldImage
+                <SmartImage
                   src={logoSrc} // Use the Cloudinary URL or fallback path
                   width={100} // Specify base width
                   height={40} // Specify base height to maintain aspect ratio
