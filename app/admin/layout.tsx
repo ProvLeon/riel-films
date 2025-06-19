@@ -23,35 +23,35 @@ export default function AdminLayout({
   }, [user, isLoading, router]);
 
   // Show loading spinner while checking auth status
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-100 dark:bg-film-black-950 flex items-center justify-center">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-100 dark:bg-film-black-950 flex items-center justify-center">
+  //       <LoadingSpinner size="large" />
+  //     </div>
+  //   );
+  // }
 
   // Render layout only if the user is authenticated
-  if (!user) {
-    return null; // Return null or a minimal placeholder while redirecting
-  }
-
-
-  // const renderAdminSideBar = () => {
-  //   if (user && !isLoading) {
-  //     return <AdminSidebar /> // Or a minimal placeholder, useEffect handles the redirect
-  //   }
+  // if (!user) {
+  //   return null; // Return null or a minimal placeholder while redirecting
   // }
+
+
+  const renderAdminSideBar = () => {
+    if (user && !isLoading) {
+      return <AdminSidebar /> // Or a minimal placeholder, useEffect handles the redirect
+    }
+  }
 
   // Render the main admin layout
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-film-black-950">
-      {/* {renderAdminSideBar()} */}
-      <AdminSidebar />
+      {renderAdminSideBar()}
+      {/* <AdminSidebar /> */}
 
       <div className="flex-1 flex flex-col">
         {/* Optional: Global Admin Header could go here if needed */}
-        <AdminHeader />
+        {user && <AdminHeader />}
 
         <main className="flex-1 overflow-y-auto">
           {/* Use a consistent container for padding */}

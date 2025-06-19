@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "node api.js && next dev --turbo",
     "dev:webpack": "next dev",
-    "build": "next build --no-lint",
-    "start": "next start",
+    "build": "node api.js && next build --no-lint",
+    "start": "node api.js && next start",
     "lint": "next lint",
     "migrate": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/migrate-data.ts",
     "create-admin": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/create-admin.ts",
